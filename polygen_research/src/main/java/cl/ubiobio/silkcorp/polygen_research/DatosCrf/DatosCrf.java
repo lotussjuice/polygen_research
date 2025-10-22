@@ -33,4 +33,36 @@ public class DatosCrf {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "Campo_CRF_ID", nullable = false)
     private CampoCrf campoCrf;
+
+    public Integer getIdDetalle() {
+        return idDetalle;
+    }
+
+    public void setIdDetalle(Integer idDetalle) {
+        this.idDetalle = idDetalle;
+    }
+
+    public String getValor() {
+        return valor;
+    }
+
+    public void setValor(String valor) {
+        this.valor = valor;
+    }
+
+    public Crf getCrf() {
+        return crf;
+    }
+
+    public void setCrf(Crf crf) {
+        this.crf = crf;
+    }
+
+    public CampoCrf getCampoCrf() {
+        return campoCrf;
+    }
+
+    public void setCampoCrf(CampoCrf campoCrf) {
+        this.campoCrf = campoCrf;
+    }
 }

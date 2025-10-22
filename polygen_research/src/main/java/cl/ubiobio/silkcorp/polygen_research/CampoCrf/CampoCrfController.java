@@ -19,13 +19,13 @@ public class CampoCrfController {
     public String listarCampos(Model model) {
         List<CampoCrf> listaCampos = campoCrfService.getAllCampos();
         model.addAttribute("campos", listaCampos);
-        return "campo-list";
+        return "CampoCrfTemp/campo-list";
     }
 
     @GetMapping("/nuevo")
     public String mostrarFormularioDeNuevoCampo(Model model) {
         model.addAttribute("campo", new CampoCrf());
-        return "campo-form";
+        return "CampoCrfTemp/campo-form";
     }
 
     @PostMapping("/guardar")

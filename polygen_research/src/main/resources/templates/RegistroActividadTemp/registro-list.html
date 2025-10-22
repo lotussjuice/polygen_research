@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+<div th:fragment="contenido">
+    <h1>Registro de Actividad (Logs)</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>ID CRF</th>
+                <th>Tipo Actividad</th>
+                <th>Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="r : ${registros}">
+                <td th:text="${r.idRegistro}">...</td>
+                <td th:text="${r.usuario?.nombreUsuario}">...</td>
+                <td th:text="${r.crf?.idCrf}">...</td>
+                <td th:text="${r.tipoActividad}">...</td>
+                <td th:text="${r.fechaActividad}">...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+</html>

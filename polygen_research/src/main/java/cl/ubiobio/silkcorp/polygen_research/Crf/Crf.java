@@ -50,4 +50,67 @@ public class Crf {
     @OneToMany(mappedBy = "crf")
     private List<RegistroActividad> registrosActividad;
     
+    public Integer getIdCrf() {
+        return idCrf;
+    }
+
+    public void setIdCrf(Integer idCrf) {
+        this.idCrf = idCrf;
+    }
+
+    public String getGrupo() {
+        return grupo;
+    }
+
+    public void setGrupo(String grupo) {
+        this.grupo = grupo;
+    }
+
+    public LocalDate getFechaConsulta() {
+        return fechaConsulta;
+    }
+
+    public void setFechaConsulta(LocalDate fechaConsulta) {
+        this.fechaConsulta = fechaConsulta;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
+    public String getObservacion() {
+        return observacion;
+    }
+
+    public void setObservacion(String observacion) {
+        this.observacion = observacion;
+    }
+
+    public DatosPaciente getDatosPaciente() {
+        return datosPaciente;
+    }
+
+    public void setDatosPaciente(DatosPaciente datosPaciente) {
+        this.datosPaciente = datosPaciente;
+    }
+
+    public List<DatosCrf> getDatosCrfList() {
+        return datosCrfList;
+    }
+
+    public void setDatosCrfList(List<DatosCrf> datosCrfList) {
+        this.datosCrfList = datosCrfList;
+    }
+
+    public List<RegistroActividad> getRegistrosActividad() {
+        return registrosActividad;
+    }
+
+    public void setRegistrosActividad(List<RegistroActividad> registrosActividad) {
+        this.registrosActividad = registrosActividad;
+    }
 }

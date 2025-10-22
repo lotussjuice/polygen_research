@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+<div th:fragment="contenido">
+    <h1>Formulario de Paciente</h1>
+    <form th:action="@{/pacientes/guardar}" th:object="${paciente}" method="POST">
+        <div>
+            <label>Código Paciente:</label>
+            <input type="text" th:field="*{codigoPaciente}" />
+        </div>
+        <div>
+            <label>Nombre:</label>
+            <input type="text" th:field="*{nombre}" />
+        </div>
+        <div>
+            <label>Apellido:</label>
+            <input type="text" th:field="*{apellido}" />
+        </div>
+        <div>
+            <label>Número:</label>
+            <input type="text" th:field="*{numero}" />
+        </div>
+        <div>
+            <label>Dirección:</label>
+            <input type="text" th:field="*{direccion}" />
+        </div>
+        <div>
+            <label>Estado:</label>
+            <input type="text" th:field="*{estado}" />
+        </div>
+        <button type="submit" class="btn">Guardar Paciente</button>
+    </form>
+</div>
+</html>

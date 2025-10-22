@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Sistema de Gestión - Polimorfismos</title>
+    <style>
+        body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f9f9f9; }
+        .container { max-width: 1000px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .menu { background-color: #333; padding: 15px 30px; }
+        .menu a { color: white; margin-right: 20px; text-decoration: none; font-weight: bold; }
+        .menu a:hover { text-decoration: underline; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .btn { display: inline-block; padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
+        .btn:hover { background-color: #0056b3; }
+        form div { margin-bottom: 15px; }
+        form label { display: block; margin-bottom: 5px; font-weight: bold; }
+        form input[type="text"], form input[type="date"], form input[type="password"], form select { width: 100%; padding: 8px; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    
+    <nav class="menu">
+        <a th:href="@{/}">Inicio</a>
+        <a th:href="@{/pacientes/list}">Pacientes</a>
+        <a th:href="@{/crfs/list}">CRFs</a>
+        <a th:href="@{/usuarios/list}">Usuarios</a>
+        <a th:href="@{/campos/list}">Campos</a>
+        <a th:href="@{/registros/list}">Logs</a>
+    </nav>
+
+    <div class="container">
+        <div th:replace="~{this :: contenido}">
+            <p>El contenido de la página va aquí...</p>
+        </div>
+    </div>
+
+</body>
+</html>

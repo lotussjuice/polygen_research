@@ -38,4 +38,44 @@ public class RegistroActividad {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "Usuario_ID", nullable = false)
     private Usuario usuario;
+
+    public Integer getIdRegistro() {
+        return idRegistro;
+    }
+
+    public void setIdRegistro(Integer idRegistro) {
+        this.idRegistro = idRegistro;
+    }
+
+    public LocalDate getFechaActividad() {
+        return fechaActividad;
+    }
+
+    public void setFechaActividad(LocalDate fechaActividad) {
+        this.fechaActividad = fechaActividad;
+    }
+
+    public String getTipoActividad() {
+        return tipoActividad;
+    }
+
+    public void setTipoActividad(String tipoActividad) {
+        this.tipoActividad = tipoActividad;
+    }
+
+    public Crf getCrf() {
+        return crf;
+    }
+
+    public void setCrf(Crf crf) {
+        this.crf = crf;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
 }

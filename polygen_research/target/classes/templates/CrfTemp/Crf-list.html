@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+<div th:fragment="contenido">
+    <h1>Lista de CRFs</h1>
+    <a th:href="@{/crfs/nuevo}" class="btn">Registrar Nuevo CRF</a>
+    <table>
+        <thead>
+            <tr>
+                <th>ID CRF</th>
+                <th>Paciente (Código)</th>
+                <th>Grupo</th>
+                <th>Fecha Consulta</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="c : ${crfs}">
+                <td th:text="${c.idCrf}">...</td>
+                <td th:text="${c.datosPaciente?.codigoPaciente}">...</td>
+                <td th:text="${c.grupo}">...</td>
+                <td th:text="${c.fechaConsulta}">...</td>
+                <td th:text="${c.estado}">...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+</html>

@@ -44,4 +44,52 @@ public class Usuario {
     // --- Relación Inversa (Uno-a-Muchos) con RegistroActividad ---
     @OneToMany(mappedBy = "usuario")
     private List<RegistroActividad> registrosActividad;
+
+    public Integer getIdUsuario() {
+        return idUsuario;
+    }
+
+    public void setIdUsuario(Integer idUsuario) {
+        this.idUsuario = idUsuario;
+    }
+
+    public String getNombreUsuario() {
+        return nombreUsuario;
+    }
+
+    public void setNombreUsuario(String nombreUsuario) {
+        this.nombreUsuario = nombreUsuario;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
+    }
+
+    public RolUsuario getRolUsuario() {
+        return rolUsuario;
+    }
+
+    public void setRolUsuario(RolUsuario rolUsuario) {
+        this.rolUsuario = rolUsuario;
+    }
+
+    public Whitelist getWhitelist() {
+        return whitelist;
+    }
+
+    public void setWhitelist(Whitelist whitelist) {
+        this.whitelist = whitelist;
+    }
+
+    public List<RegistroActividad> getRegistrosActividad() {
+        return registrosActividad;
+    }
+
+    public void setRegistrosActividad(List<RegistroActividad> registrosActividad) {
+        this.registrosActividad = registrosActividad;
+    }
 }

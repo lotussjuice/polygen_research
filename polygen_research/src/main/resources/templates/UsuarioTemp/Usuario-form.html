@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+<div th:fragment="contenido">
+    <h1>Formulario de Usuario</h1>
+    <form th:action="@{/usuarios/guardar}" th:object="${usuario}" method="POST">
+        
+        <div>
+            <label>Nombre de Usuario:</label>
+            <input type="text" th:field="*{nombreUsuario}" />
+        </div>
+        
+        <div>
+            <label>Rol:</label>
+            <select th:field="*{rolUsuario}">
+                <option value="">Seleccione un rol...</option>
+                <option th:each="r : ${roles}" 
+                        th:value="${r.idRol}" 
+                        th:text="${r.nombreRol}"></option>
+            </select>
+        </div>
+        
+        <div>
+            <label>Estado:</label>
+            <input type="text" th:field="*{estado}" />
+        </div>
+        
+        <button type="submit" class="btn">Guardar Usuario</button>
+    </form>
+</div>
+</html>

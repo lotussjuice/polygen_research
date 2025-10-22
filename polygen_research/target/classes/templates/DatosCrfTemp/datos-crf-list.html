@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+<div th:fragment="contenido">
+    <h1>Lista de Datos (Valores)</h1>
+    <a th:href="@{/datos-crf/nuevo}" class="btn">Registrar Nuevo Dato</a>
+    <table>
+        <thead>
+            <tr>
+                <th>ID Detalle</th>
+                <th>ID CRF</th>
+                <th>Campo (Variable)</th>
+                <th>Valor</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="d : ${datos}">
+                <td th:text="${d.idDetalle}">...</td>
+                <td th:text="${d.crf?.idCrf}">...</td> 
+                <td th:text="${d.campoCrf?.nombre}">...</td>
+                <td th:text="${d.valor}">...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+</html>

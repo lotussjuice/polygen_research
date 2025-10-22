@@ -25,7 +25,7 @@ public class DatosCrfController {
     public String listarDatos(Model model) {
         List<DatosCrf> listaDatos = datosCrfService.getAllDatosCrf();
         model.addAttribute("datos", listaDatos);
-        return "datos-crf-list";
+        return "DatosCrfTemp/datos-crf-list";
     }
 
     @GetMapping("/nuevo")
@@ -33,7 +33,7 @@ public class DatosCrfController {
         model.addAttribute("dato", new DatosCrf());
         model.addAttribute("crfs", crfService.getAllCrfs());
         model.addAttribute("campos", campoCrfService.getAllCampos());
-        return "datos-crf-form";
+        return "DatosCrfTemp/datos-crf-form";
     }
 
     @PostMapping("/guardar")

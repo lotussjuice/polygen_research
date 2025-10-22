@@ -19,13 +19,13 @@ public class DatosPacienteController {
     public String listarPacientes(Model model) {
         List<DatosPaciente> listaPacientes = pacienteService.getAllPacientes();
         model.addAttribute("pacientes", listaPacientes);
-        return "paciente-list";
+        return "DatosPacienteTemp/paciente-list";
     }
 
     @GetMapping("/nuevo")
     public String mostrarFormularioDeNuevoPaciente(Model model) {
         model.addAttribute("paciente", new DatosPaciente());
-        return "paciente-form";
+        return "DatosPacienteTemp/paciente-form";
     }
 
     @PostMapping("/guardar")

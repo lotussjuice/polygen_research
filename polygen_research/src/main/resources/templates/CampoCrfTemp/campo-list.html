@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+<div th:fragment="contenido">
+    <h1>Lista de Campos (Variables)</h1>
+    <a th:href="@{/campos/nuevo}" class="btn">Registrar Nuevo Campo</a>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre (Variable)</th>
+                <th>Tipo</th>
+                <th>Activo</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="c : ${campos}">
+                <td th:text="${c.idCampo}">...</td>
+                <td th:text="${c.nombre}">...</td>
+                <td th:text="${c.tipo}">...</td>
+                <td th:text="${c.activo}">...</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+</html>

@@ -29,4 +29,18 @@ public class RolUsuario {
     // Un Rol puede tener MUCHOS Usuarios.
     @OneToMany(mappedBy = "rolUsuario")
     private List<Usuario> usuarios;
+
+    public String getNombreRol() {
+        return nombreRol;
+    }
+
+    public void setNombreRol(String nombreRol) {
+        this.nombreRol = nombreRol;
+    }
+
+    // You might need to add getters/setters for idRol and usuarios too if Thymeleaf needs them
+    public Integer getIdRol() { return idRol; }
+    public void setIdRol(Integer idRol) { this.idRol = idRol; }
+    public List<Usuario> getUsuarios() { return usuarios; }
+    public void setUsuarios(List<Usuario> usuarios) { this.usuarios = usuarios; }
 }

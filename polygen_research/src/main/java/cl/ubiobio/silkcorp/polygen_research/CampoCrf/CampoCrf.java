@@ -37,4 +37,52 @@ public class CampoCrf {
     // Un Campo puede estar en MUCHOS registros de DatosCrf.
     @OneToMany(mappedBy = "campoCrf", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DatosCrf> datosCrfList;
+
+    public Integer getIdCampo() {
+        return idCampo;
+    }
+
+    public void setIdCampo(Integer idCampo) {
+        this.idCampo = idCampo;
+    }
+
+    public String getNombre() {
+        return nombre;
+    }
+
+    public void setNombre(String nombre) {
+        this.nombre = nombre;
+    }
+
+    public String getTipo() {
+        return tipo;
+    }
+
+    public void setTipo(String tipo) {
+        this.tipo = tipo;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
+    public Boolean getActivo() {
+        return activo;
+    }
+
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
+    }
+
+    public List<DatosCrf> getDatosCrfList() {
+        return datosCrfList;
+    }
+
+    public void setDatosCrfList(List<DatosCrf> datosCrfList) {
+        this.datosCrfList = datosCrfList;
+    }
 }

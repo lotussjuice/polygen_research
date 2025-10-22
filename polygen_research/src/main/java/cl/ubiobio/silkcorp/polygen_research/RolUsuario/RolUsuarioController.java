@@ -19,13 +19,13 @@ public class RolUsuarioController {
     public String listarRoles(Model model) {
         List<RolUsuario> listaRoles = rolUsuarioService.getAllRoles();
         model.addAttribute("roles", listaRoles);
-        return "rol-list";
+        return "RolUsuarioTemp/rol-list";
     }
 
     @GetMapping("/nuevo")
     public String mostrarFormularioDeNuevoRol(Model model) {
         model.addAttribute("rol", new RolUsuario());
-        return "rol-form";
+        return "RolUsuarioTemp/rol-form";
     }
 
     @PostMapping("/guardar")

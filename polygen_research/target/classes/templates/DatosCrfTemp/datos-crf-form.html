@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+<div th:fragment="contenido">
+    <h1>Formulario de Dato (Valor)</h1>
+    <form th:action="@{/datos-crf/guardar}" th:object="${dato}" method="POST">
+        
+        <div>
+            <label>Formulario (CRF):</label>
+            <select th:field="*{crf}">
+                <option value="">Seleccione un CRF...</option>
+                <option th:each="c : ${crfs}" 
+                        th:value="${c.idCrf}" 
+                        th:text="'ID: ' + ${c.idCrf} + ' (Paciente: ' + ${c.datosPaciente.codigoPaciente} + ')'"></option>
+            </select>
+        </div>
+
+        <div>
+            <label>Campo (Variable):</label>
+            <select th:field="*{crf}">
+                <option value="">Seleccione un CRF...</option>
+                <option th:each="c : ${crfs}" 
+                        th:value="${c.idCrf}" 
+                        th:text="'ID: ' + ${c.idCrf} + ' (Paciente: ' + ${c.datosPaciente?.codigoPaciente} + ')'"></option>
+            </select>
+        </div>
+
+        <div>
+            <label>Valor:</label>
+            <input type="text" th:field="*{valor}" />
+        </div>
+        
+        <button type="submit" class="btn">Guardar Dato</button>
+    </form>
+</div>
+</html>

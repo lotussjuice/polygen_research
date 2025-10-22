@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+<div th:fragment="contenido">
+    <h1>Formulario de Campo (Variable)</h1>
+    <form th:action="@{/campos/guardar}" th:object="${campo}" method="POST">
+        
+        <div>
+            <label>Nombre (Variable):</label>
+            <input type="text" th:field="*{nombre}" />
+        </div>
+        
+        <div>
+            <label>Tipo (ej. Numérico, Texto, Si/No):</label>
+            <input type="text" th:field="*{tipo}" />
+        </div>
+
+        <div>
+            <label>Descripción:</label>
+            <input type="text" th:field="*{descripcion}" />
+        </div>
+
+        <div>
+            <label>Activo:</label>
+            <input type="checkbox" th:field="*{activo}" />
+        </div>
+        
+        <button type="submit" class="btn">Guardar Campo</button>
+    </form>
+</div>
+</html>

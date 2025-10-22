@@ -4,6 +4,8 @@ import cl.ubiobio.silkcorp.polygen_research.Usuario.UsuarioService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
 
 @Controller
 @RequestMapping("/whitelist")
@@ -17,16 +19,23 @@ public class WhitelistController {
         this.usuarioService = usuarioService;
     }
 
-    @GetMapping("/registrar")
+    @GetMapping("/list")
+    public String listarCredenciales(Model model) {
+        List<Whitelist> listaCredenciales = whitelistService.getAllCredenciales();
+        model.addAttribute("credenciales", listaCredenciales);
+        return "WhitelistTemp/whitelist-list";
+    }
+
+    @GetMapping("/nuevo")
     public String mostrarFormularioDeRegistro(Model model) {
         model.addAttribute("credencial", new Whitelist());
         model.addAttribute("usuarios", usuarioService.getAllUsuarios());
-        return "whitelist-form";
+        return "WhitelistTemp/whitelist-form";
     }
 
     @PostMapping("/guardar")
     public String guardarCredencial(@ModelAttribute Whitelist credencial) {
         whitelistService.saveCredencial(credencial);
-        return "redirect:/usuarios/list";
+        return "redirect:/whitelist/list";
     }
 }

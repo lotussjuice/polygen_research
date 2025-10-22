@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+<div th:fragment="contenido">
+    <h1>Formulario de CRF</h1>
+    <form th:action="@{/crfs/guardar}" th:object="${crf}" method="POST">
+        
+        <div>
+            <label>Paciente:</label>
+            <select th:field="*{datosPaciente}">
+                <option value="">Seleccione un paciente...</option>
+                <option th:each="p : ${pacientes}" 
+                        th:value="${p.idPaciente}" 
+                        th:text="${p.codigoPaciente} + ' - ' + ${p.nombre}"></option>
+            </select>
+        </div>
+        
+        <div>
+            <label>Grupo:</label>
+            <input type="text" th:field="*{grupo}" />
+        </div>
+        <div>
+            <label>Fecha Consulta:</label>
+            <input type="date" th:field="*{fechaConsulta}" />
+        </div>
+        <div>
+            <label>Estado:</label>
+            <input type="text" th:field="*{estado}" />
+        </div>
+        <div>
+            <label>Observación:</label>
+            <input type="text" th:field="*{observacion}" />
+        </div>
+        
+        <button type="submit" class="btn">Guardar CRF</button>
+    </form>
+</div>
+</html>

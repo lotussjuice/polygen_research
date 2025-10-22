@@ -31,4 +31,36 @@ public class Whitelist {
     @OneToOne
     @JoinColumn(name = "Usuario_ID", referencedColumnName = "ID_Usuario", unique = true)
     private Usuario usuario;
+
+    public Integer getIdLista() {
+        return idLista;
+    }
+
+    public void setIdLista(Integer idLista) {
+        this.idLista = idLista;
+    }
+
+    public String getCorreo() {
+        return correo;
+    }
+
+    public void setCorreo(String correo) {
+        this.correo = correo;
+    }
+
+    public String getContrasena() {
+        return contrasena;
+    }
+
+    public void setContrasena(String contrasena) {
+        this.contrasena = contrasena;
+    }
+
+    public Usuario getUsuario() {
+        return usuario;
+    }
+
+    public void setUsuario(Usuario usuario) {
+        this.usuario = usuario;
+    }
 }

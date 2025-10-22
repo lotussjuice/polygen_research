@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+
+<div th:fragment="contenido">
+
+    <h1>Lista de Pacientes</h1>
+    <a th:href="@{/pacientes/nuevo}" class="btn">Registrar Nuevo Paciente</a>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="p : ${pacientes}">
+                <td th:text="${p.idPaciente}">...</td>
+                <td th:text="${p.codigoPaciente}">...</td>
+                <td th:text="${p.nombre}">...</td>
+                <td th:text="${p.apellido}">...</td>
+                <td th:text="${p.estado}">...</td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+</html>

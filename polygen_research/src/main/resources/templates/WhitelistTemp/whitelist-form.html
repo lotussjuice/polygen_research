@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+<div th:fragment="contenido">
+    <h1>Formulario de Credencial</h1>
+    <form th:action="@{/whitelist/guardar}" th:object="${credencial}" method="POST">
+        
+        <div>
+            <label>Correo (Login):</label>
+            <input type="text" th:field="*{correo}" />
+        </div>
+        
+        <div>
+            <label>Contraseña:</label>
+            <input type="password" th:field="*{contrasena}" />
+        </div>
+
+        <div>
+            <label>Usuario Asociado:</label>
+            <select th:field="*{usuario}">
+                <option value="">Seleccione un usuario...</option>
+                <option th:each="u : ${usuarios}" 
+                        th:value="${u.idUsuario}" 
+                        th:text="${u.nombreUsuario}"></option>
+            </select>
+        </div>
+        
+        <button type="submit" class="btn">Guardar Credencial</button>
+    </form>
+</div>
+</html>

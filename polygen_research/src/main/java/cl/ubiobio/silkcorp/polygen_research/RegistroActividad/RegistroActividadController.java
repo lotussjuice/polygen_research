@@ -20,6 +20,6 @@ public class RegistroActividadController {
     public String listarRegistros(Model model) {
         List<RegistroActividad> listaRegistros = registroService.getAllRegistros();
         model.addAttribute("registros", listaRegistros);
-        return "registro-list";
+        return "RegistroActividadTemp/registro-list";
     }
 }
