@@ -5,10 +5,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class MainController {
-
-    @GetMapping("/")
+    @GetMapping("/inicio") // <-- CAMBIA ESTO
     public String mostrarInicio() {
-        // Esto buscará el archivo /resources/templates/inicio.html
+
         return "inicio";
     }
 }
