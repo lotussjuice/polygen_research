@@ -2,6 +2,7 @@ package cl.ubiobio.silkcorp.polygen_research.DataBase.Crf; // O el paquete que c
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -105,5 +106,9 @@ public class CrfService {
     public List<Crf> getAllCrfs() {
         // Simplemente llama al método findAll() del repositorio de Crf
         return crfRepository.findAll();
+    }
+
+    public Optional<Crf> getCrfById(Integer id) {
+        return crfRepository.findById(id);
     }
 }

@@ -38,7 +38,7 @@ public class AuthController {
     // Show Login Page
     @GetMapping("/login")
     public String showLoginPage() {
-        return "login";
+        return "startpoint/login";
     }
 
     // Show Registration Page
@@ -50,7 +50,7 @@ public class AuthController {
         List<RolUsuario> roles = rolUsuarioService.getAllRoles();
         model.addAttribute("roles", roles);
         // Corresponds to /resources/templates/register.html
-        return "register";
+        return "startpoint/register";
     }
 
     // Process Registration Form

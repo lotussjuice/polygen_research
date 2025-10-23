@@ -1,39 +1,112 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Sistema de Gestión - Polimorfismos</title>
-    <style>
-        body { font-family: sans-serif; margin: 0; padding: 0; background-color: #f9f9f9; }
-        .container { max-width: 1000px; margin: 20px auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .menu { background-color: #333; padding: 15px 30px; }
-        .menu a { color: white; margin-right: 20px; text-decoration: none; font-weight: bold; }
-        .menu a:hover { text-decoration: underline; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 10px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .btn { display: inline-block; padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; }
-        .btn:hover { background-color: #0056b3; }
-        form div { margin-bottom: 15px; }
-        form label { display: block; margin-bottom: 5px; font-weight: bold; }
-        form input[type="text"], form input[type="date"], form input[type="password"], form select { width: 100%; padding: 8px; box-sizing: border-box; }
-    </style>
-</head>
-<body>
+    <title>DataClinic - Polygen Research</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
-    <nav class="menu">
-        <a th:href="@{/}">Inicio</a>
-        <a th:href="@{/pacientes/list}">Pacientes</a>
-        <!--<a th:href="@{/crf/list}">CRFs</a>-->
-        <a th:href="@{/usuarios/list}">Usuarios</a>
-        <a th:href="@{/campos/list}">Campos</a>
-        <a th:href="@{/registros/list}">Logs</a>
-    </nav>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <link rel="stylesheet" th:href="@{/css/styles.css}" />
+</head>
+<body class="">
 
-    <div class="container">
-        <div th:replace="~{this :: contenido}">
-            <p>El contenido de la página va aquí...</p>
-        </div>
+    <div id="app-wrapper">
+        
+        <aside id="sidebar" th:fragment="sidebar">
+            <div class="sidebar-header">
+                <i class="ph-bold ph-first-aid-kit"></i>
+                <h1>Polygen Research - SilkCorp</h1>
+            </div>
+            <nav>
+                <ul>
+                    <li><a th:href="@{/inicio}" class="nav-link"><i class="ph-bold ph-house"></i> Inicio (Pacientes)</a></li>
+                    <!-- <li><a th:href="@{/crfs/list}" class="nav-link"><i class="ph-bold ph-clipboard-text"></i> Gestión de CRFs</a></li> !-->
+                    <li><a th:href="@{/campos/list}" class="nav-link"><i class="ph-bold ph-pencil-simple"></i> Gestión de Campos</a></li>
+                    <li><a th:href="@{/datos-crf/list}" class="nav-link"><i class="ph-bold ph-chart-line"></i> Ver Datos (Valores)</a></li>
+                    <li><a th:href="@{/usuarios/list}" class="nav-link"><i class="ph-bold ph-user-gear"></i> Adm. Usuarios</a></li>
+                    <li><a th:href="@{/roles/list}" class="nav-link"><i class="ph-bold ph-identification-badge"></i> Adm. Roles</a></li>
+                    <li><a th:href="@{/whitelist/list}" class="nav-link"><i class="ph-bold ph-shield-check"></i> Adm. Credenciales</a></li>
+                    <li><a th:href="@{/registros/list}" class="nav-link"><i class="ph-bold ph-archive"></i> Logs de Actividad</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <p><i class="ph-fill ph-lock-simple"></i> Conexión Segura (Cifrado)</p>
+            </div>
+        </aside>
+
+        <main id="main-content">
+            
+            <header id="app-header" th:fragment="header">
+                 <div class="header-left">
+                     <button class="menu-toggle" onclick="toggleMenu()">
+                         <i class="ph-bold ph-list"></i>
+                     </button>
+                     <button onclick="alert('Función DESHACER (simulada)')" title="Deshacer"  ><i class="ph-bold ph-arrow-counter-clockwise"></i></button>
+                     <button onclick="alert('Función REHACER (simulada)')" title="Rehacer"><i class="ph-bold ph-arrow-clockwise"></i></button>
+                     <span id="save-status"><i class="ph-fill ph-check-circle"></i> Autoguardado...</span>
+                 </div>
+                 <div class="header-right">
+                    <button class="icon-btn" onclick="mostrarNotificaciones()" title="Notificaciones">
+                        <i class="ph-bold ph-bell"></i>
+                        <span class="notification-dot"></span>
+                    </button>
+                    <div class="profile-menu">
+                        <img src="https://i.pravatar.cc/150?img=12" alt="Avatar">
+                        <span>Usuario</span> 
+                    </div>
+                 </div>
+            </header>
+
+            <div id="page-container">
+                
+                <div th:replace="~{this :: contenido}">
+                    <p>El contenido de la página va aquí...</p>
+                </div>
+
+            </div>
+
+        </main>
     </div>
 
+    <script th:src="@{/js/app-logic.js}"></script>
+
+    <div id="modal-ver-paciente" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modal-patient-id">Detalles del Paciente</h2>
+          <span class="close-modal" onclick="cerrarModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+          <div class="patient-data-grid">
+            <strong>Código:</strong> <span id="modal-pac-codigo"></span>
+            <strong>Nombre:</strong> <span id="modal-pac-nombre"></span>
+            <strong>Apellido:</strong> <span id="modal-pac-apellido"></span>
+            <strong>Estado:</strong> <span id="modal-pac-estado"></span>
+            <strong>Número:</strong> <span>(Añadir ID y JS si es necesario)</span>
+            <strong>Dirección:</strong> <span>(Añadir ID y JS si es necesario)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-ver-crf" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modal-crf-titulo">Detalles del CRF</h2>
+          <span class="close-modal" onclick="cerrarModalCrf()">&times;</span>
+        </div>
+        <div class="modal-body">
+           <div class="patient-data-grid"> <strong>ID CRF:</strong> <span id="modal-crf-id"></span>
+            <strong>Paciente (Código):</strong> <span id="modal-crf-paciente"></span>
+            <strong>Grupo:</strong> <span id="modal-crf-grupo"></span>
+            <strong>Fecha Consulta:</strong> <span id="modal-crf-fecha"></span>
+            <strong>Estado:</strong> <span id="modal-crf-estado"></span>
+            <strong>Observación:</strong> <span id="modal-crf-obs"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script th:src="@{/js/app-logic.js}"></script>
 </body>
 </html>

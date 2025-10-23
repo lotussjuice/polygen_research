@@ -1,5 +1,6 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -32,5 +33,13 @@ public class DatosPacienteController {
     public String guardarPaciente(@ModelAttribute DatosPaciente paciente) {
         pacienteService.savePaciente(paciente);
         return "redirect:/pacientes/list";
+    }
+
+    @GetMapping("/api/paciente/{id}") // Nueva ruta para la API
+    @ResponseBody // Indica que la respuesta es JSON, no un nombre de template
+    public ResponseEntity<DatosPaciente> getPacienteByIdApi(@PathVariable Integer id) {
+        return pacienteService.getPacienteById(id)
+                .map(ResponseEntity::ok) // Si lo encuentra, devuelve 200 OK con el paciente
+                .orElse(ResponseEntity.notFound().build()); // Si no, devuelve 404 Not Found
     }
 }

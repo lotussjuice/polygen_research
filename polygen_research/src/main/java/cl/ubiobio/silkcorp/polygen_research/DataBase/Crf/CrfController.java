@@ -1,13 +1,17 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.Crf; // O el paquete que corresponda
 
+import org.springframework.http.ResponseEntity;
+
 //import java.util.List;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfForm;
 
@@ -34,7 +38,7 @@ public class CrfController {
         CrfForm form = crfService.prepararNuevoCrfForm();
         
         model.addAttribute("crfForm", form);
-        return "crf-form"; // El nombre de tu archivo HTML de Thymeleaf
+        return "dev/CrfTemp/crf-form"; // El nombre de tu archivo HTML de Thymeleaf
     }
 
     /**
@@ -61,6 +65,15 @@ public class CrfController {
     }
 
 
+    @GetMapping("/api/crf/{id}") // Nueva ruta para la API
+    @ResponseBody
+    public ResponseEntity<Crf> getCrfByIdApi(@PathVariable Integer id) {
+        // Asumiendo que tienes un método getCrfById en tu CrfService
+        return crfService.getCrfById(id) // Necesitas crear este método en CrfService si no existe
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     /*
     @GetMapping("/list")
     public String listarTodosLosCrfs(Model model) {
@@ -74,10 +87,5 @@ public class CrfController {
         // 3. Devuelve el nombre del nuevo archivo HTML que crearemos
         return "crf-list";
     }
-
     */
 }
-
-
-
-    // return "redirect:/crfs/list";

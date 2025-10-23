@@ -1,0 +1,575 @@
+/* --- 1. Configuración General y Variables --- */
+:root {
+    --color-primario: #005a9c;
+    --color-secundario: #00a8e8;
+    --color-fondo: #f4f7fa;
+    --color-tarjeta: #ffffff;
+    --color-texto: #333333;
+    --color-texto-secundario: #666;
+    --color-borde: #dde3e8;
+    --color-exito: #28a745;
+    --color-error: #dc3545;
+    --color-aviso: #ffc107;
+    --sombra-tarjeta: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.dark-mode {
+    --color-primario: #007bff;
+    --color-secundario: #17a2b8;
+    --color-fondo: #121212;
+    --color-tarjeta: #1e1e1e;
+    --color-texto: #e0e0e0;
+    --color-texto-secundario: #a0a0a0;
+    --color-borde: #333;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+    transition: background-color 0.3s, color 0.3s;
+    overflow-x: hidden;
+}
+
+/* --- 2. Página de Login (Historia: Login, Recuperar Contraseña, Crear Cuenta) --- */
+#pagina-login {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
+}
+
+.login-container {
+    background-color: var(--color-tarjeta);
+    padding: 2.5rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+}
+
+.login-container h2 {
+    margin-bottom: 1.5rem;
+    color: var(--color-primario);
+}
+
+.form-group {
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--color-borde);
+    border-radius: 8px;
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+}
+
+.btn-primario {
+    width: 100%;
+    padding: 0.85rem;
+    border: none;
+    border-radius: 8px;
+    background-color: var(--color-primario);
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    text-decoration: none; /* Añadido para <a> tags */
+    display: inline-block; /* Añadido para <a> tags */
+    text-align: center; /* Añadido para <a> tags */
+}
+
+.btn-primario:hover {
+    background-color: #004578;
+}
+
+.login-links {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+}
+
+.login-links a {
+    color: var(--color-secundario);
+    text-decoration: none;
+}
+.login-links a:hover {
+    text-decoration: underline;
+}
+
+/* --- 3. Contenedor Principal de la App (Post-Login) --- */
+#app-wrapper {
+    display: flex; /* Cambiado de 'none' a 'flex' */
+    height: 100vh;
+}
+
+/* --- 4. Barra Lateral (Historia: Menú desplegable) --- */
+#sidebar {
+    width: 260px;
+    background-color: var(--color-tarjeta);
+    border-right: 1px solid var(--color-borde);
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease-in-out;
+    box-shadow: var(--sombra-tarjeta);
+    z-index: 100;
+    flex-shrink: 0; /* Evita que se encoja */
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 2rem;
+}
+.sidebar-header i {
+    font-size: 2.5rem;
+    color: var(--color-primario);
+}
+.sidebar-header h1 {
+    font-size: 1.5rem;
+    color: var(--color-texto);
+}
+
+#sidebar nav ul {
+    list-style: none;
+    flex-grow: 1;
+}
+
+#sidebar nav li {
+    margin-bottom: 0.5rem;
+}
+
+#sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 0.85rem 1rem;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--color-texto-secundario);
+    font-weight: 500;
+    transition: background-color 0.2s, color 0.2s;
+}
+#sidebar nav a i {
+    font-size: 1.3rem;
+}
+#sidebar nav a:hover,
+#sidebar nav a.active {
+    background-color: var(--color-primario);
+    color: white;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    font-size: 0.8rem;
+    color: #999;
+}
+.sidebar-footer i {
+    color: var(--color-exito);
+    vertical-align: middle;
+}
+
+/* --- 5. Contenido Principal --- */
+#main-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    height: 100vh;
+}
+
+/* 5.1 Encabezado Superior */
+#app-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background-color: var(--color-tarjeta);
+    border-bottom: 1px solid var(--color-borde);
+    min-height: 70px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.header-left button {
+    background: none;
+    border: 1px solid var(--color-borde);
+    border-radius: 6px;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: var(--color-texto-secundario);
+}
+.header-left button:hover {
+    background-color: var(--color-fondo);
+}
+.header-left button i {
+    font-size: 1.2rem;
+    display: block;
+}
+#save-status {
+    font-size: 0.875rem;
+    color: var(--color-texto-secundario);
+    opacity: 0;
+    transition: opacity 0.5s;
+}
+#save-status.visible {
+    opacity: 1;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+.header-right .icon-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--color-texto-secundario);
+    position: relative;
+}
+.header-right .icon-btn .notification-dot {
+    height: 8px;
+    width: 8px;
+    background-color: var(--color-error);
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+.profile-menu {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+}
+.profile-menu img {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+.profile-menu span {
+    font-weight: 600;
+}
+
+/* 5.2 Contenedor de Páginas */
+#page-container {
+    padding: 2rem;
+    flex-grow: 1;
+}
+
+/* --- 6. Componentes Comunes (Tarjetas, Botones, Tablas) --- */
+.card {
+    background-color: var(--color-tarjeta);
+    border-radius: 12px;
+    border: 1px solid var(--color-borde);
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--sombra-tarjeta);
+}
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--color-borde);
+}
+.card-header h3 {
+    margin: 0;
+}
+
+.btn-secundario {
+    padding: 0.6rem 1rem;
+    border: 1px solid var(--color-borde);
+    border-radius: 8px;
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.btn-secundario:hover {
+    background-color: #e9ecef;
+}
+/* Añadido para que los botones primarios puedan ser más pequeños */
+.btn-primario.btn-sm, .btn-secundario.btn-sm {
+     padding: 0.6rem 1rem;
+     width: auto;
+}
+.btn-exito { background-color: var(--color-exito); color: white; border: none; }
+.btn-exito:hover { background-color: #218838; }
+.btn-error { background-color: var(--color-error); color: white; border: none; }
+.btn-error:hover { background-color: #c82333; }
+.btn-stata { background-color: #1a60ac; color: white; border: none; }
+.btn-stata:hover { background-color: #134a8a; }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+th, td {
+    text-align: left;
+    padding: 0.9rem;
+    border-bottom: 1px solid var(--color-borde);
+    vertical-align: middle;
+}
+th {
+    background-color: var(--color-fondo);
+    font-weight: 600;
+    color: var(--color-texto-secundario);
+    font-size: 0.875rem;
+}
+tr:hover {
+    background-color: var(--color-fondo);
+}
+.actions-cell button, .actions-cell a {
+    margin-right: 5px;
+    padding: 0.3rem 0.6rem;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+/* --- 7. Estilos de Páginas Específicas --- */
+
+/* Página: Formulario de Ingreso */
+#form-paciente {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+}
+#form-paciente .form-group {
+    margin-bottom: 0;
+}
+#form-paciente .full-width {
+    grid-column: 1 / -1;
+}
+
+#form-paciente .validation-error {
+    color: var(--color-error);
+    font-size: 0.8rem;
+    display: none;
+}
+#form-paciente input:invalid {
+    border-color: var(--color-error);
+}
+
+/* Página: Análisis (Historia: Cuantificación, Dicotomización) */
+.stats-container {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+.stat-box {
+    flex-grow: 1;
+    background-color: var(--color-fondo);
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid var(--color-borde);
+}
+.stat-box h4 {
+    color: var(--color-texto-secundario);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+.stat-box p {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primario);
+}
+
+/* Página: Pizarrón (Historia: Pizarrón digital) */
+#pizarron-digital {
+    width: 100%;
+    min-height: 400px;
+    border: 1px solid var(--color-borde);
+    border-radius: 8px;
+    padding: 1rem;
+    background-color: var(--color-tarjeta);
+}
+
+/* Página: Configuración (Historia: Personalización, Datos personales) */
+.config-opcion {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0;
+}
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .4s;
+    border-radius: 28px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .slider {
+    background-color: var(--color-primario);
+}
+input:checked + .slider:before {
+    transform: translateX(22px);
+}
+
+/* --- 8. Modal (Pop-up) --- */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+}
+.modal-content {
+    background-color: var(--color-tarjeta);
+    margin: 10% auto;
+    padding: 2rem;
+    border: 1px solid var(--color-borde);
+    border-radius: 12px;
+    width: 80%;
+    max-width: 700px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--color-borde);
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+.modal-header h2 {
+    margin: 0;
+}
+.close-modal {
+    color: var(--color-texto-secundario);
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+.close-modal:hover {
+    color: var(--color-texto);
+}
+.patient-data-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1rem;
+}
+.patient-data-grid strong {
+    color: var(--color-texto-secundario);
+}
+
+/* --- 9. Responsividad --- */
+@media (max-width: 768px) {
+    #sidebar {
+        position: absolute;
+        transform: translateX(-100%);
+        height: 100%;
+    }
+    #sidebar.open {
+        transform: translateX(0);
+    }
+    #app-wrapper {
+        flex-direction: column;
+    }
+    #main-content {
+        width: 100%;
+    }
+    #page-container {
+        padding: 1rem;
+    }
+    .grid-2 {
+        grid-template-columns: 1fr;
+    }
+    .header-left .menu-toggle {
+        display: block;
+    }
+    .profile-menu span {
+        display: none;
+    }
+    .modal-content {
+        width: 95%;
+        margin: 5% auto;
+    }
+    
+    /* --- 10. Estilos de Alertas y Mensajes --- */
+.alert {
+    padding: 1rem;
+    margin-bottom: 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    border: 1px solid transparent;
+}
+
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+}
+
+.alert-error {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+}
+}

@@ -4,6 +4,8 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @Service
 public class RolUsuarioService {
 
@@ -13,6 +15,7 @@ public class RolUsuarioService {
         this.rolUsuarioRepository = rolUsuarioRepository;
     }
 
+    @Transactional(readOnly = true) // <-- Asegúrate que esté aquí
     public List<RolUsuario> getAllRoles() {
         return rolUsuarioRepository.findAll();
     }
