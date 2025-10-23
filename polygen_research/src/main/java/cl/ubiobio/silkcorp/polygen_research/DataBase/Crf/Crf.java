@@ -1,16 +1,27 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.Crf;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import java.time.LocalDate; // Usamos LocalDate para fechas, es más moderno
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosCrf.DatosCrf;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPaciente;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.RegistroActividad.RegistroActividad;
+import jakarta.persistence.CascadeType; // Usamos LocalDate para fechas, es más moderno
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter; // <-- ¡ESTE FALTABA!
 
 @Entity
 @Table(name = "crf")
@@ -28,8 +39,14 @@ public class Crf {
     @Column(name = "Grupo", length = 30)
     private String grupo;
 
+    //@Column(name = "Fecha_consulta")
+    //private LocalDate fechaConsulta; // Mapea a 'date' en MySQL
     @Column(name = "Fecha_consulta")
-    private LocalDate fechaConsulta; // Mapea a 'date' en MySQL
+    private LocalDate fechaConsulta = LocalDate.now();
+
+
+
+
 
     @Column(name = "Estado", length = 20)
     private String estado;
@@ -42,9 +59,16 @@ public class Crf {
     @JoinColumn(name = "Datos_Paciente_ID", nullable = false)
     private DatosPaciente datosPaciente;
 
-    // Un CRF tiene MUCHOS datos_crf
-    @OneToMany(mappedBy = "crf")
-    private List<DatosCrf> datosCrfList;
+    // --- Relación con las Respuestas ---
+    // ¡ESTA ANOTACIÓN ES LA CLAVE DE TODO!
+    // 'mappedBy = "crf"' -> Le dice a JPA que la entidad 'DatosCRF' maneja la FK (en su campo 'crf')
+    // 'cascade = CascadeType.ALL' -> Le dice "Guarda, actualiza o borra mis 'DatosCRF' cuando yo me guarde"
+    @OneToMany(
+        mappedBy = "crf", 
+        cascade = CascadeType.ALL, 
+        orphanRemoval = true
+    )
+    private List<DatosCrf> datosCrfList = new ArrayList<>();;
 
     // Un CRF tiene MUCHOS registros_actividad
     @OneToMany(mappedBy = "crf")
@@ -113,4 +137,13 @@ public class Crf {
     public void setRegistrosActividad(List<RegistroActividad> registrosActividad) {
         this.registrosActividad = registrosActividad;
     }
+
+    public void addDato(DatosCrf dato) {
+        // 1. Agrega la respuesta a la lista de este CRF
+        datosCrfList.add(dato);
+        
+        // 2. Establece la relación inversa (le dice a la respuesta quién es su "padre" Crf)
+        dato.setCrf(this);
+    }
+
 }

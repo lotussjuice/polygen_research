@@ -1,12 +1,20 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.DatosCrf;
 
-import cl.ubiobio.silkcorp.polygen_research.DataBase.Crf.Crf;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.CampoCrf.CampoCrf;
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.Crf.Crf;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "datos_crf")
@@ -18,20 +26,20 @@ public class DatosCrf {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID_detalle")
+    @Column(name = "id_detalle")
     private Integer idDetalle;
 
-    @Column(name = "Valor", length = 30)
+    @Column(name = "valor", length = 30)
     private String valor;
 
     // --- Clave Foránea (Relación N-a-1) a Crf ---
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "CRF_ID", nullable = false)
+    @JoinColumn(name = "crf_id", nullable = false)
     private Crf crf;
 
     // --- Clave Foránea (Relación N-a-1) a CampoCrf ---
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "Campo_CRF_ID", nullable = false)
+    @JoinColumn(name = "campo_crf_id", nullable = false)
     private CampoCrf campoCrf;
 
     public Integer getIdDetalle() {

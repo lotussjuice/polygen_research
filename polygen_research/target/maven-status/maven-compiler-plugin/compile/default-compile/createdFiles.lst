@@ -1,2 +1,3 @@
 cl\ubiobio\silkcorp\polygen_research\PolygenResearchApplication.class
 cl\ubiobio\silkcorp\polygen_research\MainController.class
+cl\ubiobio\silkcorp\polygen_research\DataBase\dto\CrfForm.class
