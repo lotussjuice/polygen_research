@@ -2,28 +2,50 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Iniciar Sesión</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
-    </head>
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
 <body id="pagina-login">
-    <div class="login-container">
-        <h1>Iniciar Sesión</h1>
 
-        <div th:if="${param.error}" class="alert alert-error"> Correo o contraseña inválidos.
+    <div class="login-container">
+        
+        <div class="sidebar-header" style="margin-bottom: 1.5rem; justify-content: center;">
+            <i class="ph-bold ph-first-aid-kit" style="font-size: 2rem;"></i>
+            <h1 style="font-size: 1.5rem;">Polygen Research</h1>
         </div>
-        <div th:if="${param.logout}" class="alert alert-success"> Has cerrado sesión correctamente.
+
+        <h2 style="margin-bottom: 1.5rem; font-weight: 600; color: var(--color-texto-secundario);">Iniciar Sesión</h2>
+
+        <div th:if="${param.error}" class="alert alert-error" style="margin-bottom: 1rem;">
+            Correo o contraseña inválidos.
         </div>
-        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div> <form th:action="@{/login}" method="post">
-            <div class="form-group"> <label for="username">Correo Electrónico:</label>
-                <input type="text" id="username" name="username" required autofocus />
+        <div th:if="${param.logout}" class="alert alert-success" style="margin-bottom: 1rem;">
+            Has cerrado sesión correctamente.
+        </div>
+        <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: 1rem;" th:text="${successMessage}">
+        </div>
+
+        <form th:action="@{/login}" method="post" style="text-align: left;">
+            
+            <div class="form-group">
+                <label for="username">Correo Electrónico:</label>
+                <input type="text" id="username" name="username" class="form-control" required autofocus />
             </div>
-            <div class="form-group"> <label for="password">Contraseña:</label>
-                <input type="password" id="password" name="password" required />
+            
+            <div class="form-group">
+                <label for="password">Contraseña:</label>
+                <input type="password" id="password" name="password" class="form-control" required />
             </div>
-            <div>
-                 <button type="submit" class="btn-primario">Ingresar</button>
+            
+            <div style="margin-top: 1.5rem;">
+                 <button type="submit" class="btn-primario" style="width: 100%;">Ingresar</button>
             </div>
         </form>
-        <div class="login-links"> ¿No tienes cuenta? <a th:href="@{/register}">Regístrate aquí</a>
+        
+        <div class="login-links" style="margin-top: 1.5rem; font-size: 0.9rem; justify-content: center;">
+             <span>¿No tienes cuenta?</span>
+             <a th:href="@{/register}" style="margin-left: 5px;">Regístrate aquí</a>
         </div>
     </div>
 </body>

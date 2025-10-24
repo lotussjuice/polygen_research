@@ -1,25 +1,64 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+
 <div th:fragment="contenido">
-    <h1>Lista de Campos (Variables)</h1>
-    <a th:href="@{/campos/nuevo}" class="btn-primario">Registrar Nuevo Campo</a>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Nombre (Variable)</th>
-                <th>Tipo</th>
-                <th>Activo</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="c : ${campos}">
-                <td th:text="${c.idCampo}">...</td>
-                <td th:text="${c.nombre}">...</td>
-                <td th:text="${c.tipo}">...</td>
-                <td th:text="${c.activo}">...</td>
-            </tr>
-        </tbody>
-    </table>
+
+    <div class="card">
+        
+        <div class="card-header">
+            <h3><i class="ph-bold ph-pencil-simple"></i> Gestión de Campos (Variables)</h3>
+            <a th:href="@{/campos/nuevo}" class="btn-primario btn-sm">
+                <i class="ph-bold ph-plus"></i> Registrar Nuevo Campo
+            </a>
+        </div>
+
+        <div class="card-body">
+            
+            <div th:if="${#lists.isEmpty(campos)}" class="alert" style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
+                No hay campos (variables) registrados. Estos campos son las "preguntas" que aparecerán en el formulario CRF.
+            </div>
+
+            <table th:if="${!#lists.isEmpty(campos)}">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre (Variable)</th>
+                        <th>Tipo</th>
+                        <th>Descripción</th>
+                        <th>Estado</th>
+                        <th style="text-align: right; width: 150px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="c : ${campos}">
+                        <td th:text="${c.idCampo}">...</td>
+                        <td th:text="${c.nombre}">...</td>
+                        <td th:text="${c.tipo}">...</td>
+                        <td th:text="${c.descripcion}">...</td>
+                        
+                        <td>
+                            <span th:if="${c.activo}" style="color: var(--color-exito); font-weight: 600;">Activo</span>
+                            <span th:if="${!c.activo}" style="color: var(--color-texto-secundario);">Inactivo</span>
+                        </td>
+                        
+                        <td class="actions-cell" style="text-align: right;">
+                            
+                            <a th:href="@{/campos/editar/{id}(id=${c.idCampo})}" 
+                               class="btn-secundario btn-sm"
+                               title="Editar Campo">
+                                <i class="ph-bold ph-pencil-simple"></i>
+                            </a>
+                            
+                            <a th:href="@{/campos/desactivar/{id}(id=${c.idCampo})}" 
+                               class="btn-error btn-sm"
+                               title="Desactivar Campo">
+                                <i class="ph-bold ph-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 </html>

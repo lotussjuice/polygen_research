@@ -3,29 +3,59 @@
 
 <div th:fragment="contenido">
 
-    <h1>Lista de Pacientes</h1>
-    <a th:href="@{/crf/nuevo}" class="btn-primario">Crear Nuevo CRF</a>
+    <div class="card">
+        
+        <div class="card-header">
+            <h3><i class="ph-bold ph-users"></i> Lista de Pacientes</h3>
+            
+            <a th:href="@{/crf/nuevo}" class="btn-primario btn-sm">
+                <i class="ph-bold ph-plus"></i> Crear Nuevo CRF
+            </a>
+        </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Código</th>
-                <th>Nombre</th>
-                <th>Apellido</th>
-                <th>Estado</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="p : ${pacientes}">
-                <td th:text="${p.idPaciente}">...</td>
-                <td th:text="${p.codigoPaciente}">...</td>
-                <td th:text="${p.nombre}">...</td>
-                <td th:text="${p.apellido}">...</td>
-                <td th:text="${p.estado}">...</td>
-            </tr>
-        </tbody>
-    </table>
+        <div class="card-body">
+            
+            <div th:if="${#lists.isEmpty(pacientes)}" class="alert" style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
+                Aún no hay pacientes registrados. Puedes crear uno nuevo usando el formulario 'Crear Nuevo CRF'.
+            </div>
 
+            <table th:if="${!#lists.isEmpty(pacientes)}">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Código</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Estado</th>
+                        <th style="text-align: right; width: 150px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p : ${pacientes}">
+                        <td th:text="${p.idPaciente}">...</td>
+                        <td th:text="${p.codigoPaciente}">...</td>
+                        <td th:text="${p.nombre}">...</td>
+                        <td th:text="${p.apellido}">...</td>
+                        <td th:text="${p.estado}">...</td>
+                        
+                        <td class="actions-cell" style="text-align: right;">
+                            
+                            <button th:onclick="|verPaciente(${p.idPaciente})|" 
+                                    class="btn-secundario btn-sm" 
+                                    title="Ver Detalles">
+                                <i class="ph-bold ph-eye"></i>
+                            </button>
+                            
+                            <a th:href="@{/pacientes/editar/{id}(id=${p.idPaciente})}" 
+                               class="btn-secundario btn-sm"
+                               title="Editar Paciente">
+                                <i class="ph-bold ph-pencil-simple"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 </html>

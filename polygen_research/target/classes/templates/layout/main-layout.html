@@ -52,9 +52,9 @@
                         <span class="notification-dot"></span>
                     </button>
                     <div class="profile-menu">
-                        <img src="https://i.pravatar.cc/150?img=12" alt="Avatar">
-                        <span>Usuario</span> 
-                    </div>
+                     <img src="https://i.pravatar.cc/150?img=12" alt="Avatar">
+                     <span th:text="${#authentication.principal.nombreUsuario}">Nombre del Usuario</span> 
+                 </div>
                  </div>
             </header>
 

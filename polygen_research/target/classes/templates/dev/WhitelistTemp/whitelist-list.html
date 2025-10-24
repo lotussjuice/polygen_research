@@ -1,23 +1,50 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+
 <div th:fragment="contenido">
-    <h1>Lista de Credenciales</h1>
-    <a th:href="@{/whitelist/nuevo}" class="btn-primario">Registrar Nueva Credencial</a>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Correo</th>
-                <th>Usuario Asociado</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="w : ${credenciales}">
-                <td th:text="${w.idLista}">...</td>
-                <td th:text="${w.correo}">...</td>
-                <td th:text="${w.usuario?.nombreUsuario}">...</td>
-            </tr>
-        </tbody>
-    </table>
+
+    <div class="card">
+        
+        <div class="card-header">
+            <h3><i class="ph-bold ph-shield-check"></i> Administración de Credenciales</h3>
+            <a th:href="@{/whitelist/nuevo}" class="btn-primario btn-sm">
+                <i class="ph-bold ph-plus"></i> Registrar Nueva Credencial
+            </a>
+        </div>
+
+        <div class="card-body">
+            
+            <div th:if="${#lists.isEmpty(credenciales)}" class="alert" style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
+                No hay credenciales registradas. Una credencial (correo + contraseña) es necesaria para que un usuario pueda iniciar sesión.
+            </div>
+
+            <table th:if="${!#lists.isEmpty(credenciales)}">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Correo (Login)</th>
+                        <th>Usuario Asociado</th>
+                        <th style="text-align: right; width: 150px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="w : ${credenciales}">
+                        <td th:text="${w.idLista}">...</td>
+                        <td th:text="${w.correo}">...</td>
+                        <td th:text="${w.usuario?.nombreUsuario}">N/A</td> 
+                        
+                        <td class="actions-cell" style="text-align: right;">
+                            
+                            <a th:href="@{/whitelist/editar/{id}(id=${w.idLista})}" 
+                               class="btn-secundario btn-sm"
+                               title="Editar Credencial">
+                                <i class="ph-bold ph-pencil-simple"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 </html>

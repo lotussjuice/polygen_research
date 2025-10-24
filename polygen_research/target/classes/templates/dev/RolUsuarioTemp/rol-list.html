@@ -1,21 +1,48 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+
 <div th:fragment="contenido">
-    <h1>Lista de Roles</h1>
-    <a th:href="@{/roles/nuevo}" class="btn-primario">Registrar Nuevo Rol</a>
-    <table>
-        <thead>
-            <tr>
-                <th>ID Rol</th>
-                <th>Nombre del Rol</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="r : ${roles}">
-                <td th:text="${r.idRol}">...</td>
-                <td th:text="${r.nombreRol}">...</td>
-            </tr>
-        </tbody>
-    </table>
+
+    <div class="card">
+        
+        <div classV="card-header">
+            <h3><i class="ph-bold ph-identification-badge"></i> Administración de Roles</h3>
+            <a th:href="@{/roles/nuevo}" class="btn-primario btn-sm">
+                <i class="ph-bold ph-plus"></i> Registrar Nuevo Rol
+            </a>
+        </div>
+
+        <div class="card-body">
+            
+            <div th:if="${#lists.isEmpty(roles)}" class="alert" style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
+                No hay roles registrados. Debes crear al menos un rol (ej. "Investigador") antes de poder crear usuarios.
+            </div>
+
+            <table th:if="${!#lists.isEmpty(roles)}">
+                <thead>
+                    <tr>
+                        <th>ID Rol</th>
+                        <th>Nombre del Rol</th>
+                        <th style="text-align: right; width: 150px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="r : ${roles}">
+                        <td th:text="${r.idRol}">...</td>
+                        <td th:text="${r.nombreRol}">...</td>
+                        
+                        <td class="actions-cell" style="text-align: right;">
+                            
+                            <a th:href="@{/roles/editar/{id}(id=${r.idRol})}" 
+                               class="btn-secundario btn-sm"
+                               title="Editar Rol">
+                                <i class="ph-bold ph-pencil-simple"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 </html>

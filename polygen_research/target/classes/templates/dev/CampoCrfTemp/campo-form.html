@@ -1,30 +1,45 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+
 <div th:fragment="contenido">
-    <h1>Formulario de Campo (Variable)</h1>
-    <form th:action="@{/campos/guardar}" th:object="${campo}" method="POST">
-        
-        <div>
-            <label>Nombre (Variable):</label>
-            <input type="text" th:field="*{nombre}" />
+    
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="ph-bold ph-pencil-simple"></i> Formulario de Campo (Variable)</h3>
         </div>
         
-        <div>
-            <label>Tipo (ej. Numérico, Texto, Si/No):</label>
-            <input type="text" th:field="*{tipo}" />
-        </div>
+        <div class="card-body">
+            <form th:action="@{/campos/guardar}" th:object="${campo}" method="POST">
+                
+                <div class="form-group">
+                    <label>Nombre (Variable):</label>
+                    <input type="text" th:field="*{nombre}" class="form-control" placeholder="Ej. Tabaquismo" />
+                </div>
+                
+                <div class="form-group">
+                    <label>Tipo (ej. Numérico, Texto, Si/No):</label>
+                    <input type="text" th:field="*{tipo}" class="form-control" placeholder="Ej. NUMERO, TEXTO, FECHA" />
+                </div>
 
-        <div>
-            <label>Descripción:</label>
-            <input type="text" th:field="*{descripcion}" />
-        </div>
+                <div class="form-group">
+                    <label>Descripción:</label>
+                    <input type="text" th:field="*{descripcion}" class="form-control" placeholder="Ayuda visual para el recolector de datos" />
+                </div>
 
-        <div>
-            <label>Activo:</label>
-            <input type="checkbox" th:field="*{activo}" />
+                <div class="config-opcion" style="padding: 1rem 0;">
+                    <span>Activo (visible en el formulario CRF)</span>
+                    <label class="switch">
+                        <input type="checkbox" th:field="*{activo}" />
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                    <button type="submit" class="btn-primario">Guardar Campo</button>
+                    <a th:href="@{/campos/list}" class="btn-secundario">Cancelar</a>
+                </div>
+            </form>
         </div>
-        
-        <button type="submit" class="btn">Guardar Campo</button>
-    </form>
+    </div>
 </div>
 </html>

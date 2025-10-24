@@ -5,7 +5,7 @@ import cl.ubiobio.silkcorp.polygen_research.DataBase.Whitelist.WhitelistReposito
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
+// NO importamos 'User' aquí, usaremos el nuestro
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -13,7 +13,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
-import java.util.Collections; // Import corrected
+import java.util.Collections; 
 
 @Service
 public class CustomUserDetailService implements UserDetailsService {
@@ -26,20 +26,35 @@ public class CustomUserDetailService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        // Spring Security uses "username" generically, but we use email
+        // Spring Security usa "username" genéricamente, pero nosotros usamos email
         Whitelist credencial = whitelistRepository.findByCorreo(email)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado con el correo: " + email));
 
-        // Get authorities (roles) from the associated Usuario entity
-        Collection<? extends GrantedAuthority> authorities = Collections.emptyList(); // Default to no roles
+        // Obtener roles (esto se mantiene igual)
+        Collection<? extends GrantedAuthority> authorities = Collections.emptyList(); 
         if (credencial.getUsuario() != null && credencial.getUsuario().getRolUsuario() != null) {
-            // Assign role like "ROLE_ADMINISTRADOR", "ROLE_INVESTIGADOR", etc.
             authorities = Collections.singletonList(
                     new SimpleGrantedAuthority("ROLE_" + credencial.getUsuario().getRolUsuario().getNombreRol().toUpperCase())
             );
         }
 
-        // Return Spring Security's User object
-        return new User(credencial.getCorreo(), credencial.getContrasena(), authorities);
+        // --- INICIO DEL CAMBIO ---
+
+        // 1. Obtener el nombreUsuario. 
+        // Si el usuario no está seteado, usamos el email como fallback.
+        String nombreDeUsuario = credencial.getCorreo(); 
+        if (credencial.getUsuario() != null && credencial.getUsuario().getNombreUsuario() != null) {
+            nombreDeUsuario = credencial.getUsuario().getNombreUsuario();
+        }
+
+        // 2. Retornar NUESTRA clase CustomUserDetails en lugar del 'User' genérico
+        // Pasamos el 'email' como 'username' (para Spring) y el 'nombreDeUsuario' (para nosotros)
+        return new CustomUserDetails(
+                credencial.getCorreo(), 
+                credencial.getContrasena(), 
+                authorities, 
+                nombreDeUsuario // Este es el nuevo campo
+        );
+        // --- FIN DEL CAMBIO ---
     }
 }

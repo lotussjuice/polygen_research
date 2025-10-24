@@ -1,13 +1,26 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+
 <div th:fragment="contenido">
-    <h1>Formulario de Rol</h1>
-    <form th:action="@{/roles/guardar}" th:object="${rol}" method="POST">
-        <div>
-            <label>Nombre del Rol:</label>
-            <input type="text" th:field="*{nombreRol}" />
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="ph-bold ph-identification-badge"></i> Formulario de Rol</h3>
         </div>
-        <button type="submit" class="btn">Guardar Rol</button>
-    </form>
+        
+        <div class="card-body">
+            <form th:action="@{/roles/guardar}" th:object="${rol}" method="POST">
+                <div class="form-group">
+                    <label>Nombre del Rol:</label>
+                    <input type="text" th:field="*{nombreRol}" class="form-control" placeholder="Ej. Investigador, Administrador" />
+                </div>
+                
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                    <button type="submit" class="btn-primario">Guardar Rol</button>
+                    <a th:href="@{/roles/list}" class="btn-secundario">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 </html>
