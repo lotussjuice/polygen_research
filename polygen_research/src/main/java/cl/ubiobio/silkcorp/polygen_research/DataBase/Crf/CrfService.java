@@ -61,46 +61,40 @@ public class CrfService {
     @Transactional
     public void guardarCrfCompleto(CrfForm form) {
         
-        // 1. Guardar el Paciente (Esto ya funcionaba)
+        // 1. Guardar el Paciente
         DatosPaciente pacienteGuardado = datosPacienteRepository.save(form.getDatosPaciente());
 
         // 2. Crear el Contenedor CRF y asociarlo al paciente
         Crf crf = new Crf();
         crf.setDatosPaciente(pacienteGuardado);
 
-        // 3. Procesar y asociar las respuestas (Lógica mejorada)
+        // --- ¡VUELVE A AÑADIR ESTAS 3 LÍNEAS! ---
+        // Sincronizamos el lado inverso de la relación (Paciente -> CRF)
+        // Esto es necesario para que el botón "Ver" funcione de inmediato.
+        if (pacienteGuardado.getCrfs() == null) {
+            pacienteGuardado.setCrfs(new java.util.ArrayList<>()); // Usa la ruta completa por si acaso
+        }
+        pacienteGuardado.getCrfs().add(crf);
+        // --- FIN DEL ARREGLO ---
+
+        // 3. Procesar y asociar las respuestas
         List<DatosCrf> respuestasDelForm = form.getDatosCrfList();
 
         for (DatosCrf respuesta : respuestasDelForm) {
-            
-            // --- PASO CLAVE 1: Ignorar valores vacíos ---
-            // Solo guardamos si el usuario realmente escribió algo.
-            // Usamos .trim() para ignorar también espacios en blanco.
+            // ... (el resto de tu lógica de guardado)
             if (respuesta.getValor() != null && !respuesta.getValor().trim().isEmpty()) {
-                
-                // --- PASO CLAVE 2: Re-hidratar la entidad CamposCRF ---
-                // 'respuesta.getCampoCrf()' solo tiene el ID.
-                // Necesitamos cargar la entidad 'CamposCRF' real desde la BD.
                 int idCampo = respuesta.getCampoCrf().getIdCampo();
                 CampoCrf campoReal = camposCRFRepository.findById(idCampo)
                     .orElseThrow(() -> new RuntimeException("Error: No se encontró el CampoCRF con ID: " + idCampo));
-                
-                // --- PASO CLAVE 3: Re-asignar la entidad manejada ---
-                // Ahora 'respuesta' tiene el 'valor' del formulario
-                // y una entidad 'campoCrf' completa y manejada por JPA.
                 respuesta.setCampoCrf(campoReal);
-                
-                // 4. Añadir la respuesta válida al CRF
-                // (El método addDato también setea la relación inversa crf.setCrf(this))
                 crf.addDato(respuesta);
             }
         }
 
         // 5. Guardar el CRF
-        // Gracias a 'cascade = CascadeType.ALL' en la entidad Crf,
-        // al guardar 'crf', JPA guardará automáticamente la 'List<DatosCRF>'
-        // que acabamos de construir y filtrar.
         crfRepository.save(crf);
+
+        datosPacienteRepository.save(pacienteGuardado);
     }
 
     public List<Crf> getAllCrfs() {

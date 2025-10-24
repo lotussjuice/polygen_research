@@ -1,24 +1,14 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
-
 <div th:fragment="contenido">
-
     <div class="card">
-        
         <div class="card-header">
             <h3><i class="ph-bold ph-users"></i> Lista de Pacientes</h3>
-            
             <a th:href="@{/crf/nuevo}" class="btn-primario btn-sm">
                 <i class="ph-bold ph-plus"></i> Crear Nuevo CRF
             </a>
         </div>
-
         <div class="card-body">
-            
-            <div th:if="${#lists.isEmpty(pacientes)}" class="alert" style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
-                Aún no hay pacientes registrados. Puedes crear uno nuevo usando el formulario 'Crear Nuevo CRF'.
-            </div>
-
             <table th:if="${!#lists.isEmpty(pacientes)}">
                 <thead>
                     <tr>
@@ -31,7 +21,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr th:each="p : ${pacientes}">
+                    <tr th:each="p : ${pacientes}" 
+                        th:classappend="${p.validationMessage != null ? 'fila-incompleta' : ''}"
+                        th:title="${p.validationMessage}">
+                        
                         <td th:text="${p.idPaciente}">...</td>
                         <td th:text="${p.codigoPaciente}">...</td>
                         <td th:text="${p.nombre}">...</td>
@@ -39,7 +32,6 @@
                         <td th:text="${p.estado}">...</td>
                         
                         <td class="actions-cell" style="text-align: right;">
-                            
                             <button th:onclick="|verPaciente(${p.idPaciente})|" 
                                     class="btn-secundario btn-sm" 
                                     title="Ver Detalles">

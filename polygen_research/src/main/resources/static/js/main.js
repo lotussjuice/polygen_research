@@ -42,41 +42,82 @@ const modalPaciente = document.getElementById('modal-ver-paciente');
 const modalCrf = document.getElementById('modal-ver-crf');
 
 // Función asíncrona para mostrar detalles de un Paciente
+// Función asíncrona para mostrar detalles de un Paciente
 async function verPaciente(pacienteId) {
     if (!modalPaciente) {
         console.error("El modal 'modal-ver-paciente' no se encuentra en esta página.");
         return;
     }
+    
+    // Referencia al nuevo contenedor de datos CRF
+    const crfDataContainer = document.getElementById('modal-pac-crf-data');
+
     // Muestra el modal y un mensaje de carga
     document.getElementById('modal-patient-id').innerText = 'Cargando...';
-    // Limpia campos anteriores (opcional, buena práctica)
+    // Limpia campos anteriores
     document.getElementById('modal-pac-codigo').innerText = '';
     document.getElementById('modal-pac-nombre').innerText = '';
     document.getElementById('modal-pac-apellido').innerText = '';
     document.getElementById('modal-pac-estado').innerText = '';
+    crfDataContainer.innerHTML = '<p>Cargando datos de estudio...</p>'; // Limpia datos CRF
     modalPaciente.style.display = 'block';
 
     try {
-        // Realiza una petición 'fetch' al endpoint del backend que devuelve los datos del paciente en JSON
-        // NOTA: Necesitas crear este endpoint @GetMapping("/pacientes/api/paciente/{id}") en tu DatosPacienteController que devuelva JSON (@ResponseBody o usando @RestController para ese método).
+        // Llama a la API (esto ya lo tenías)
         const response = await fetch(`/pacientes/api/paciente/${pacienteId}`);
         if (!response.ok) {
-            // Si la respuesta no es exitosa (ej. 404 Not Found), lanza un error.
             throw new Error(`Paciente no encontrado (ID: ${pacienteId}), Estado: ${response.status}`);
         }
-        const paciente = await response.json(); // Convierte la respuesta JSON a un objeto JavaScript
+        const paciente = await response.json(); 
 
-        // Rellena el modal con los datos obtenidos del backend
+        // Rellena el modal con los datos personales (esto ya lo tenías)
         document.getElementById('modal-patient-id').innerText = `Detalles del Paciente: ${paciente.codigoPaciente || 'N/A'}`;
         document.getElementById('modal-pac-codigo').innerText = paciente.codigoPaciente || 'N/A';
         document.getElementById('modal-pac-nombre').innerText = paciente.nombre || 'N/A';
         document.getElementById('modal-pac-apellido').innerText = paciente.apellido || 'N/A';
         document.getElementById('modal-pac-estado').innerText = paciente.estado || 'N/A';
-        // ... puedes añadir más campos aquí ...
+
+        // --- ¡NUEVA LÓGICA PARA DATOS DE ESTUDIO! ---
+        
+        // 1. Revisa si el paciente tiene CRFs
+        if (paciente.crfs && paciente.crfs.length > 0) {
+            let html = ''; // Variable para construir el HTML
+            
+            // 2. Itera sobre cada CRF del paciente
+            for (const crf of paciente.crfs) {
+                // Añade un título para este CRF
+                html += `<div class="card" style="margin-top: 1rem; background-color: var(--color-fondo);">
+                           <div class="card-header" style="padding: 0.75rem 1rem;">
+                             <strong>CRF ID: ${crf.idCrf}</strong>
+                             <a href="/crf/editar/${crf.idCrf}" class="btn-secundario btn-sm">Editar CRF</a>
+                           </div>
+                           <div class="card-body" style="padding: 1rem;">`;
+                
+                // 3. Revisa si este CRF tiene datos dinámicos
+                if (crf.datosCrfList && crf.datosCrfList.length > 0) {
+                    
+                    // 4. Itera sobre cada dato (pregunta y respuesta)
+                    for (const dato of crf.datosCrfList) {
+                        html += `<div class="patient-data-grid" style="gap: 0.5rem 1rem;">
+                                   <strong>${dato.campoCrf ? dato.campoCrf.nombre : 'Campo desconocido'}:</strong>
+                                   <span>${dato.valor || '(Sin respuesta)'}</span>
+                                 </div>`;
+                    }
+                } else {
+                    html += '<p>Este CRF no tiene datos registrados.</p>';
+                }
+                html += '</div></div>'; // Cierra card-body y card
+            }
+            crfDataContainer.innerHTML = html; // Inserta todo el HTML en el div
+            
+        } else {
+            // Si el paciente no tiene CRFs
+            crfDataContainer.innerHTML = '<p>Este paciente no tiene ningún CRF asociado.</p>';
+        }
 
     } catch (error) {
-        // Si ocurre un error (fetch fallido, JSON inválido), muestra un mensaje de error.
         document.getElementById('modal-patient-id').innerText = 'Error al cargar los datos';
+        crfDataContainer.innerHTML = '<p style="color: var(--color-error);">Error al cargar datos de estudio.</p>';
         console.error("Error en verPaciente:", error);
     }
 }
@@ -149,23 +190,27 @@ window.onclick = function(event) {
 
 /* --- Lógica de Personalización (Modo Oscuro) --- */
 const darkModeToggle = document.getElementById('dark-mode-toggle');
+
 if (darkModeToggle) {
-    // Si el interruptor existe, añade un listener para el cambio
+    // Listener para el cambio en el interruptor
     darkModeToggle.addEventListener('change', () => {
-        // Añade o quita la clase 'dark-mode' del body, el CSS se encarga del resto.
-        document.body.classList.toggle('dark-mode');
-        // Opcional: Guardar preferencia en localStorage para recordarla
-        if(document.body.classList.contains('dark-mode')) {
+        // --- ¡CAMBIO AQUÍ! ---
+        // Ahora aplicamos/quitamos la clase en documentElement (<html>)
+        document.documentElement.classList.toggle('dark-mode');
+
+        // Guardar preferencia en localStorage (revisando documentElement)
+        if (document.documentElement.classList.contains('dark-mode')) {
             localStorage.setItem('theme', 'dark');
         } else {
             localStorage.setItem('theme', 'light');
         }
     });
 
-    // Opcional: Cargar preferencia al iniciar la página
     if (localStorage.getItem('theme') === 'dark') {
-        document.body.classList.add('dark-mode');
-        darkModeToggle.checked = true;
+        // Comprobamos si el interruptor existe antes de marcarlo
+        if (darkModeToggle) {
+             darkModeToggle.checked = true;
+        }
     }
 }
 

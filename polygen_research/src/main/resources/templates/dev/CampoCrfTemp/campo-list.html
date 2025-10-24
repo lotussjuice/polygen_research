@@ -37,11 +37,11 @@
                         <td th:text="${c.descripcion}">...</td>
                         
                         <td>
-                            <span th:if="${c.activo}" style="color: var(--color-exito); font-weight: 600;">Activo</span>
-                            <span th:if="${!c.activo}" style="color: var(--color-texto-secundario);">Inactivo</span>
+                            <span th:if="${c.activo == true}" style="color: var(--color-exito); font-weight: 600;">Activo</span>
+                            <span th:if="${c.activo == false or c.activo == null}" style="color: var(--color-texto-secundario);">Inactivo</span>
                         </td>
                         
-                        <td class="actions-cell" style="text-align: right;">
+                      <td class="actions-cell" style="text-align: right;">
                             
                             <a th:href="@{/campos/editar/{id}(id=${c.idCampo})}" 
                                class="btn-secundario btn-sm"
@@ -49,10 +49,18 @@
                                 <i class="ph-bold ph-pencil-simple"></i>
                             </a>
                             
-                            <a th:href="@{/campos/desactivar/{id}(id=${c.idCampo})}" 
+                            <a th:if="${c.activo == true}"
+                               th:href="@{/campos/desactivar/{id}(id=${c.idCampo})}" 
                                class="btn-error btn-sm"
                                title="Desactivar Campo">
-                                <i class="ph-bold ph-trash"></i>
+                                <i class="ph-bold ph-power"></i> 
+                            </a>
+                            
+                            <a th:if="${c.activo == false or c.activo == null}"
+                               th:href="@{/campos/desactivar/{id}(id=${c.idCampo})}" 
+                               class="btn-exito btn-sm"
+                               title="Activar Campo">
+                                <i class="ph-bold ph-power"></i>
                             </a>
                         </td>
                     </tr>

@@ -20,12 +20,30 @@ public class DatosPacienteController {
     public String listarPacientes(Model model) {
         List<DatosPaciente> listaPacientes = pacienteService.getAllPacientes();
         model.addAttribute("pacientes", listaPacientes);
-        return "Dev/DatosPacienteTemp/paciente-list";
+        
+        // --- ¡ARREGLO AQUÍ! ---
+        // Apuntamos a la ruta correcta que tenías originalmente
+        return "Dev/DatosPacienteTemp/paciente-list"; 
     }
 
     @GetMapping("/nuevo")
     public String mostrarFormularioDeNuevoPaciente(Model model) {
         model.addAttribute("paciente", new DatosPaciente());
+
+        // --- ¡ARREGLO AQUÍ! ---
+        // También corregimos esta ruta
+        return "Dev/DatosPacienteTemp/paciente-form"; 
+    }
+    
+    @GetMapping("/editar/{id}")
+    public String mostrarFormularioDeEditar(@PathVariable Integer id, Model model) {
+        DatosPaciente paciente = pacienteService.getPacienteById(id)
+                .orElseThrow(() -> new IllegalArgumentException("ID de paciente inválido:" + id));
+        
+        model.addAttribute("paciente", paciente);
+
+        // --- ¡ARREGLO AQUÍ! ---
+        // Y también esta
         return "Dev/DatosPacienteTemp/paciente-form";
     }
 
@@ -35,11 +53,11 @@ public class DatosPacienteController {
         return "redirect:/pacientes/list";
     }
 
-    @GetMapping("/api/paciente/{id}") // Nueva ruta para la API
-    @ResponseBody // Indica que la respuesta es JSON, no un nombre de template
+    @GetMapping("/api/paciente/{id}") 
+    @ResponseBody 
     public ResponseEntity<DatosPaciente> getPacienteByIdApi(@PathVariable Integer id) {
         return pacienteService.getPacienteById(id)
-                .map(ResponseEntity::ok) // Si lo encuentra, devuelve 200 OK con el paciente
-                .orElse(ResponseEntity.notFound().build()); // Si no, devuelve 404 Not Found
+                .map(ResponseEntity::ok) 
+                .orElse(ResponseEntity.notFound().build()); 
     }
 }

@@ -11,6 +11,8 @@
         <div class="card-body">
             <form th:action="@{/campos/guardar}" th:object="${campo}" method="POST">
                 
+                <input type="hidden" th:field="*{idCampo}" />
+
                 <div class="form-group">
                     <label>Nombre (Variable):</label>
                     <input type="text" th:field="*{nombre}" class="form-control" placeholder="Ej. Tabaquismo" />
@@ -25,15 +27,7 @@
                     <label>Descripción:</label>
                     <input type="text" th:field="*{descripcion}" class="form-control" placeholder="Ayuda visual para el recolector de datos" />
                 </div>
-
-                <div class="config-opcion" style="padding: 1rem 0;">
-                    <span>Activo (visible en el formulario CRF)</span>
-                    <label class="switch">
-                        <input type="checkbox" th:field="*{activo}" />
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                
+        
                 <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
                     <button type="submit" class="btn-primario">Guardar Campo</button>
                     <a th:href="@{/campos/list}" class="btn-secundario">Cancelar</a>

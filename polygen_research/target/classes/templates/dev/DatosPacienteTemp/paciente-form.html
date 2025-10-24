@@ -11,6 +11,8 @@
         <div class="card-body">
             <form th:action="@{/pacientes/guardar}" th:object="${paciente}" method="POST">
                 
+                <input type="hidden" th:field="*{idPaciente}" />
+
                 <div class="form-group">
                     <label>Código Paciente:</label>
                     <input type="text" th:field="*{codigoPaciente}" class="form-control" />

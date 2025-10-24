@@ -13,11 +13,12 @@
     --sombra-tarjeta: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
+/* --- ¡CAMBIO AQUÍ! Paleta de Modo Oscuro actualizada a Negro y Verde --- */
 .dark-mode {
-    --color-primario: #007bff;
-    --color-secundario: #17a2b8;
-    --color-fondo: #121212;
-    --color-tarjeta: #1e1e1e;
+    --color-primario: #00b377;     /* Verde principal */
+    --color-secundario: #00d98f;  /* Verde secundario */
+    --color-fondo: #121212;         /* Negro */
+    --color-tarjeta: #1e1e1e;      /* Gris oscuro */
     --color-texto: #e0e0e0;
     --color-texto-secundario: #a0a0a0;
     --color-borde: #333;
@@ -33,17 +34,35 @@
 body {
     background-color: var(--color-fondo);
     color: var(--color-texto);
-    transition: background-color 0.3s, color 0.3s;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Transición base */
     overflow-x: hidden;
 }
 
-/* --- 2. Página de Login (Historia: Login, Recuperar Contraseña, Crear Cuenta) --- */
+/* --- ¡CAMBIO AQUÍ! Transiciones "vistosas" añadidas --- */
+#sidebar,
+#app-header,
+.card,
+.modal-content,
+.btn-primario,
+.btn-secundario,
+.btn-exito,
+.btn-error,
+.form-group input,
+.form-group select,
+th,
+td {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+/* --------------------------------------------------- */
+
+/* --- 2. Página de Login --- */
 #pagina-login {
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
     background: linear-gradient(135deg, var(--color-primario), var(--color-secundario));
+    transition: background 0.3s ease;
 }
 
 .login-container {
@@ -54,11 +73,13 @@ body {
     width: 100%;
     max-width: 400px;
     text-align: center;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .login-container h2 {
     margin-bottom: 1.5rem;
     color: var(--color-primario);
+    transition: color 0.3s ease;
 }
 
 .form-group {
@@ -92,13 +113,14 @@ body {
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s;
-    text-decoration: none; /* Añadido para <a> tags */
-    display: inline-block; /* Añadido para <a> tags */
-    text-align: center; /* Añadido para <a> tags */
+    transition: background-color 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
 }
 
 .btn-primario:hover {
+    /* Considera definir un --color-primario-hover en :root y .dark-mode */
     background-color: #004578;
 }
 
@@ -112,18 +134,19 @@ body {
 .login-links a {
     color: var(--color-secundario);
     text-decoration: none;
+    transition: color 0.3s ease;
 }
 .login-links a:hover {
     text-decoration: underline;
 }
 
-/* --- 3. Contenedor Principal de la App (Post-Login) --- */
+/* --- 3. Contenedor Principal de la App --- */
 #app-wrapper {
-    display: flex; /* Cambiado de 'none' a 'flex' */
+    display: flex;
     height: 100vh;
 }
 
-/* --- 4. Barra Lateral (Historia: Menú desplegable) --- */
+/* --- 4. Barra Lateral --- */
 #sidebar {
     width: 260px;
     background-color: var(--color-tarjeta);
@@ -131,10 +154,10 @@ body {
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease-in-out;
+    transition: transform 0.3s ease-in-out, background-color 0.3s ease, border-color 0.3s ease;
     box-shadow: var(--sombra-tarjeta);
     z-index: 100;
-    flex-shrink: 0; /* Evita que se encoja */
+    flex-shrink: 0;
 }
 
 .sidebar-header {
@@ -146,14 +169,17 @@ body {
 .sidebar-header i {
     font-size: 2.5rem;
     color: var(--color-primario);
+    transition: color 0.3s ease;
 }
 .sidebar-header h1 {
     font-size: 1.5rem;
     color: var(--color-texto);
+    transition: color 0.3s ease;
 }
 
 #sidebar nav ul {
     list-style: none;
+    padding: 0; /* Asegúrate que no haya padding por defecto */
     flex-grow: 1;
 }
 
@@ -170,10 +196,11 @@ body {
     text-decoration: none;
     color: var(--color-texto-secundario);
     font-weight: 500;
-    transition: background-color 0.2s, color 0.2s;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 #sidebar nav a i {
     font-size: 1.3rem;
+    flex-shrink: 0; /* Evita que el icono se encoja */
 }
 #sidebar nav a:hover,
 #sidebar nav a.active {
@@ -232,7 +259,7 @@ body {
 }
 .header-left button i {
     font-size: 1.2rem;
-    display: block;
+    display: block; /* Asegura que el icono no cause espacio extra */
 }
 #save-status {
     font-size: 0.875rem;
@@ -256,6 +283,7 @@ body {
     cursor: pointer;
     color: var(--color-texto-secundario);
     position: relative;
+    transition: color 0.3s ease;
 }
 .header-right .icon-btn .notification-dot {
     height: 8px;
@@ -304,9 +332,16 @@ body {
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--color-borde);
+    transition: border-color 0.3s ease;
 }
 .card-header h3 {
     margin: 0;
+    display: flex; /* Para alinear el icono con el texto */
+    align-items: center;
+    gap: 0.5rem; /* Espacio entre icono y texto */
+}
+.card-header h3 i {
+    font-size: 1.2em; /* Tamaño del icono relativo al h3 */
 }
 
 .btn-secundario {
@@ -317,15 +352,16 @@ body {
     color: var(--color-texto);
     font-weight: 500;
     cursor: pointer;
-    transition: background-color 0.2s;
 }
 .btn-secundario:hover {
     background-color: #e9ecef;
 }
-/* Añadido para que los botones primarios puedan ser más pequeños */
 .btn-primario.btn-sm, .btn-secundario.btn-sm {
      padding: 0.6rem 1rem;
      width: auto;
+     display: inline-flex; /* Asegura alineación del icono */
+     align-items: center;
+     gap: 0.4rem; /* Espacio entre icono y texto del botón */
 }
 .btn-exito { background-color: var(--color-exito); color: white; border: none; }
 .btn-exito:hover { background-color: #218838; }
@@ -358,7 +394,12 @@ tr:hover {
     margin-right: 5px;
     padding: 0.3rem 0.6rem;
     text-decoration: none;
-    display: inline-block;
+    display: inline-flex; /* Centra el icono dentro del botón */
+    align-items: center;
+    justify-content: center;
+}
+.actions-cell button i, .actions-cell a i {
+    font-size: 1.1rem; /* Tamaño de iconos en botones de acción */
 }
 
 .grid-2 {
@@ -369,7 +410,6 @@ tr:hover {
 
 /* --- 7. Estilos de Páginas Específicas --- */
 
-/* Página: Formulario de Ingreso */
 #form-paciente {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -391,7 +431,6 @@ tr:hover {
     border-color: var(--color-error);
 }
 
-/* Página: Análisis (Historia: Cuantificación, Dicotomización) */
 .stats-container {
     display: flex;
     gap: 1rem;
@@ -403,6 +442,7 @@ tr:hover {
     padding: 1rem;
     border-radius: 8px;
     border: 1px solid var(--color-borde);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 .stat-box h4 {
     color: var(--color-texto-secundario);
@@ -413,9 +453,9 @@ tr:hover {
     font-size: 1.5rem;
     font-weight: 700;
     color: var(--color-primario);
+    transition: color 0.3s ease;
 }
 
-/* Página: Pizarrón (Historia: Pizarrón digital) */
 #pizarron-digital {
     width: 100%;
     min-height: 400px;
@@ -423,9 +463,9 @@ tr:hover {
     border-radius: 8px;
     padding: 1rem;
     background-color: var(--color-tarjeta);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
-/* Página: Configuración (Historia: Personalización, Datos personales) */
 .config-opcion {
     display: flex;
     align-items: center;
@@ -437,6 +477,7 @@ tr:hover {
     display: inline-block;
     width: 50px;
     height: 28px;
+    flex-shrink: 0; /* Evita que se encoja en flex containers */
 }
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider {
@@ -452,7 +493,8 @@ tr:hover {
 }
 .slider:before {
     position: absolute;
-    content: "";
+    /* --- ¡CAMBIO AQUÍ! Añadimos icono de sol ☀️ --- */
+    content: '☀️';
     height: 20px;
     width: 20px;
     left: 4px;
@@ -460,12 +502,23 @@ tr:hover {
     background-color: white;
     transition: .4s;
     border-radius: 50%;
+    /* Centrado del icono */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: #333;
+    /* --- FIN DEL CAMBIO --- */
 }
 input:checked + .slider {
     background-color: var(--color-primario);
 }
 input:checked + .slider:before {
     transform: translateX(22px);
+    /* --- ¡CAMBIO AQUÍ! Añadimos icono de luna 🌙 --- */
+    content: '🌙';
+    color: white;
+    /* --- FIN DEL CAMBIO --- */
 }
 
 /* --- 8. Modal (Pop-up) --- */
@@ -506,34 +559,38 @@ input:checked + .slider:before {
     font-size: 2rem;
     font-weight: bold;
     cursor: pointer;
+    transition: color 0.3s ease;
 }
 .close-modal:hover {
     color: var(--color-texto);
 }
 .patient-data-grid {
     display: grid;
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: auto 1fr; /* Columna de etiquetas ajustada al contenido */
     gap: 1rem;
 }
 .patient-data-grid strong {
     color: var(--color-texto-secundario);
+    font-weight: 600; /* Un poco más de énfasis */
 }
 
 /* --- 9. Responsividad --- */
 @media (max-width: 768px) {
     #sidebar {
-        position: absolute;
+        position: fixed; /* Mejor para overlay */
         transform: translateX(-100%);
         height: 100%;
+        box-shadow: 5px 0 15px rgba(0,0,0,0.1); /* Sombra más pronunciada */
     }
     #sidebar.open {
         transform: translateX(0);
     }
     #app-wrapper {
-        flex-direction: column;
+        /* Mantenemos flex para layout general, pero main-content ocupa todo */
     }
     #main-content {
         width: 100%;
+        margin-left: 0; /* Aseguramos que no haya margen */
     }
     #page-container {
         padding: 1rem;
@@ -542,7 +599,7 @@ input:checked + .slider:before {
         grid-template-columns: 1fr;
     }
     .header-left .menu-toggle {
-        display: block;
+        display: block; /* Aseguramos que sea visible */
     }
     .profile-menu span {
         display: none;
@@ -551,8 +608,9 @@ input:checked + .slider:before {
         width: 95%;
         margin: 5% auto;
     }
+}
     
-    /* --- 10. Estilos de Alertas y Mensajes --- */
+/* --- 10. Estilos de Alertas y Mensajes --- */
 .alert {
     padding: 1rem;
     margin-bottom: 1.5rem;
@@ -566,10 +624,35 @@ input:checked + .slider:before {
     background-color: #d4edda;
     border-color: #c3e6cb;
 }
+/* Estilos modo oscuro para alertas */
+.dark-mode .alert-success {
+    color: #c3e6cb;
+    background-color: #1d3c2a;
+    border-color: #2c5a3a;
+}
 
 .alert-error {
     color: #721c24;
     background-color: #f8d7da;
     border-color: #f5c6cb;
 }
+/* Estilos modo oscuro para alertas */
+.dark-mode .alert-error {
+    color: #f5c6cb;
+    background-color: #58151c;
+    border-color: #842029;
+}
+
+/* --- 11. Estilos de Advertencia de Tabla --- */
+tr.fila-incompleta {
+    border-left: 4px solid var(--color-error);
+    /* Fondo muy sutil, ajustado para ambos modos */
+    background-color: rgba(220, 53, 69, 0.05);
+}
+tr.fila-incompleta:hover {
+    /* Mantenemos el hover normal */
+    background-color: var(--color-fondo);
+}
+tr.fila-incompleta td {
+    cursor: help;
 }

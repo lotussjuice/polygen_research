@@ -1,13 +1,21 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 import java.util.List;
 
 import cl.ubiobio.silkcorp.polygen_research.DataBase.Crf.Crf;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "datos_paciente")
@@ -23,7 +31,7 @@ public class DatosPaciente {
     private Integer idPaciente;
 
     @Column(name = "Codigo_Paciente", length = 50, unique = true)
-    private String codigoPaciente; // Es buena idea que el código sea único
+    private String codigoPaciente;
 
     @Column(name = "Nombre", length = 30)
     private String nombre;
@@ -40,12 +48,20 @@ public class DatosPaciente {
     @Column(name = "Estado", length = 20)
     private String estado;
 
-    // --- Relación Inversa ---
-    // Un paciente puede tener MUCHOS Crfs.
-    // "mappedBy" le dice a JPA que la clave foránea está en la entidad Crf, 
-    // en el campo "datosPaciente".
     @OneToMany(mappedBy = "datosPaciente", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Crf> crfs;
+
+    @Transient
+    private String validationMessage;
+    
+
+    public String getValidationMessage() {
+        return validationMessage;
+    }
+
+    public void setValidationMessage(String validationMessage) {
+        this.validationMessage = validationMessage;
+    }
 
     public Integer getIdPaciente() {
         return idPaciente;

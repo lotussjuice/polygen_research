@@ -1,9 +1,6 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.Crf; // O el paquete que corresponda
 
 import org.springframework.http.ResponseEntity;
-
-//import java.util.List;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
