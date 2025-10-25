@@ -1,13 +1,65 @@
-/* --- Lógica de Responsividad (Menú Lateral) --- */
-// Función para mostrar/ocultar la barra lateral en pantallas pequeñas.
+const sidebar = document.getElementById('sidebar');
+const sidebarToggleBtn = document.getElementById('sidebar-toggle'); // Referencia al NUEVO botón
+const sidebarToggleIcon = sidebarToggleBtn ? sidebarToggleBtn.querySelector('i') : null; // Icono dentro del botón
+
+// Función para mostrar/ocultar (colapsar/expandir) la barra lateral.
 function toggleMenu() {
-    const sidebar = document.getElementById('sidebar');
-    if (sidebar) { // Verifica si el elemento existe antes de usarlo
-        sidebar.classList.toggle('open');
+    // Verificamos que existan sidebar Y el icono del botón nuevo
+    if (!sidebar || !sidebarToggleIcon) {
+        console.error("Elementos del sidebar (#sidebar) o botón (#sidebar-toggle > i) no encontrados.");
+        return;
+    }
+
+    // 1. Añade o quita la clase '.open' al sidebar
+    sidebar.classList.toggle('open');
+
+    // 2. Comprueba el estado DESPUÉS de cambiar la clase
+    const isExpanded = sidebar.classList.contains('open');
+
+    // 3. Guarda el estado en localStorage
+    localStorage.setItem('sidebarState', isExpanded ? 'expanded' : 'collapsed');
+
+    // 4. Cambia el icono del botón y su tooltip
+    if (isExpanded) {
+        sidebarToggleIcon.classList.remove('ph-caret-double-right');
+        sidebarToggleIcon.classList.add('ph-caret-double-left');
+        sidebarToggleBtn.setAttribute('title', 'Colapsar Menú');
     } else {
-        console.error("Elemento con ID 'sidebar' no encontrado.");
+        sidebarToggleIcon.classList.remove('ph-caret-double-left');
+        sidebarToggleIcon.classList.add('ph-caret-double-right');
+        sidebarToggleBtn.setAttribute('title', 'Expandir Menú');
     }
 }
+
+// --- Código de INICIALIZACIÓN (Ejecutar al cargar la página) ---
+document.addEventListener('DOMContentLoaded', () => {
+    // Verificamos de nuevo por si acaso
+    if (!sidebar || !sidebarToggleBtn || !sidebarToggleIcon) return;
+
+    // 1. Añadir clase 'preload' para desactivar transiciones temporalmente
+    document.body.classList.add('preload-transitions');
+
+    // 2. Leer el estado guardado
+    const savedState = localStorage.getItem('sidebarState');
+
+    // 3. Aplicar estado guardado (Colapsado por defecto si no hay nada guardado)
+    if (savedState === 'expanded') {
+        sidebar.classList.add('open'); // Aseguramos que tenga la clase
+        sidebarToggleIcon.classList.remove('ph-caret-double-right');
+        sidebarToggleIcon.classList.add('ph-caret-double-left');
+        sidebarToggleBtn.setAttribute('title', 'Colapsar Menú');
+    } else { // Estado 'collapsed' o null
+        sidebar.classList.remove('open'); // Aseguramos que NO tenga la clase
+        sidebarToggleIcon.classList.remove('ph-caret-double-left');
+        sidebarToggleIcon.classList.add('ph-caret-double-right');
+        sidebarToggleBtn.setAttribute('title', 'Expandir Menú');
+    }
+
+    // 4. Quitar la clase 'preload' después de un instante para reactivar transiciones
+    setTimeout(() => {
+        document.body.classList.remove('preload-transitions');
+    }, 50); // 50ms suele ser suficiente
+});
 
 /* --- Lógica para Marcar el Enlace Activo en el Menú --- */
 // Selecciona todos los enlaces de navegación en la barra lateral.

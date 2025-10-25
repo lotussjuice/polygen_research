@@ -1,12 +1,16 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.DatosCrf;
 
-import cl.ubiobio.silkcorp.polygen_research.DataBase.CampoCrf.CampoCrfService;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.Crf.CrfService;
-
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
-import java.util.List;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import cl.ubiobio.silkcorp.polygen_research.DataBase.CampoCrf.CampoCrfService;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.Crf.CrfService;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO;
+//import java.util.List;
 
 @Controller
 @RequestMapping("/datos-crf")
@@ -23,10 +27,17 @@ public class DatosCrfController {
     }
 
     @GetMapping("/list")
-    public String listarDatos(Model model) {
-        List<DatosCrf> listaDatos = datosCrfService.getAllDatosCrf();
-        model.addAttribute("datos", listaDatos);
-        return "Dev/DatosCrfTemp/datos-crf-list";
+    public String mostrarReporteDeDatos(Model model) {
+        
+        // 1. Llama al método del servicio que pivota los datos
+        CrfResumenViewDTO data = crfService.getCrfResumenView();
+        
+        // 2. Pasamos las dos variables que el HTML necesita
+        model.addAttribute("camposColumnas", data.getCamposActivos()); // Los <th>
+        model.addAttribute("filasCrf", data.getFilas());         // Los <tr>
+        
+        // 3. Devuelve el nombre del archivo HTML que te pasaste
+        return "dev/DatosCrfTemp/datos-crf-list"; 
     }
 
     @GetMapping("/nuevo")

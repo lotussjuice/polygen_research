@@ -1,24 +1,45 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
-<div th:fragment="contenido">
-    <h1>Lista de Datos (Valores)</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>ID Detalle</th>
-                <th>ID CRF</th>
-                <th>Campo (Variable)</th>
-                <th>Valor</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="d : ${datos}">
-                <td th:text="${d.idDetalle}">...</td>
-                <td th:text="${d.crf?.idCrf}">...</td> 
-                <td th:text="${d.campoCrf?.nombre}">...</td>
-                <td th:text="${d.valor}">...</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+
+<body> <div th:fragment="contenido">
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="ph-bold ph-chart-line"></i> Reporte de Datos (Valores CRF)</h3>
+            </div>
+        <div class="card-body">
+
+            <p>Cada fila representa un CRF completo, con las columnas correspondientes a los campos activos.</p>
+
+            <div th:if="${#lists.isEmpty(filasCrf)}" class="alert" style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
+                No se han encontrado CRFs para mostrar en el reporte.
+            </div>
+
+            <div class="table-responsive-wrapper" th:if="${!#lists.isEmpty(filasCrf)}">
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID CRF</th>
+                            <th>Cód. Paciente</th>
+                            <th>Paciente</th>
+                            <th>Fecha Creación</th>
+
+                            <th th:each="campo : ${camposColumnas}" th:text="${campo.nombre}">...</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="fila : ${filasCrf}">
+                            <td th:text="${fila.crf.idCrf}">...</td>
+                            <td th:text="${fila.crf.datosPaciente?.codigoPaciente}">...</td>
+                            <td th:text="${fila.crf.datosPaciente?.nombre + ' ' + fila.crf.datosPaciente?.apellido}">...</td>
+                            <td th:text="${fila.crf.fechaConsulta != null ? #temporals.format(fila.crf.fechaConsulta, 'dd/MM/yyyy') : 'N/A'}">...</td>
+
+                            <td th:each="campo : ${camposColumnas}">
+                                <span th:text="${fila.valores.get(campo.idCampo) ?: '-'}"></span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div> </div> </div> </div> </body>
 </html>

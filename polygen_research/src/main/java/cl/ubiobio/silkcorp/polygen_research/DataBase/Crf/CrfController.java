@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfForm;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO;
 
 
 @Controller
@@ -69,6 +70,23 @@ public class CrfController {
         return crfService.getCrfById(id) // Necesitas crear este método en CrfService si no existe
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Muestra el reporte de CRFs en formato de tabla pivotada.
+     */
+    @GetMapping("/reporte")
+    public String mostrarReporteCrf(Model model) {
+        
+        // 1. Llama al nuevo método del servicio
+        CrfResumenViewDTO data = crfService.getCrfResumenView();
+        
+        // 2. Pasamos las dos partes a la vista
+        model.addAttribute("camposColumnas", data.getCamposActivos()); // Los <th>
+        model.addAttribute("filasCrf", data.getFilas());         // Los <tr>
+        
+        // 3. El nombre de tu nuevo archivo HTML
+        return "crf-reporte";
     }
 
     /*

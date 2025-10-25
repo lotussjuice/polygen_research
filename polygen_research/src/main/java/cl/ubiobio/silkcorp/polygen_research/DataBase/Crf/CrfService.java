@@ -3,6 +3,9 @@ package cl.ubiobio.silkcorp.polygen_research.DataBase.Crf; // O el paquete que c
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import org.hibernate.Hibernate;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +16,8 @@ import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosCrf.DatosCrf;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPaciente;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPacienteRepository;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfForm;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO; // DTO Nuevo
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenRowDTO;  // DTO Nuevo
 
 @Service
 public class CrfService {
@@ -105,4 +110,54 @@ public class CrfService {
     public Optional<Crf> getCrfById(Integer id) {
         return crfRepository.findById(id);
     }
+
+
+
+    /**
+     * Prepara una vista de "Reporte" pivotando los datos de los CRFs.
+     * @return Un DTO que contiene las columnas (Campos) y las filas (Datos)
+     */
+    @Transactional(readOnly = true)
+    public CrfResumenViewDTO getCrfResumenView() {
+        
+        // 1. Obtener las Columnas (los <th>)
+        // (Este método ya lo creamos antes)
+        List<CampoCrf> campos = camposCRFRepository.findByActivoTrueOrderByNombre();
+
+        // 2. Obtener las Filas (los <tr>)
+        List<Crf> crfs = crfRepository.findAll();
+        
+        // 3. Preparar el DTO principal
+        CrfResumenViewDTO viewDTO = new CrfResumenViewDTO();
+        viewDTO.setCamposActivos(campos);
+        
+        List<CrfResumenRowDTO> filasDTO = new ArrayList<>();
+        
+        // 4. Bucle principal: Procesar cada CRF (cada fila)
+        for (Crf crf : crfs) {
+            // Forzamos la carga de datos 'lazy'
+            Hibernate.initialize(crf.getDatosPaciente());
+            Hibernate.initialize(crf.getDatosCrfList());
+
+            CrfResumenRowDTO rowDTO = new CrfResumenRowDTO();
+            rowDTO.setCrf(crf); // Asignamos el CRF (para paciente, fecha, etc.)
+
+            // 5. ¡El Pivote!
+            // Creamos un Mapa para buscar valores rápidamente
+            Map<Integer, String> valoresMap = new HashMap<>();
+            
+            for (DatosCrf dato : crf.getDatosCrfList()) {
+                if (dato.getCampoCrf() != null) {
+                    valoresMap.put(dato.getCampoCrf().getIdCampo(), dato.getValor());
+                }
+            }
+            
+            rowDTO.setValores(valoresMap); // Asignamos el mapa de valores
+            filasDTO.add(rowDTO);
+        }
+        
+        viewDTO.setFilas(filasDTO);
+        return viewDTO;
+    }
+
 }

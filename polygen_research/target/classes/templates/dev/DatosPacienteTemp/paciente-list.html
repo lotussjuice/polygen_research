@@ -9,45 +9,47 @@
             </a>
         </div>
         <div class="card-body">
-            <table th:if="${!#lists.isEmpty(pacientes)}">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Código</th>
-                        <th>Nombre</th>
-                        <th>Apellido</th>
-                        <th>Estado</th>
-                        <th style="text-align: right; width: 150px;">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="p : ${pacientes}" 
-                        th:classappend="${p.validationMessage != null ? 'fila-incompleta' : ''}"
-                        th:title="${p.validationMessage}">
-                        
-                        <td th:text="${p.idPaciente}">...</td>
-                        <td th:text="${p.codigoPaciente}">...</td>
-                        <td th:text="${p.nombre}">...</td>
-                        <td th:text="${p.apellido}">...</td>
-                        <td th:text="${p.estado}">...</td>
-                        
-                        <td class="actions-cell" style="text-align: right;">
-                            <button th:onclick="|verPaciente(${p.idPaciente})|" 
-                                    class="btn-secundario btn-sm" 
-                                    title="Ver Detalles">
-                                <i class="ph-bold ph-eye"></i>
-                            </button>
-                            
-                            <a th:href="@{/pacientes/editar/{id}(id=${p.idPaciente})}" 
-                               class="btn-secundario btn-sm"
-                               title="Editar Paciente">
-                                <i class="ph-bold ph-pencil-simple"></i>
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+
+            <div th:if="${#lists.isEmpty(pacientes)}" class="alert" style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
+                Aún no hay pacientes registrados. Puedes crear uno nuevo usando el formulario 'Crear Nuevo CRF'.
+            </div>
+
+            <div class="table-responsive-wrapper" th:if="${!#lists.isEmpty(pacientes)}">
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Código</th>
+                            <th>Nombre</th>
+                            <th>Apellido</th>
+                            <th>Estado</th>
+                            <th style="text-align: right; width: 150px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="p : ${pacientes}"
+                            th:classappend="${p.validationMessage != null ? 'fila-incompleta' : ''}"
+                            th:title="${p.validationMessage}">
+
+                            <td th:text="${p.idPaciente}">...</td>
+                            <td th:text="${p.codigoPaciente}">...</td>
+                            <td th:text="${p.nombre}">...</td>
+                            <td th:text="${p.apellido}">...</td>
+                            <td th:text="${p.estado}">...</td>
+
+                            <td class="actions-cell" style="text-align: right;">
+                                <button th:onclick="|verPaciente(${p.idPaciente})|"
+                                        class="btn-secundario btn-sm"
+                                        title="Ver Detalles">
+                                    <i class="ph-bold ph-eye"></i>
+                                </button>
+
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div> </div>
     </div>
 </div>
 </html>

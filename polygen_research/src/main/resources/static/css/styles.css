@@ -148,16 +148,28 @@ td {
 
 /* --- 4. Barra Lateral --- */
 #sidebar {
-    width: 260px;
+    width: var(--sidebar-width); /* Usamos la variable */
     background-color: var(--color-tarjeta);
     border-right: 1px solid var(--color-borde);
     padding: 1.5rem;
     display: flex;
     flex-direction: column;
-    transition: transform 0.3s ease-in-out, background-color 0.3s ease, border-color 0.3s ease;
     box-shadow: var(--sombra-tarjeta);
     z-index: 100;
     flex-shrink: 0;
+    /* Transición para ESCRITORIO (width, padding) */
+    transition: width 0.3s ease-in-out, padding 0.3s ease-in-out, background-color 0.3s ease, border-color 0.3s ease;
+    /* Estado base visible */
+    transform: translateX(0);
+    overflow: hidden; /* Oculta contenido si se encoge */
+    position: relative; /* Necesario para posicionar el botón toggle abajo */
+}
+
+#sidebar:not(.open) {
+    width: 70px; /* Ancho mínimo para iconos, ajústalo si es necesario */
+    padding-left: 0.5rem; /* Padding reducido para centrar iconos */
+    padding-right: 0.5rem;
+    border-right: 1px solid var(--color-borde); /* Mantenemos un borde */
 }
 
 .sidebar-header {
@@ -202,6 +214,25 @@ td {
     font-size: 1.3rem;
     flex-shrink: 0; /* Evita que el icono se encoja */
 }
+
+/* Estilos para el texto dentro de los enlaces */
+.link-text {
+    opacity: 1;
+    transition: opacity 0.2s ease-out 0.1s; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    flex-grow: 1; 
+    margin-left: 12px; 
+}
+
+/* Ocultar texto cuando el sidebar está colapsado */
+#sidebar:not(.open) .link-text {
+    opacity: 0;
+    width: 0;
+    margin-left: 0;
+    transition: opacity 0.1s ease-in, width 0s linear 0.1s; /* Desaparece rápido */
+}
+
 #sidebar nav a:hover,
 #sidebar nav a.active {
     background-color: var(--color-primario);
@@ -213,18 +244,48 @@ td {
     font-size: 0.8rem;
     color: #999;
 }
+
+/* Estilos para el nuevo botón de colapsar/expandir */
+#sidebar-toggle {
+    background: none;
+    border: 1px solid var(--color-borde);
+    border-radius: 6px;
+    padding: 0.5rem;
+    cursor: pointer;
+    color: var(--color-texto-secundario);
+    margin-top: 1rem; /* Espacio antes del footer */
+    margin-bottom: 0.5rem; /* Espacio antes del footer */
+    align-self: center; /* Centrar el botón */
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+#sidebar-toggle:hover {
+    background-color: var(--color-fondo);
+}
+#sidebar-toggle i {
+    font-size: 1.2rem;
+    display: block; /* Asegura tamaño correcto */
+    transition: transform 0.3s ease-in-out; /* Para animar cambio de icono si es necesario */
+}
+
 .sidebar-footer i {
     color: var(--color-exito);
     vertical-align: middle;
 }
 
-/* --- 5. Contenido Principal --- */
+/* --- 5. Contenido Principal */
 #main-content {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    overflow-y: auto;
+    overflow-y: auto; /* Permite scroll vertical */
     height: 100vh;
+    /* Margen izquierdo por defecto y animación */
+    margin-left: var(--sidebar-width); /* Usamos la variable */
+    transition: margin-left 0.3s ease-in-out;
+}
+
+#sidebar:not(.open) ~ #main-content {
+    margin-left: 0px; /* Debe coincidir con el width colapsado del sidebar */
 }
 
 /* 5.1 Encabezado Superior */
@@ -576,40 +637,102 @@ input:checked + .slider:before {
 
 /* --- 9. Responsividad --- */
 @media (max-width: 768px) {
+
+
+
+    /* 1. Reducir tamaño de fuente general */
+    body {
+        font-size: 14px; /* Un poco más pequeño */
+    }
+
+    /* 2. Sidebar más estrecho */
     #sidebar {
-        position: fixed; /* Mejor para overlay */
-        transform: translateX(-100%);
-        height: 100%;
-        box-shadow: 5px 0 15px rgba(0,0,0,0.1); /* Sombra más pronunciada */
+        width: 60px; /* Más estrecho que los 70px anteriores */
+        padding-left: 0.4rem; /* Menos padding lateral */
+        padding-right: 0.4rem;
+        padding-top: 1rem; /* Menos padding superior */
+        padding-bottom: 1rem;
+        /* Mantenemos posición y ocultar texto */
+        position: sticky; top: 0; height: 100vh;
+        z-index: 100;
+        box-shadow: var(--sombra-tarjeta);
+        transition: width 0.3s ease-in-out, padding 0.3s ease-in-out, background-color 0.3s ease, border-color 0.3s ease;
+        overflow: hidden;
     }
-    #sidebar.open {
-        transform: translateX(0);
+
+    /* Ocultamos texto (igual que antes) */
+    #sidebar .link-text,
+    #sidebar .sidebar-footer .link-text,
+    #sidebar .sidebar-header h1 { /* Ocultamos H1 también */
+        display: none; /* Más directo que opacity/width */
     }
-    #app-wrapper {
-        /* Mantenemos flex para layout general, pero main-content ocupa todo */
+
+    /* Ajustar header del sidebar */
+     #sidebar .sidebar-header {
+         margin-bottom: 1.5rem; /* Menos espacio inferior */
+         justify-content: center; /* Centrar icono */
+         padding-left: 0; /* Sin padding extra */
+         padding-right: 0;
+     }
+     #sidebar .sidebar-header i {
+         font-size: 2rem; /* Icono del header un poco más pequeño */
+     }
+
+
+    /* 3. Iconos de navegación más pequeños y menos espaciados */
+    #sidebar nav a {
+        padding: 0.6rem; /* Menos padding */
+        gap: 8px; /* Menos gap (aunque el texto está oculto) */
+        justify-content: center; /* Centrar icono */
     }
+    #sidebar nav a i {
+        font-size: 1.2rem; /* Iconos más pequeños */
+        margin: 0; /* Quitamos margen si lo hubiera */
+    }
+
+    /* Ocultar footer o hacerlo más compacto */
+    .sidebar-footer {
+        padding: 0.5rem;
+        text-align: center;
+    }
+     .sidebar-footer i {
+         font-size: 0.9rem; /* Icono del candado más pequeño */
+     }
+
+    /* 4. Contenido principal con margen ajustado */
     #main-content {
-        width: 100%;
-        margin-left: 0; /* Aseguramos que no haya margen */
+        width: auto;
+        margin-left: 60px; /* Coincide con el nuevo ancho del sidebar */
+        transition: none;
     }
-    #page-container {
-        padding: 1rem;
+
+    /* 5. Header superior más compacto */
+    #app-header {
+        position: sticky; top: 0; z-index: 900;
+        padding: 0.5rem 1rem; /* Menos padding vertical */
+        min-height: 55px; /* Altura menor */
     }
-    .grid-2 {
-        grid-template-columns: 1fr;
-    }
-    .header-left .menu-toggle {
-        display: block; /* Aseguramos que sea visible */
-    }
-    .profile-menu span {
+    .header-left { flex-wrap: nowrap; overflow: hidden; gap: 0.5rem; /* Menos gap */}
+    .header-left button { padding: 0.4rem; /* Botones más pequeños */ }
+    .header-left button i { font-size: 1.1rem; /* Iconos más pequeños */ }
+
+    .header-right { gap: 1rem; /* Menos gap */ }
+    .header-right .icon-btn { font-size: 1.3rem; /* Iconos más pequeños */ }
+    .profile-menu img { width: 32px; height: 32px; /* Avatar más pequeño */ }
+
+    /* Ocultamos botón inferior (igual que antes) */
+    #sidebar-toggle {
         display: none;
     }
-    .modal-content {
-        width: 95%;
-        margin: 5% auto;
-    }
+
+    /* Mantenemos otros ajustes (igual que antes) */
+    #page-container { padding: 1rem; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .profile-menu span { display: none; }
+    .modal-content { width: 95%; margin: 5% auto; }
+
 }
-    
+
 /* --- 10. Estilos de Alertas y Mensajes --- */
 .alert {
     padding: 1rem;
@@ -655,4 +778,17 @@ tr.fila-incompleta:hover {
 }
 tr.fila-incompleta td {
     cursor: help;
+}
+
+/* --- 12. Estilos Responsivos para Tablas (NUEVO) --- */
+
+.table-responsive-wrapper {
+    overflow-x: auto; /* Habilita el scroll horizontal si es necesario */
+    width: 100%;       /* Ocupa todo el ancho disponible */
+    -webkit-overflow-scrolling: touch; /* Mejora el scroll en iOS */
+}
+
+/* Opcional: Ancho mínimo para la tabla antes de que aparezca el scroll */
+.table-responsive-wrapper table {
+    min-width: 600px; /* Ajusta este valor si necesitas más o menos espacio */
 }
