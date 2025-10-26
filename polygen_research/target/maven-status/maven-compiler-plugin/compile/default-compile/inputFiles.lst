@@ -1,42 +1,45 @@
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\auth\AuthController.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\auth\RegisterDto.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\config\SecurityConfig.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\CampoCrf\CampoCrf.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\CampoCrf\CampoCrfController.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\CampoCrf\CampoCrfRepository.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\CampoCrf\CampoCrfService.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Crf\Crf.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Crf\CrfController.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Crf\CrfRepository.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Crf\CrfService.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\DatosCrf\DatosCrf.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\DatosCrf\DatosCrfController.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\DatosCrf\DatosCrfRepository.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\DatosCrf\DatosCrfService.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\DatosPaciente\DatosPaciente.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\DatosPaciente\DatosPacienteController.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\DatosPaciente\DatosPacienteRepository.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\DatosPaciente\DatosPacienteService.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\dto\CrfForm.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\dto\CrfResumenRowDTO.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\dto\CrfResumenViewDTO.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\RegistroActividad\RegistroActividad.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\RegistroActividad\RegistroActividadController.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\RegistroActividad\RegistroActividadRepository.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\RegistroActividad\RegistroActividadService.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuario.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuarioController.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuarioRepository.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuarioService.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Usuario\Usuario.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Usuario\UsuarioController.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Usuario\UsuarioRepository.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Usuario\UsuarioService.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Whitelist\Whitelist.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Whitelist\WhitelistController.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Whitelist\WhitelistRepository.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Whitelist\WhitelistService.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\MainController.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\PolygenResearchApplication.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\security\CustomUserDetails.java
-C:\Users\Matias Figueroa\Desktop\p\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\security\CustomUserDetailService.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\auth\AuthController.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\auth\RegisterDto.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\config\SecurityConfig.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\CampoCrf\CampoCrf.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\CampoCrf\CampoCrfController.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\CampoCrf\CampoCrfRepository.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\CampoCrf\CampoCrfService.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Crf\Crf.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Crf\CrfController.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Crf\CrfRepository.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Crf\CrfService.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\DatosCrf\DatosCrf.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\DatosCrf\DatosCrfController.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\DatosCrf\DatosCrfRepository.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\DatosCrf\DatosCrfService.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\DatosPaciente\DatosPaciente.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\DatosPaciente\DatosPacienteController.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\DatosPaciente\DatosPacienteRepository.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\DatosPaciente\DatosPacienteService.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\dto\CrfForm.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\dto\CrfResumenRowDTO.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\dto\CrfResumenViewDTO.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\dto\CriterioDTO.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\export\ExcelReporteService.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\RegistroActividad\RegistroActividad.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\RegistroActividad\RegistroActividadController.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\RegistroActividad\RegistroActividadRepository.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\RegistroActividad\RegistroActividadService.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuario.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuarioController.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuarioRepository.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuarioService.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Usuario\Usuario.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Usuario\UsuarioController.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Usuario\UsuarioRepository.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Usuario\UsuarioService.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\util\CalculoService.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Whitelist\Whitelist.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Whitelist\WhitelistController.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Whitelist\WhitelistRepository.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\DataBase\Whitelist\WhitelistService.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\MainController.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\PolygenResearchApplication.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\security\CustomUserDetails.java
+C:\Users\shado\Desktop\silkloned\polygen_research\polygen_research\src\main\java\cl\ubiobio\silkcorp\polygen_research\security\CustomUserDetailService.java
