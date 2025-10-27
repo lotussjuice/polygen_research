@@ -5,23 +5,18 @@ import java.util.List;
 
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosCrf.DatosCrf;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPaciente;
-//import lombok.Getter;
-//import lombok.Setter;
 
-/**
- * Este DTO (Data Transfer Object) actúa como un "Wrapper" o "Contenedor"
- * para el formulario de Thymeleaf. Agrupa los datos del paciente (estáticos)
- * y la lista de respuestas (dinámicas).
- */
 //@Getter
 //@Setter
 public class CrfForm {
 
-    // 1. Objeto para los campos estáticos de DatosPaciente
     private DatosPaciente datosPaciente;
-
-    // 2. Lista para los campos dinámicos (las respuestas)
     private List<DatosCrf> datosCrfList;
+
+    private boolean esCasoEstudio;
+    private String observacion;
+
+    private Integer idCrf;
 
     public CrfForm() {
         this.datosPaciente = new DatosPaciente();
@@ -43,4 +38,30 @@ public class CrfForm {
     public void setDatosCrfList(List<DatosCrf> datosCrfList) {
         this.datosCrfList = datosCrfList;
     }
+
+    public boolean isEsCasoEstudio() {
+        return esCasoEstudio;
+    }
+
+    public void setEsCasoEstudio(boolean esCasoEstudio) {
+        this.esCasoEstudio = esCasoEstudio;
+    }
+
+    public String getObservacion() {
+        return observacion;
+    }
+
+    public void setObservacion(String observacion) {
+        this.observacion = observacion;
+    }
+
+    public Integer getIdCrf() { 
+        return idCrf; 
+    }
+    
+    public void setIdCrf(Integer idCrf) { 
+        this.idCrf = idCrf; 
+    }
+
+    
 }

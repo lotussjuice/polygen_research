@@ -4,8 +4,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
-import org.springframework.transaction.annotation.Transactional;
-
 @Service
 public class RolUsuarioService {
 
@@ -15,7 +13,6 @@ public class RolUsuarioService {
         this.rolUsuarioRepository = rolUsuarioRepository;
     }
 
-    @Transactional(readOnly = true) // <-- Asegúrate que esté aquí
     public List<RolUsuario> getAllRoles() {
         return rolUsuarioRepository.findAll();
     }
@@ -23,13 +20,9 @@ public class RolUsuarioService {
     public Optional<RolUsuario> getRolById(Integer id) {
         return rolUsuarioRepository.findById(id);
     }
-
-    public RolUsuario saveRol(RolUsuario rol) {
-        // Lógica de negocio (ej: validar que el nombre del rol no se repita)
-        return rolUsuarioRepository.save(rol);
-    }
-
-    public void deleteRol(Integer id) {
-        rolUsuarioRepository.deleteById(id);
+    
+    public RolUsuario getRolVisitantePorDefecto() {
+        return rolUsuarioRepository.findByNombreRol("VISITANTE")
+                .orElseThrow(() -> new RuntimeException("Error fatal: El rol 'VISITANTE' no se encontró en la base de datos."));
     }
 }

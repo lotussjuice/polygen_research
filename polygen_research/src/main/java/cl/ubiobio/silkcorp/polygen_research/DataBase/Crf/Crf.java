@@ -18,62 +18,37 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter; 
 
 @Entity
 @Table(name = "crf")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
 public class Crf {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "ID_CRF")
     private Integer idCrf;
 
     @Column(name = "Grupo", length = 30)
-    private String grupo;
+    private boolean esCasoEstudio;
 
-    //@Column(name = "Fecha_consulta")
-    //private LocalDate fechaConsulta; // Mapea a 'date' en MySQL
     @Column(name = "Fecha_consulta")
     private LocalDate fechaConsulta = LocalDate.now();
-
-
-
-
 
     @Column(name = "Estado", length = 20)
     private String estado;
 
     @Column(name = "Observacion", length = 200)
     private String observacion;
-    
-    // MUCHOS Crfs pertenecen a UN Paciente.
+
     @ManyToOne(fetch = FetchType.LAZY) // LAZY es bueno para performance
     @JoinColumn(name = "Datos_Paciente_ID", nullable = false)
     private DatosPaciente datosPaciente;
 
-    // --- Relación con las Respuestas ---
-    // ¡ESTA ANOTACIÓN ES LA CLAVE DE TODO!
-    // 'mappedBy = "crf"' -> Le dice a JPA que la entidad 'DatosCRF' maneja la FK (en su campo 'crf')
-    // 'cascade = CascadeType.ALL' -> Le dice "Guarda, actualiza o borra mis 'DatosCRF' cuando yo me guarde"
-    @OneToMany(
-        mappedBy = "crf", 
-        cascade = CascadeType.ALL, 
-        orphanRemoval = true
-    )
+    @OneToMany(mappedBy = "crf", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DatosCrf> datosCrfList = new ArrayList<>();;
 
-    // Un CRF tiene MUCHOS registros_actividad
     @OneToMany(mappedBy = "crf")
     private List<RegistroActividad> registrosActividad;
-    
+
     public Integer getIdCrf() {
         return idCrf;
     }
@@ -82,12 +57,12 @@ public class Crf {
         this.idCrf = idCrf;
     }
 
-    public String getGrupo() {
-        return grupo;
+    public boolean isCasoEstudio() {
+        return esCasoEstudio;
     }
 
-    public void setGrupo(String grupo) {
-        this.grupo = grupo;
+    public void setCasoEstudio(boolean grupo) {
+        this.esCasoEstudio = grupo;
     }
 
     public LocalDate getFechaConsulta() {
@@ -139,11 +114,10 @@ public class Crf {
     }
 
     public void addDato(DatosCrf dato) {
-        // 1. Agrega la respuesta a la lista de este CRF
+        // Agrega la respuesta a la lista de este CRF
         datosCrfList.add(dato);
-        
-        // 2. Establece la relación inversa (le dice a la respuesta quién es su "padre" Crf)
+        // Establece la relación inversa (le dice a la respuesta quién es su "padre"
+        // Crf)
         dato.setCrf(this);
     }
-
 }

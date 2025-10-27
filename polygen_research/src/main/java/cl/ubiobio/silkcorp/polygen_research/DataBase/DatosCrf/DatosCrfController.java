@@ -14,10 +14,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+
 import cl.ubiobio.silkcorp.polygen_research.DataBase.CampoCrf.CampoCrfService;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.Crf.CrfService;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.export.ExcelReporteService;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.export.StataExportService; // NUEVO IMPORT
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.StataPreviewDTO; // NUEVO IMPORT
+import org.springframework.web.bind.annotation.ResponseBody; // NUEVO IMPORT
 
 @Controller
 @RequestMapping("/datos-crf")
@@ -27,12 +33,14 @@ public class DatosCrfController {
     private final CrfService crfService;
     //private final CampoCrfService campoCrfService;
     private final ExcelReporteService excelReporteService;
-
-    public DatosCrfController(DatosCrfService datosCrfService, CrfService crfService, CampoCrfService campoCrfService, ExcelReporteService excelReporteService) {
+    private final StataExportService stataExportService;
+    
+    public DatosCrfController(DatosCrfService datosCrfService, CrfService crfService, CampoCrfService campoCrfService, ExcelReporteService excelReporteService, StataExportService stataExportService) {
         //this.datosCrfService = datosCrfService;
         this.crfService = crfService;
         //this.campoCrfService = campoCrfService;
         this.excelReporteService = excelReporteService;
+        this.stataExportService = stataExportService;
     }
 
     @GetMapping("/list")
@@ -74,9 +82,11 @@ public class DatosCrfController {
             @RequestParam("criteriosJson") String criteriosJson) throws IOException {
 
         ByteArrayInputStream stream = excelReporteService.generarReporteDicotomizado(criteriosJson);
+        String fechaActual = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String nombreArchivo = "ReporteDicotomizado_" + fechaActual + ".xlsx";
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=ReporteDicotomizado.xlsx");
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nombreArchivo + "\"");
 
         return ResponseEntity
                 .ok()
@@ -84,4 +94,34 @@ public class DatosCrfController {
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(new InputStreamResource(stream));
     }
+
+    @PostMapping("/api/preview-stata")
+    @ResponseBody // Devuelve JSON
+    public ResponseEntity<StataPreviewDTO> getStataPreview(@RequestParam("criteriosJson") String criteriosJson) {
+        try {
+            StataPreviewDTO previewData = stataExportService.getPreview(criteriosJson);
+            return ResponseEntity.ok(previewData);
+        } catch (IOException e) {
+            // Manejo de error (simplificado)
+            return ResponseEntity.badRequest().build();
+        }
+    }
+    
+    // --- NUEVO ENDPOINT PARA DESCARGA STATA ---
+    @PostMapping("/list/exportar-stata")
+    public ResponseEntity<InputStreamResource> exportarReporteStata(
+            @RequestParam("criteriosJson") String criteriosJson) throws IOException {
+
+        ByteArrayInputStream stream = stataExportService.generarReporteStata(criteriosJson);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=Reporte_STATA.xlsx");
+
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(stream));
+    }
+
 }

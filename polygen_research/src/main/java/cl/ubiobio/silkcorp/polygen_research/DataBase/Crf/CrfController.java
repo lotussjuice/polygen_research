@@ -39,6 +39,18 @@ public class CrfController {
         return "dev/CrfTemp/crf-form"; // El nombre de tu archivo HTML de Thymeleaf
     }
 
+    @GetMapping("/editar/{id}")
+    public String mostrarFormularioEditarCrf(@PathVariable("id") Integer crfId, Model model) {
+        
+        // Llama al nuevo método del servicio
+        CrfForm form = crfService.prepararCrfFormParaEditar(crfId);
+        
+        model.addAttribute("crfForm", form);
+        
+        // Reutiliza la misma vista del formulario
+        return "dev/CrfTemp/Crf-form"; 
+    }
+
     /**
      * Recibe los datos del formulario (paciente + respuestas dinámicas).
      * El @ModelAttribute "crfForm" une todos los campos del HTML
@@ -48,18 +60,25 @@ public class CrfController {
     public String guardarNuevoCrf(@ModelAttribute CrfForm crfForm, Model model) {
         
         try {
-            // Llama al servicio para guardar todo en una transacción
-            crfService.guardarCrfCompleto(crfForm);
+            // --- ¡NUEVA LÓGICA DE DECISIÓN! ---
+            if (crfForm.getIdCrf() == null) {
+                // Si NO hay ID, es un CRF Nuevo
+                crfService.guardarCrfCompleto(crfForm);
+            } else {
+                // Si SÍ hay ID, es una Edición
+                crfService.actualizarCrfCompleto(crfForm);
+            }
+
         } catch (Exception e) {
-            // Manejo básico de errores
+            // Manejo básico de errores (devuelve al usuario al formulario)
             model.addAttribute("errorMessage", "Error al guardar el CRF: " + e.getMessage());
-            // Devolvemos el formulario con los datos cargados para que el usuario corrija
-            model.addAttribute("crfForm", crfForm);
-            return "crf-form";
+            // Recarga el formulario con los datos que el usuario ya tenía
+            model.addAttribute("crfForm", crfForm); 
+            return "dev/CrfTemp/Crf-form";
         }
 
-        // Redirige a la lista de pacientes (o a donde quieras)
-        return "redirect:/pacientes/list"; 
+        // Redirige a la lista de CRFs
+        return "redirect:/crf/list"; 
     }
 
 
@@ -89,18 +108,20 @@ public class CrfController {
         return "crf-reporte";
     }
 
-    /*
+    
     @GetMapping("/list")
-    public String listarTodosLosCrfs(Model model) {
-        // 1. Llama al servicio para obtener todos los CRFs
-        // (Este método ya debería existir en tu CrfService)
-        List<Crf> listaDeCrfs = crfService.getAllCrfs();
-        
-        // 2. Agrega la lista al modelo para que la vista la pueda usar
-        model.addAttribute("crfs", listaDeCrfs);
-        
-        // 3. Devuelve el nombre del nuevo archivo HTML que crearemos
-        return "crf-list";
-    }
-    */
+        public String listarTodosLosCrfs(Model model) {
+            
+            // 1. Llama al servicio que ya creamos (getCrfResumenView)
+            // Este servicio hace todo el trabajo de "pivotar" los datos.
+            CrfResumenViewDTO data = crfService.getCrfResumenView();
+            
+            // 2. Pasamos las dos variables que el HTML necesita
+            model.addAttribute("camposColumnas", data.getCamposActivos());
+            model.addAttribute("filasCrf", data.getFilas());
+            
+            
+            return "dev/CrfTemp/Crf-list"; 
+        }
+
 }

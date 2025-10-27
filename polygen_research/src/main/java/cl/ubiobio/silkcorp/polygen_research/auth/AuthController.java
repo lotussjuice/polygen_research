@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes; 
 
-import java.util.List;
+import java.util.List; // Esta importación ya no es necesaria aquí, pero no daña
 
 @Controller
 public class AuthController {
@@ -46,9 +46,13 @@ public class AuthController {
     public String showRegisterPage(Model model) {
         // We need a DTO (Data Transfer Object) to hold registration data
         model.addAttribute("registerDto", new RegisterDto());
-        // Pass roles to the form for selection
-        List<RolUsuario> roles = rolUsuarioService.getAllRoles();
-        model.addAttribute("roles", roles);
+        
+        // ==== CAMBIO AQUÍ ====
+        // Ya no pasamos la lista de roles al formulario
+        // List<RolUsuario> roles = rolUsuarioService.getAllRoles(); // <-- LÍNEA ELIMINADA
+        // model.addAttribute("roles", roles); // <-- LÍNEA ELIMINADA
+        // ==== FIN DEL CAMBIO ====
+        
         // Corresponds to /resources/templates/register.html
         return "startpoint/register";
     }
@@ -59,14 +63,16 @@ public class AuthController {
                                       BindingResult result, // For validation results
                                       RedirectAttributes redirectAttributes) { // To show success/error messages
 
-        // Basic Validation (you can add more sophisticated validation later)
+        // ==== CAMBIO EN VALIDACIÓN ====
+        // Se quita la validación de 'registerDto.getIdRol()'
         if (registerDto.getCorreo() == null || registerDto.getCorreo().isEmpty() ||
             registerDto.getPassword() == null || registerDto.getPassword().isEmpty() ||
-            registerDto.getNombreUsuario() == null || registerDto.getNombreUsuario().isEmpty() ||
-            registerDto.getIdRol() == null) {
+            registerDto.getNombreUsuario() == null || registerDto.getNombreUsuario().isEmpty()) {
             // Add an error message if validation fails
             result.reject("globalError", "Todos los campos son obligatorios.");
         }
+        // ==== FIN DEL CAMBIO ====
+
 
         // Check if email already exists
         if (whitelistService.existsByCorreo(registerDto.getCorreo())) {
@@ -89,13 +95,15 @@ public class AuthController {
             nuevoUsuario.setNombreUsuario(registerDto.getNombreUsuario());
             nuevoUsuario.setEstado("Activo"); // Set default state
 
-            // Find the selected RolUsuario
-            RolUsuario rolSeleccionado = rolUsuarioService.getRolById(registerDto.getIdRol())
-                    .orElseThrow(() -> new RuntimeException("Rol no encontrado"));
-            nuevoUsuario.setRolUsuario(rolSeleccionado);
+            // ==== CAMBIO EN ASIGNACIÓN DE ROL ====
+            // En lugar de obtener el rol del DTO, asignamos "VISITANTE" por defecto
+            RolUsuario rolVisitante = rolUsuarioService.getRolVisitantePorDefecto();
+            nuevoUsuario.setRolUsuario(rolVisitante);
+            // ==== FIN DEL CAMBIO ====
+            
             Usuario usuarioGuardado = usuarioService.saveUsuario(nuevoUsuario); // Save and get ID
 
-            // 2. Create Whitelist (Credentials)
+            // 2. Create Whitelist (Credentials) - SIN CAMBIOS
             Whitelist credencial = new Whitelist();
             credencial.setCorreo(registerDto.getCorreo());
             // Encode the password before saving!

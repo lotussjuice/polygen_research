@@ -1,159 +1,208 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
 
-<body> <div th:fragment="contenido">
+<body>
+    <div th:fragment="contenido">
 
-    <div class="card">
-        <div class="card-header">
-            <h3><i class="ph-bold ph-chart-line"></i> Reporte de Datos (Valores CRF)</h3>
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="ph-bold ph-chart-line"></i> Reporte de Datos (Valores CRF)</h3>
             </div>
-        <div class="card-body">
+            <div class="card-body">
 
-            <p>Cada fila representa un CRF completo. Use (+) en las columnas numéricas para añadir criterios de dicotomización antes de exportar.</p>
+                <p>Cada fila representa un CRF completo. Use (+) en las columnas numéricas para añadir criterios de dicotomización antes de exportar.</p>
 
-            <form id="exportForm" th:action="@{/datos-crf/list/exportar}" method="post">
-                <input type="hidden" id="criteriosExport" name="criteriosJson" />
-                <button type="submit" class="btn-exito btn-sm" style="margin-bottom: 1rem;"> <i class="ph-bold ph-file-xls"></i> Exportar a Excel
+                <form id="exportForm" th:action="@{/datos-crf/list/exportar}" method="post" style="display: inline-block;">
+                    <input type="hidden" id="criteriosExport" name="criteriosJson" />
+                    <button type="submit" class="btn-exito btn-sm" style="margin-bottom: 1rem;">
+                        <i class="ph-bold ph-file-xls"></i> Exportar a Excel
+                    </button>
+                </form>
+
+                <button type="button" id="btn-stata-preview" class="btn-stata btn-sm" style="margin-bottom: 1rem; margin-left: 0.5rem;">
+                    <i class="ph-bold ph-file"></i> Exportar para STATA
                 </button>
-            </form>
 
-            <div th:if="${#lists.isEmpty(filasCrf)}" class="alert" style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
-                No se han encontrado CRFs para mostrar en el reporte.
-            </div>
+                <form id="stataExportForm" th:action="@{/datos-crf/list/exportar-stata}" method="post" style="display: none;">
+                    <input type="hidden" id="stataCriteriosExport" name="criteriosJson" />
+                </form>
 
-            <div class="table-responsive-wrapper" th:if="${!#lists.isEmpty(filasCrf)}">
-
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID CRF</th>
-                            <th>Cód. Paciente</th>
-                            <th>Paciente</th>
-                            <th>Fecha Creación</th>
-                            <th th:each="campo : ${camposColumnas}">
-    <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <span th:text="${campo.nombre}">...</span>
-        <button th:if="${campo.tipo == 'NUMERO'}"
-                type="button"
-                class="btn-add-criterion" th:data-campo-id="${campo.idCampo}"
-                th:data-campo-nombre="${campo.nombre}">
-            +
-        </button>
-    </div>
-    <div class="criteria-tags" th:id="'tags-campo-' + ${campo.idCampo}"></div>
-</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="fila : ${filasCrf}">
-                            <td th:text="${fila.crf.idCrf}">...</td>
-                            <td th:text="${fila.crf.datosPaciente?.codigoPaciente}">...</td>
-                            <td th:text="${fila.crf.datosPaciente?.nombre + ' ' + fila.crf.datosPaciente?.apellido}">...</td>
-                            <td th:text="${fila.crf.fechaConsulta != null ? #temporals.format(fila.crf.fechaConsulta, 'dd/MM/yyyy') : 'N/A'}">...</td>
-                            <td th:each="campo : ${camposColumnas}">
-                                <span th:text="${fila.valores.get(campo.idCampo) ?: '-'}"></span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div> </div> </div> <div class="modal fade" id="modalCriterio" tabindex="-1" aria-labelledby="modalCriterioLabel" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content" style="background-color: var(--color-tarjeta); color: var(--color-texto); border-color: var(--color-borde);"> <div class="modal-header" style="border-bottom-color: var(--color-borde);">
-                    <h5 class="modal-title" id="modalCriterioLabel">Agregar Criterio para: <span id="modalCampoNombre"></span></h5>
-                    <button type="button" class="close-modal" data-bs-dismiss="modal" aria-label="Cerrar">&times;</button>
+                <div th:if="${#lists.isEmpty(filasCrf)}" class="alert" style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
+                    No se han encontrado CRFs para mostrar en el reporte.
                 </div>
-                <div class="modal-body">
-                    <input type="hidden" id="modalCampoId" />
-                    <div class="form-group">
-                        <label for="selectTipoCriterio">Tipo de Criterio</label>
-                        <select class="form-control" id="selectTipoCriterio"> <option value="media">Media</option>
-                            <option value="mediana">Mediana</option>
-                            <option value="promedio">Promedio</option>
-                            <option value="personalizado">Personalizado</option>
-                        </select>
-                    </div>
-                    <div id="divPersonalizado" style="display: none;">
-                        <div class="form-group">
-                            <label for="inputNombreCriterio">Nombre para la Columna Excel</label>
-                            <input type="text" class="form-control" id="inputNombreCriterio" placeholder="Ej: Edad_Joven"> <small style="color: var(--color-texto-secundario);">Se usará como cabecera en Excel (Ej: Edad_Joven)</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="inputPuntoCorte">Punto de Corte (Valor numérico)</label>
-                            <input type="number" class="form-control" id="inputPuntoCorte" placeholder="Ej: 30"> </div>
-                        <div class="form-group">
-                            <label for="selectOperador">Operador</label>
-                            <select class="form-control" id="selectOperador"> <option value="<">&lt; (Menor que)</option>
-                                <option value="<=">&lt;= (Menor o igual que)</option>
-                                <option value=">">&gt; (Mayor que)</option>
-                                <option value=">=">&gt;= (Mayor o igual que)</option>
-                                <option value="==">== (Igual a)</option>
-                            </select>
-                        </div>
-                    </div>
+
+                <div class="table-responsive-wrapper" th:if="${!#lists.isEmpty(filasCrf)}">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID CRF</th>
+                                <th>Cód. Paciente</th>
+                                <th th:each="campo : ${camposColumnas}">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                        <span th:text="${campo.nombre}">...</span>
+                                        <button th:if="${campo.tipo == 'NUMERO'}"
+                                                type="button"
+                                                class="btn-add-criterion"
+                                                th:data-campo-id="${campo.idCampo}"
+                                                th:data-campo-nombre="${campo.nombre}">
+                                            +
+                                        </button>
+                                    </div>
+                                    <div class="criteria-tags" th:id="'tags-campo-' + ${campo.idCampo}"></div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="fila : ${filasCrf}">
+                                <td th:text="${fila.crf.idCrf}">...</td>
+                                <td th:text="${fila.crf.datosPaciente?.codigoPaciente}">...</td>
+                                <td th:each="campo : ${camposColumnas}">
+                                    <span th:text="${fila.valores.get(campo.idCampo) ?: '-'}"></span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <div class="modal-footer" style="border-top-color: var(--color-borde);">
-                    <button type="button" class="btn-secundario" data-bs-dismiss="modal">Cancelar</button> <button type="button" class="btn-primario" id="btnGuardarCriterio">Guardar Criterio</button> </div>
             </div>
         </div>
-    </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            let criterios = {};
-            const modalElement = document.getElementById('modalCriterio');
+        <!-- Modal Criterio -->
+        <div class="modal fade" id="modalCriterio" tabindex="-1" aria-labelledby="modalCriterioLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content" style="background-color: var(--color-tarjeta); color: var(--color-texto); border-color: var(--color-borde);">
+                    <div class="modal-header" style="border-bottom-color: var(--color-borde);">
+                        <h5 class="modal-title" id="modalCriterioLabel">Agregar Criterio para: <span id="modalCampoNombre"></span></h5>
+                        <button type="button" class="close-modal" data-bs-dismiss="modal" aria-label="Cerrar">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="modalCampoId" />
+                        <div class="form-group">
+                            <label for="selectTipoCriterio">Tipo de Criterio</label>
+                            <select class="form-control" id="selectTipoCriterio">
+                                <option value="media">Media</option>
+                                <option value="mediana">Mediana</option>
+                                <option value="promedio">Promedio</option>
+                                <option value="personalizado">Personalizado</option>
+                            </select>
+                        </div>
+                        <div id="divPersonalizado" style="display: none;">
+                            <div class="form-group">
+                                <label for="inputNombreCriterio">Nombre para la Columna Excel</label>
+                                <input type="text" class="form-control" id="inputNombreCriterio" placeholder="Ej: Edad_Joven">
+                                <small style="color: var(--color-texto-secundario);">Se usará como cabecera en Excel (Ej: Edad_Joven)</small>
+                            </div>
+                            <div class="form-group">
+                                <label for="inputPuntoCorte">Punto de Corte (Valor numérico)</label>
+                                <input type="number" class="form-control" id="inputPuntoCorte" placeholder="Ej: 30">
+                            </div>
+                            <div class="form-group">
+                                <label for="selectOperador">Operador</label>
+                                <select class="form-control" id="selectOperador">
+                                    <option value="<">&lt; (Menor que)</option>
+                                    <option value="<=">&lt;= (Menor o igual que)</option>
+                                    <option value=">">&gt; (Mayor que)</option>
+                                    <option value=">=">&gt;= (Mayor o igual que)</option>
+                                    <option value="==">== (Igual a)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="border-top-color: var(--color-borde);">
+                        <button type="button" class="btn-secundario" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn-primario" id="btnGuardarCriterio">Guardar Criterio</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-            // Intenta cargar Bootstrap JS si no está presente
-            if (typeof bootstrap === 'undefined' || typeof bootstrap.Modal === 'undefined') {
-                console.warn("Bootstrap JS no detectado, intentando cargar...");
-                if (!document.querySelector('script[src*="bootstrap.bundle.min.js"]')) {
-                    let script = document.createElement('script');
-                    script.src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js";
-                    script.integrity = "sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"; // Buena práctica añadir integridad
-                    script.crossOrigin = "anonymous";
-                    script.onload = inicializarModal;
-                    document.body.appendChild(script);
+        <!-- Modal STATA Preview -->
+        <div class="modal fade" id="modalStataPreview" tabindex="-1" aria-labelledby="modalStataLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content" style="background-color: var(--color-tarjeta); color: var(--color-texto); border-color: var(--color-borde);">
+                    <div class="modal-header" style="border-bottom-color: var(--color-borde);">
+                        <h5 class="modal-title" id="modalStataLabel">Previsualización de Formato STATA</h5>
+                        <button type="button" class="close-modal" data-bs-dismiss="modal" aria-label="Cerrar">&times;</button>
+                    </div>
+                    <div class="modal-body" id="stata-preview-body">
+                        <p>Generando previsualización...</p>
+                    </div>
+                    <div class="modal-footer" style="border-top-color: var(--color-borde);">
+                        <button type="button" class="btn-secundario" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn-primario" id="btn-confirmar-descarga-stata">
+                            Confirmar y Descargar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                let criterios = {};
+                const modalElement = document.getElementById('modalCriterio');
+                const modalStataElement = document.getElementById('modalStataPreview');
+
+                // Intenta cargar Bootstrap JS si no está presente
+                if (typeof bootstrap === 'undefined' || typeof bootstrap.Modal === 'undefined') {
+                    console.warn("Bootstrap JS no detectado, intentando cargar...");
+                    if (!document.querySelector('script[src*="bootstrap.bundle.min.js"]')) {
+                        let script = document.createElement('script');
+                        script.src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js";
+                        script.integrity = "sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz";
+                        script.crossOrigin = "anonymous";
+                        script.onload = inicializarModal;
+                        document.body.appendChild(script);
+                    } else {
+                        console.error("Bootstrap JS parece estar en el DOM pero no se inicializó correctamente.");
+                        if (modalElement || modalStataElement) inicializarModal();
+                    }
                 } else {
-                     // Si el script ya está en el DOM pero bootstrap no está definido globalmente,
-                     // podría haber un problema de carga o un conflicto.
-                     console.error("Bootstrap JS parece estar en el DOM pero no se inicializó correctamente.");
-                     // Forzar inicialización si el script ya existe pero bootstrap no.
-                     // Esto es un parche, lo ideal es asegurar que cargue bien una sola vez.
-                     if(modalElement) inicializarModal();
-                }
-            } else {
-                inicializarModal();
-            }
-
-            let modalCriterio;
-            const modalCampoId = document.getElementById('modalCampoId');
-            const modalCampoNombre = document.getElementById('modalCampoNombre');
-            const selectTipoCriterio = document.getElementById('selectTipoCriterio');
-            const divPersonalizado = document.getElementById('divPersonalizado');
-            const inputNombreCriterio = document.getElementById('inputNombreCriterio');
-            const inputPuntoCorte = document.getElementById('inputPuntoCorte');
-            const selectOperador = document.getElementById('selectOperador');
-            const btnGuardarCriterio = document.getElementById('btnGuardarCriterio');
-            const exportForm = document.getElementById('exportForm');
-
-            function inicializarModal() {
-                 if (!modalElement || typeof bootstrap === 'undefined') {
-                    console.error("No se encontró #modalCriterio o Bootstrap JS no está disponible.");
-                    return;
-                }
-                // Prevenir doble inicialización
-                if (!modalCriterio) {
-                   modalCriterio = new bootstrap.Modal(modalElement);
-                   console.log("Modal de Bootstrap inicializado.");
+                    inicializarModal();
                 }
 
-                // Asegurarse que el listener solo se añada una vez
-                if (btnGuardarCriterio && !btnGuardarCriterio.dataset.listenerAttached) {
-                    btnGuardarCriterio.addEventListener('click', guardarCriterioAction);
-                    btnGuardarCriterio.dataset.listenerAttached = 'true'; // Marcar como añadido
-                }
-            }
+                let modalCriterio;
+                let modalStata;
+                const modalCampoId = document.getElementById('modalCampoId');
+                const modalCampoNombre = document.getElementById('modalCampoNombre');
+                const selectTipoCriterio = document.getElementById('selectTipoCriterio');
+                const divPersonalizado = document.getElementById('divPersonalizado');
+                const inputNombreCriterio = document.getElementById('inputNombreCriterio');
+                const inputPuntoCorte = document.getElementById('inputPuntoCorte');
+                const selectOperador = document.getElementById('selectOperador');
+                const btnGuardarCriterio = document.getElementById('btnGuardarCriterio');
+                const exportForm = document.getElementById('exportForm');
 
-            function guardarCriterioAction() { // Separar lógica del listener
+                // Elementos STATA
+                const btnStataPreview = document.getElementById('btn-stata-preview');
+                const btnConfirmarDescargaStata = document.getElementById('btn-confirmar-descarga-stata');
+                const stataExportForm = document.getElementById('stataExportForm');
+                const stataCriteriosInput = document.getElementById('stataCriteriosExport');
+                const stataPreviewBody = document.getElementById('stata-preview-body');
+
+                function inicializarModal() {
+                    if (typeof bootstrap === 'undefined') {
+                        console.error("Bootstrap JS no está disponible.");
+                        return;
+                    }
+
+                    // Inicializar Modal Criterio
+                    if (modalElement && !modalCriterio) {
+                        modalCriterio = new bootstrap.Modal(modalElement);
+                        console.log("Modal de Criterio inicializado.");
+                        if (btnGuardarCriterio && !btnGuardarCriterio.dataset.listenerAttached) {
+                            btnGuardarCriterio.addEventListener('click', guardarCriterioAction);
+                            btnGuardarCriterio.dataset.listenerAttached = 'true';
+                        }
+                    }
+
+                    // Inicializar Modal STATA
+                    if (modalStataElement && !modalStata) {
+                        modalStata = new bootstrap.Modal(modalStataElement);
+                        console.log("Modal de STATA inicializado.");
+                    }
+                }
+
+                function guardarCriterioAction() {
                     const campoId = parseInt(modalCampoId.value, 10);
                     const tipo = selectTipoCriterio.value;
                     let criterioNuevo = { tipo: tipo };
@@ -168,9 +217,7 @@
                             return;
                         }
                         criterioNuevo.nombre = nombre;
-                        // Guardamos operador y corte por separado para flexibilidad
-                        criterioNuevo.operador = operador;
-                        criterioNuevo.puntoCorte = corte;
+                        criterioNuevo.puntoCorte = `${operador}${corte}`;
                     }
 
                     if (!criterios[campoId]) {
@@ -178,97 +225,198 @@
                     }
                     criterios[campoId].push(criterioNuevo);
                     actualizarTagsUI();
-                    if(modalCriterio) modalCriterio.hide(); // Ocultar solo si está inicializado
-            }
+                    if (modalCriterio) modalCriterio.hide();
+                }
 
-            // Mostrar/Ocultar campos de "Personalizado"
-            if(selectTipoCriterio) {
-                selectTipoCriterio.addEventListener('change', () => {
-                    if(divPersonalizado) divPersonalizado.style.display = (selectTipoCriterio.value === 'personalizado') ? 'block' : 'none';
+                // Mostrar/Ocultar campos de "Personalizado"
+                if (selectTipoCriterio) {
+                    selectTipoCriterio.addEventListener('change', () => {
+                        if (divPersonalizado) {
+                            divPersonalizado.style.display = (selectTipoCriterio.value === 'personalizado') ? 'block' : 'none';
+                        }
+                    });
+                }
+
+                // Abrir el Modal al hacer clic en '+'
+                document.querySelectorAll('.btn-add-criterion').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        if (!modalCriterio) {
+                            console.error("El modal no está inicializado.");
+                            alert("Error: No se pudo abrir el modal. Revise la consola.");
+                            return;
+                        }
+                        const campoId = e.target.dataset.campoId;
+                        const campoNombre = e.target.dataset.campoNombre;
+
+                        if (modalCampoId) modalCampoId.value = campoId;
+                        if (modalCampoNombre) modalCampoNombre.textContent = campoNombre;
+                        if (selectTipoCriterio) selectTipoCriterio.value = 'media';
+                        if (divPersonalizado) divPersonalizado.style.display = 'none';
+                        if (inputNombreCriterio) inputNombreCriterio.value = '';
+                        if (inputPuntoCorte) inputPuntoCorte.value = '';
+
+                        modalCriterio.show();
+                    });
                 });
-            }
 
-            // Abrir el Modal al hacer clic en '+'
-            document.querySelectorAll('.btn-add-criterion').forEach(button => {
-                button.addEventListener('click', (e) => {
-                    if (!modalCriterio) {
-                        console.error("El modal no está inicializado.");
-                        alert("Error: No se pudo abrir el modal. Revise la consola.");
-                        return;
+                // Dibujar los 'tags'
+                function actualizarTagsUI() {
+                    document.querySelectorAll('.criteria-tags').forEach(div => div.innerHTML = '');
+
+                    for (const campoId in criterios) {
+                        const container = document.getElementById(`tags-campo-${campoId}`);
+                        if (container) {
+                            criterios[campoId].forEach((crit, index) => {
+                                let nombreTag = crit.tipo;
+                                if (crit.tipo === 'personalizado') {
+                                    nombreTag = `${crit.nombre} (${crit.puntoCorte})`;
+                                }
+
+                                const tag = document.createElement('span');
+                                tag.className = 'criterion-tag';
+                                tag.textContent = nombreTag;
+
+                                const btnRemove = document.createElement('button');
+                                btnRemove.type = 'button';
+                                btnRemove.className = 'btn-remove';
+                                btnRemove.innerHTML = '&times;';
+                                btnRemove.dataset.campoId = campoId;
+                                btnRemove.dataset.index = index;
+
+                                tag.appendChild(btnRemove);
+                                container.appendChild(tag);
+                            });
+                        }
                     }
-                    const campoId = e.target.dataset.campoId;
-                    const campoNombre = e.target.dataset.campoNombre;
+                }
 
-                    if(modalCampoId) modalCampoId.value = campoId;
-                    if(modalCampoNombre) modalCampoNombre.textContent = campoNombre;
-                    if(selectTipoCriterio) selectTipoCriterio.value = 'media';
-                    if(divPersonalizado) divPersonalizado.style.display = 'none';
-                    if(inputNombreCriterio) inputNombreCriterio.value = '';
-                    if(inputPuntoCorte) inputPuntoCorte.value = '';
-
-                    modalCriterio.show();
+                // Borrar un 'tag'
+                document.body.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('btn-remove')) {
+                        const campoId = e.target.dataset.campoId;
+                        const index = e.target.dataset.index;
+                        if (criterios[campoId]) {
+                            criterios[campoId].splice(index, 1);
+                            if (criterios[campoId].length === 0) {
+                                delete criterios[campoId];
+                            }
+                            actualizarTagsUI();
+                        }
+                    }
                 });
-            });
 
-            // Dibujar los 'tags'
-            function actualizarTagsUI() {
-                document.querySelectorAll('.criteria-tags').forEach(div => div.innerHTML = '');
+                // Interceptar submit de exportación (Excel)
+                if (exportForm) {
+                    exportForm.addEventListener('submit', (e) => {
+                        const jsonCriterios = JSON.stringify(criterios);
+                        const criteriosInput = document.getElementById('criteriosExport');
+                        if (criteriosInput) criteriosInput.value = jsonCriterios;
+                    });
+                }
 
-                for (const campoId in criterios) {
-                    const container = document.getElementById(`tags-campo-${campoId}`);
-                    if (container) {
-                        criterios[campoId].forEach((crit, index) => {
-                            let nombreTag = crit.tipo;
-                            if (crit.tipo === 'personalizado') {
-                                // Mostramos nombre, operador y corte para claridad
-                                nombreTag = `${crit.nombre} (${crit.operador} ${crit.puntoCorte})`;
+                // Botón STATA Preview
+                if (btnStataPreview) {
+                    btnStataPreview.addEventListener('click', async () => {
+                        if (!modalStata) {
+                            console.error("Modal STATA no inicializado. Intentando inicializar ahora.");
+                            inicializarModal();
+                            if (!modalStata) {
+                                alert("Error: El modal no pudo inicializarse.");
+                                return;
+                            }
+                        }
+
+                        stataPreviewBody.innerHTML = '<p>Generando previsualización... Por favor espere.</p>';
+                        modalStata.show();
+
+                        const jsonCriterios = JSON.stringify(criterios);
+                        const formData = new FormData();
+                        formData.append('criteriosJson', jsonCriterios);
+
+                        try {
+                            const response = await fetch('/datos-crf/api/preview-stata', {
+                                method: 'POST',
+                                body: formData
+                            });
+
+                            if (!response.ok) {
+                                throw new Error('Error del servidor al generar la previsualización.');
                             }
 
-                            const tag = document.createElement('span');
-                            tag.className = 'criterion-tag'; /* Estilo a mover a styles.css */
-                            tag.textContent = nombreTag;
+                            const data = await response.json();
+                            const tableHtml = buildPreviewTable(data);
+                            stataPreviewBody.innerHTML = tableHtml;
 
-                            const btnRemove = document.createElement('button');
-                            btnRemove.type = 'button';
-                            btnRemove.className = 'btn-remove'; /* Estilo a mover a styles.css */
-                            btnRemove.innerHTML = '&times;';
-                            btnRemove.dataset.campoId = campoId;
-                            btnRemove.dataset.index = index;
-
-                            tag.appendChild(btnRemove);
-                            container.appendChild(tag);
-                        });
-                    }
-                }
-            }
-
-            // Borrar un 'tag'
-            document.body.addEventListener('click', (e) => {
-                if (e.target.classList.contains('btn-remove')) {
-                    const campoId = e.target.dataset.campoId;
-                    const index = e.target.dataset.index;
-                    if (criterios[campoId]) { // Verificar que exista
-                        criterios[campoId].splice(index, 1);
-                        // Si el array queda vacío, eliminar la clave del objeto (opcional)
-                        if (criterios[campoId].length === 0) {
-                            delete criterios[campoId];
+                        } catch (error) {
+                            stataPreviewBody.innerHTML = `<p style="color: var(--color-error);">Error: ${error.message}</p>`;
                         }
-                        actualizarTagsUI();
+                    });
+                }
+
+                // Confirmar y Descargar STATA
+                if (btnConfirmarDescargaStata) {
+                    btnConfirmarDescargaStata.addEventListener('click', () => {
+                        stataCriteriosInput.value = JSON.stringify(criterios);
+                        stataExportForm.submit();
+                        if (modalStata) modalStata.hide();
+                    });
+                }
+
+                // Función para construir la tabla de preview
+                function buildPreviewTable(data) {
+                    let html = '<p>Se aplicarán los siguientes cambios de formato a las cabeceras y valores. Verifique antes de descargar.</p>';
+                    html += '<div class="table-responsive-wrapper" style="max-height: 50vh; overflow-y: auto;">';
+                    html += '<table><thead><tr><th style="background-color: var(--color-fondo);">Campo Original</th><th style="background-color: var(--color-fondo);">Formato STATA</th></tr></thead><tbody>';
+
+                    // Comparación de Headers
+                    for (let i = 0; i < data.headersOriginal.length; i++) {
+                        const original = data.headersOriginal[i];
+                        const stata = data.headersStata[i];
+                        const esDiferente = original !== stata;
+                        html += `<tr ${esDiferente ? 'style="background-color: rgba(255, 193, 7, 0.1);"' : ''}>
+                                    <td style="word-break: break-all;">${escapeHTML(original)}</td>
+                                    <td style="word-break: break-all;"><strong>${escapeHTML(stata)}</strong></td>
+                                </tr>`;
                     }
+
+                    // Ejemplo de primera fila
+                    html += '<tr><td colspan="2" style="background-color: var(--color-fondo); text-align: center; font-weight: bold;"><i>Ejemplo de 1ra Fila de Datos</i></td></tr>';
+
+                    if (data.filasOriginal && data.filasOriginal.length > 0) {
+                        const primeraFilaOrig = data.filasOriginal[0] || {};
+                        const primeraFilaStata = data.filasStata[0] || {};
+
+                        for (let i = 0; i < data.headersOriginal.length; i++) {
+                            const hOrig = data.headersOriginal[i];
+                            const hStata = data.headersStata[i];
+                            const valOrig = primeraFilaOrig[hOrig] || '';
+                            const valStata = primeraFilaStata[hStata] || '';
+                            const esDiferente = valOrig !== valStata;
+
+                            html += `<tr ${esDiferente ? 'style="background-color: rgba(255, 193, 7, 0.1);"' : ''}>
+                                        <td style="word-break: break-all;">${escapeHTML(valOrig)}</td>
+                                        <td style="word-break: break-all;"><strong>${escapeHTML(valStata)}</strong></td>
+                                    </tr>`;
+                        }
+                    }
+
+                    html += '</tbody></table></div>';
+                    return html;
+                }
+
+                // Función para escapar HTML
+                function escapeHTML(str) {
+                    if (str === null || str === undefined) return '';
+                    return str.toString()
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#39;');
                 }
             });
+        </script>
 
-            // Interceptar submit de exportación
-            if(exportForm) {
-                exportForm.addEventListener('submit', (e) => {
-                    const jsonCriterios = JSON.stringify(criterios);
-                    const criteriosInput = document.getElementById('criteriosExport');
-                    if(criteriosInput) criteriosInput.value = jsonCriterios;
-                    // No prevenimos default, dejamos que el form envíe
-                });
-            }
-        });
-    </script>
-
-</div> </body>
+    </div>
+</body>
 </html>

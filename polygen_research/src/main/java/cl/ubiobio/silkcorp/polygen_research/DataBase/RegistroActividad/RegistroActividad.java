@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import cl.ubiobio.silkcorp.polygen_research.DataBase.Crf.Crf;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.Usuario.Usuario;
@@ -24,7 +25,7 @@ public class RegistroActividad {
     private Integer idRegistro;
 
     @Column(name = "Fecha_actividad")
-    private LocalDate fechaActividad;
+    private LocalDateTime fechaActividad;
 
     @Column(name = "Tipo_actividad", length = 50)
     private String tipoActividad;
@@ -47,11 +48,11 @@ public class RegistroActividad {
         this.idRegistro = idRegistro;
     }
 
-    public LocalDate getFechaActividad() {
+    public LocalDateTime getFechaActividad() {
         return fechaActividad;
     }
 
-    public void setFechaActividad(LocalDate fechaActividad) {
+    public void setFechaActividad(LocalDateTime fechaActividad) {
         this.fechaActividad = fechaActividad;
     }
 

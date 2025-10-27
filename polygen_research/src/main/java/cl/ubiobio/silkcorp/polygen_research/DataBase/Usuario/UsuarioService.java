@@ -22,6 +22,5 @@ public class UsuarioService {
         // Ej: Si se crea un usuario, poner 'Estado' en 'Activo'.
         return usuarioRepository.save(usuario);
     }
-    
-    // ... otros métodos CRUD
+
 }

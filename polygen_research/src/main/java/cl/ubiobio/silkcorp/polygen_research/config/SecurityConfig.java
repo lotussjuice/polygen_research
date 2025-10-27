@@ -11,10 +11,9 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
+    
     @Bean
     public static PasswordEncoder passwordEncoder() {
-        // Standard encoder for secure password hashing
         return new BCryptPasswordEncoder();
     }
 
@@ -22,17 +21,33 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
-                // Allow access to static resources, login, and registration pages without authentication
+                // Permisos publicos
                 .requestMatchers("/login", "/register", "/css/**", "/js/**").permitAll()
-                // Require authentication for any other request
+
+                //  Permisos específicos por rol
+
+                // DEV y ADMIN tienen acceso a todo 
+                // Usamos hasAnyRole para permitir a cualquiera de los dos
+                .requestMatchers("/dev/**").hasAnyRole("DEV", "ADMINISTRADOR") // En caso de añadir rutas de devs
+
+                // ADMIN puede gestionar usuarios, roles y credenciales
+                .requestMatchers("/usuarios/**", "/roles/**", "/whitelist/**").hasAnyRole("ADMINISTRADOR", "DEV")
+
+                // INVESTIGADOR y ADMIN pueden gestionar datos clínicos
+                .requestMatchers("/pacientes/**", "/crf/**", "/campos/**").hasAnyRole("INVESTIGADOR", "ADMINISTRADOR")
+
+                // En casod de querer restringir a admin
+                .requestMatchers("/registros/**").hasAnyRole("ADMINISTRADOR", "INVESTIGADOR")
+
+                // La página de inicio es para cualquier usuario logueado
+                .requestMatchers("/inicio", "/datos-crf/**").authenticated() // Cualquier rol logueado
+
                 .anyRequest().authenticated()
             )
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
-                // Redirect to the root URL (inicio.html) on successful login
-                .defaultSuccessUrl("/inicio", true)
-                // Stay on the login page if login fails
+                .defaultSuccessUrl("/inicio", true) // Redirige a /inicio al loguearse
                 .failureUrl("/login?error")
                 .permitAll()
             )
@@ -40,7 +55,9 @@ public class SecurityConfig {
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout")
                 .permitAll()
-            );
+            );            
+
+            
 
         return http.build();
     }

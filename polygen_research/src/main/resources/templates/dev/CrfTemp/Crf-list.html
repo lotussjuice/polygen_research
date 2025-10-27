@@ -1,36 +1,76 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org th:replace="~{layout/main-layout :: ~{}}">
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
 
-<head>
-    <meta charset="UTF-8">
-    <title>Lista de CRFs</title>
-    
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-
+<head></head>
 <body>
 
-    <nav class="menu">
-        <a th:href="@{/}">Inicio</a>
-        <a th:href="@{/pacientes/list}">Pacientes</a>
-        <a th:href="@{/crf/list}">CRFs</a>
-        <a th:href="@{/crf/nuevo}">Nuevo CRF</a> <a th:href="@{/usuarios/list}">Usuarios</a>
-        <a th:href="@{/campos/list}">Campos</a>
-        <a th:href="@{/registros/list}">Logs</a>
-    </nav>
-    
-    <div class="container mt-4">
+<div th:fragment="contenido">
 
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <h2 class="mb-0">Listado de CRFs Creados</h2>
-            <a th:href="@{/crf/nuevo}" class="btn-primario">
-                + Agregar Nuevo CRF
+    <style>
+        .table-responsive-wrapper {
+            overflow-x: auto;
+            margin-top: 20px;
+        }
+    </style>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="ph-bold ph-table"></i> Listado Completo de CRFs</h3>
+        </div>
+        <div class="card-body">
+            
+            <p>Reporte completo. Cada fila representa un CRF, incluyendo todos los datos del paciente y los campos del estudio.</p>
+            
+            <a th:href="@{/crf/nuevo}" class="btn btn-primary mb-3">
+                <i class="ph-bold ph-plus"></i> Agregar Nuevo CRF
             </a>
-        </div>
-        <hr>
 
-        <div th:if="${#lists.isEmpty(crfs)}" class="alert alert-info" role="alert">
-            Aún no se ha guardado ningún CRF.
-        </div>
+            <div th:if="${#lists.isEmpty(filasCrf)}" class="alert" style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
+                No se han encontrado CRFs para mostrar.
+            </div>
 
-        <div class="accordion" id="accordionCrfList" th:if="${!#lists.isEmpty(crfs)}">
+            <div class="table-responsive-wrapper" th:if="${!#lists.isEmpty(filasCrf)}">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID CRF</th>
+                            <th>Fecha Creación</th>
+                            <th>Cód. Paciente</th>
+                            <th>Nombre</th>
+                            <th>Apellido</th>
+                            <th>Número</th>
+                            <th>Dirección</th>
+                            <th>Estado Paciente</th>
+                            
+                            <th th:each="campo : ${camposColumnas}" th:text="${campo.nombre}">...</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="fila : ${filasCrf}">
+                            
+                            <td th:text="${fila.crf.idCrf}">...</td>
+                            <td th:text="${fila.crf.fechaConsulta != null ? #temporals.format(fila.crf.fechaConsulta, 'dd/MM/yyyy') : 'N/A'}">...</td>
+                            <td th:text="${fila.crf.datosPaciente?.codigoPaciente}">...</td>
+                            <td th:text="${fila.crf.datosPaciente?.nombre}">...</td>
+                            <td th:text="${fila.crf.datosPaciente?.apellido}">...</td>
+                            <td th:text="${fila.crf.datosPaciente?.numero}">...</td>
+                            <td th:text="${fila.crf.datosPaciente?.direccion}">...</td>
+                            <td th:text="${fila.crf.datosPaciente?.estado}">...</td>
+                            
+                            <td th:each="campo : ${camposColumnas}">
+                                <span th:text="${fila.valores.get(campo.idCampo) ?: '-'}"></span>
+                            </td>
+
+                            <td>
+                                <a th:href="@{/crf/editar/{id}(id=${fila.crf.idCrf})}" 
+                                class="btn btn-sm btn-outline-primary" 
+                                title="Editar">
+                                <i class="ph-bold ph-pencil-simple"></i> </a>
+                            </td>
+
+                        </tr>
+                    </tbody>
+                </table>
+            </div> </div> </div> </div> </body>
+</html>

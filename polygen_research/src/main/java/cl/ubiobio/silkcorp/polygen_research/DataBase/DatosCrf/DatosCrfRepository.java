@@ -7,5 +7,4 @@ import org.springframework.stereotype.Repository;
 public interface DatosCrfRepository extends JpaRepository<DatosCrf, Integer> {
     
     // Aquí podrías buscar todos los datos de un CRF específico
-    // List<DatosCrf> findByCrf_IdCrf(Integer crfId);
 }
