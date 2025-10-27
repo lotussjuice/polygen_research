@@ -19,8 +19,14 @@
                 </div>
                 
                 <div class="form-group">
-                    <label>Tipo (ej. Numérico, Texto, Si/No):</label>
-                    <input type="text" th:field="*{tipo}" class="form-control" placeholder="Ej. NUMERO, TEXTO, FECHA" />
+                    <label for="tipoCampo">Tipo:</label>
+                    <select id="tipoCampo" th:field="*{tipo}" class="form-control" required>
+                        <option value="">Seleccione un tipo...</option>
+                        <option value="TEXTO">TEXTO</option>
+                        <option value="NUMERO">NUMERO</option>
+                        <option value="FECHA">FECHA</option>
+                        <option value="SI/NO">SI/NO</option>
+                    </select>
                 </div>
 
                 <div class="form-group">

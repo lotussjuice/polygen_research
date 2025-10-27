@@ -792,3 +792,46 @@ tr.fila-incompleta td {
 .table-responsive-wrapper table {
     min-width: 600px; /* Ajusta este valor si necesitas más o menos espacio */
 }
+
+/* Estilos para el botón '+' y los tags de criterios */
+.btn-add-criterion {
+    font-weight: bold;
+    padding: 0px 6px;
+    line-height: 1;
+    font-size: 0.8em;
+    border-radius: 50%;
+    border: 1px solid var(--color-primario); /* Usar variable */
+    background-color: var(--color-fondo); /* Usar variable */
+    color: var(--color-primario); /* Usar variable */
+    cursor: pointer;
+}
+.btn-add-criterion:hover {
+    background-color: #e9ecef; /* Ajustar para modo oscuro si es necesario */
+}
+.criterion-tag {
+    display: inline-block;
+    font-size: 0.75em;
+    background-color: #e9ecef; /* Color base claro, ajustar para modo oscuro */
+    color: var(--color-texto-secundario); /* Usar variable */
+    border-radius: 4px;
+    padding: 3px 6px;
+    margin-top: 4px;
+    margin-right: 4px;
+    line-height: 1.2;
+}
+.dark-mode .criterion-tag { /* Estilo para modo oscuro */
+    background-color: #333;
+    color: var(--color-texto-secundario);
+}
+.criterion-tag .btn-remove {
+    border: none;
+    background: none;
+    padding: 0 0 0 5px;
+    color: var(--color-error); /* Usar variable */
+    font-weight: bold;
+    cursor: pointer;
+    opacity: 0.7;
+}
+ .criterion-tag .btn-remove:hover {
+    opacity: 1;
+ }
