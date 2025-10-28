@@ -835,3 +835,143 @@ tr.fila-incompleta td {
  .criterion-tag .btn-remove:hover {
     opacity: 1;
  }
+/* --- 13. ESTILOS DEL DASHBOARD (Versión Final) --- */
+
+/* Cabecera del Dashboard */
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+.dashboard-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-texto);
+}
+
+/* Layout principal de 2 columnas */
+.dashboard-grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 50% y 50% */
+    gap: 2rem;
+    align-items: flex-start; 
+}
+
+/* Columna Izquierda: Cuadrícula de 2x2 para mini-tarjetas */
+.dashboard-stats-grid-2x2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 columnas */
+    gap: 1.5rem;
+}
+
+/* Mini-Tarjeta ("Pestañita") Individual */
+.mini-stat-card {
+    background-color: var(--color-tarjeta);
+    border: 1px solid var(--color-borde);
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: var(--sombra-tarjeta);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    min-height: 120px;
+}
+.mini-stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+.dark-mode .mini-stat-card:hover {
+     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.mini-stat-card .stat-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--color-texto-secundario);
+    display: block;
+    margin-bottom: 0.75rem;
+}
+
+.mini-stat-card .stat-value {
+    font-size: 2.25rem;
+    font-weight: 700;
+    color: var(--color-texto);
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+}
+
+.mini-stat-card .stat-value-small {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-texto);
+    margin-top: auto; 
+}
+
+/* Columna Derecha: Contenedor del Gráfico */
+.chart-container {
+    background-color: var(--color-tarjeta);
+    border: 1px solid var(--color-borde);
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: var(--sombra-tarjeta);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.chart-container h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.chart-canvas-wrapper {
+    position: relative;
+    max-width: 350px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* Estilo para el Rol del Usuario */
+.dashboard-user-role {
+    position: fixed;
+    bottom: 20px;
+    right: 30px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-texto-secundario);
+    padding: 0.5rem 1rem;
+    background-color: var(--color-tarjeta);
+    border: 1px solid var(--color-borde);
+    border-radius: 8px;
+    box-shadow: var(--sombra-tarjeta);
+    z-index: 100;
+}
+
+/* --- 14. RESPONSIVIDAD DEL DASHBOARD (Versión Final) --- */
+@media (max-width: 1200px) {
+    .dashboard-stats-grid-2x2 {
+        grid-template-columns: 1fr;
+    }
+}
+@media (max-width: 992px) {
+    .dashboard-grid-2col {
+        grid-template-columns: 1fr;
+    }
+    .dashboard-stats-grid-2x2 {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+@media (max-width: 576px) {
+    .dashboard-stats-grid-2x2 {
+        grid-template-columns: 1fr;
+    }
+    .dashboard-user-role {
+        display: none;
+    }
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+    .chart-container h3 {
+        font-size: 1.2rem;
+    }
+}

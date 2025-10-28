@@ -9,4 +9,10 @@ import org.springframework.stereotype.Repository;
 public interface CrfRepository extends JpaRepository<Crf, Integer> {
 
     Optional<Crf> findByDatosPacienteCodigoPacienteIgnoreCase(String codigo);
+
+    // Cuenta cuántos CRFs tienen el campo 'esCasoEstudio' en true
+    long countByEsCasoEstudioTrue();
+    
+    // Cuenta cuántos CRFs tienen el campo 'esCasoEstudio' en false
+    long countByEsCasoEstudioFalse();
 }

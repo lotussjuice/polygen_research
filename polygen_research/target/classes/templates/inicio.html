@@ -1,16 +1,97 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{/layout/main-layout :: ~{}}">
 
 <div th:fragment="contenido">
     
-    <div class="card">
-        <div class="card-body">
-            <h1 style="margin-bottom: 1rem;">Inicio</h1>
-            <p>Bienvenido al Sistema de Gestión de Estudio de Polygen Research.</p>
-            <p>Seleccione una opción del menú de la izquierda para comenzar a trabajar.</p>
+    <div class="dashboard-header">
+        <h1 th:text="'¡Bienvenido, ' + ${#authentication.principal.nombreUsuario} + '!'">¡Bienvenido!</h1>
         </div>
+
+    <div class="dashboard-grid-2col">
+
+        <div class="dashboard-stats-grid-2x2">
+
+            <div class="mini-stat-card">
+                <span class="stat-title">Cantidad CRF's totales</span>
+                <span class="stat-value" th:text="${totalCrfs}">0</span>
+            </div>
+
+            <div class="mini-stat-card">
+                <span class="stat-title">Casos (Estudio)</span>
+                <span class="stat-value" th:text="${casosEstudio}">0</span>
+            </div>
+
+            <div class="mini-stat-card">
+                <span class="stat-title">Controles (Consulta)</span>
+                <span class="stat-value" th:text="${casosConsulta}">0</span>
+            </div>
+
+            <div class="mini-stat-card">
+                <span class="stat-title">Fecha del último cambio</span>
+                <span class="stat-value-small" th:text="${fechaUltimoCambio}">N/A</span>
+            </div>
+        </div>
+        <div class="chart-container">
+            <h3>Tipos de Paciente</h3>
+            <div class="chart-canvas-wrapper">
+                <canvas id="tipoPacienteChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+    
+    <div class="dashboard-user-role" 
+         th:if="${#authentication.authorities.size() > 0}"
+         th:text="${#strings.replace(#authentication.authorities[0].authority, 'ROLE_', '')}">
+         Rol de Ejemplo
     </div>
 
-</div>
 
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        
+        const casosEstudio = /*[[${casosEstudio}]]*/ 0;
+        const casosConsulta = /*[[${casosConsulta}]]*/ 0;
+
+        const data = {
+            labels: [ 'Estudio', 'Control' ],
+            datasets: [{
+                label: 'Tipos de Paciente',
+                data: [casosEstudio, casosConsulta],
+                backgroundColor: [ '#005a9c', '#28a745' ],
+                hoverOffset: 4
+            }]
+        };
+
+        const ctx = document.getElementById('tipoPacienteChart').getContext('2d');
+        const miGraficoCircular = new Chart(ctx, {
+            type: 'pie',
+            data: data,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                let value = context.raw;
+                                let total = context.chart.getDatasetMeta(0).total;
+                                let percentage = (total == 0) ? 0 : (value * 100 / total).toFixed(1);
+                                return label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        /*]]>*/
+    </script>
+
+</div>
 </html>
