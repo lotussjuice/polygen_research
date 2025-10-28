@@ -1,13 +1,14 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.Crf; // O el paquete que corresponda
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import org.hibernate.Hibernate;
-import java.util.Map;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.hibernate.Hibernate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,8 +20,8 @@ import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPaciente
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPacienteRepository;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.RegistroActividad.RegistroActividadService;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfForm;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO; // DTO Nuevo
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenRowDTO; // DTO Nuevo
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO; // DTO Nuevo
 
 @Service
 public class CrfService {
@@ -264,5 +265,47 @@ public class CrfService {
                 crf.addDato(respuesta); // Añadimos al CRF (esto setea la FK)
             }
         }
+    }
+
+    @Transactional(readOnly = true)
+    public CrfResumenViewDTO getCrfResumenView(String codigoPaciente) { // Parameter is still String
+
+        List<CampoCrf> campos = camposCRFRepository.findByActivoTrueOrderByNombre();
+        List<Crf> crfs; // Still use a List for processing later
+
+        // --- LÓGICA DE FILTRADO AJUSTADA ---
+        if (codigoPaciente != null && !codigoPaciente.trim().isEmpty()) {
+            // Llama al nuevo método del repositorio que devuelve Optional
+            Optional<Crf> crfOptional = crfRepository.findByDatosPacienteCodigoPacienteIgnoreCase(codigoPaciente.trim());
+            // Convierte el Optional a una lista (vacía o con un elemento)
+            crfs = crfOptional.map(Collections::singletonList).orElseGet(Collections::emptyList);
+        } else {
+            // Si no hay búsqueda, obtén todos
+            crfs = crfRepository.findAll();
+        }
+
+        CrfResumenViewDTO viewDTO = new CrfResumenViewDTO();
+        viewDTO.setCamposActivos(campos);
+        List<CrfResumenRowDTO> filasDTO = new ArrayList<>();
+
+        for (Crf crf : crfs) {
+            Hibernate.initialize(crf.getDatosPaciente());
+            Hibernate.initialize(crf.getDatosCrfList());
+            // ... (crear rowDTO, llenar valoresMap, etc.) ...
+            CrfResumenRowDTO rowDTO = new CrfResumenRowDTO();
+            rowDTO.setCrf(crf);
+            Map<Integer, String> valoresMap = crf.getDatosCrfList().stream()
+                    .filter(dato -> dato.getCampoCrf() != null)
+                    .collect(Collectors.toMap(
+                        dato -> dato.getCampoCrf().getIdCampo(),
+                        DatosCrf::getValor,
+                        (v1, v2) -> v1
+                    ));
+            rowDTO.setValores(valoresMap);
+            filasDTO.add(rowDTO);
+        }
+
+        viewDTO.setFilas(filasDTO);
+        return viewDTO;
     }
 }

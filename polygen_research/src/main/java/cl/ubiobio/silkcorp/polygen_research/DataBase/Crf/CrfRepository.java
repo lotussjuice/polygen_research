@@ -1,10 +1,12 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.Crf;
 
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CrfRepository extends JpaRepository<Crf, Integer> {
 
-    // List<Crf> findByDatosPaciente_IdPaciente(Integer pacienteId);
+    Optional<Crf> findByDatosPacienteCodigoPacienteIgnoreCase(String codigo);
 }

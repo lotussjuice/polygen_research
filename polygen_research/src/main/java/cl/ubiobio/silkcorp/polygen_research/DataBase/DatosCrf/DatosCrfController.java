@@ -2,6 +2,8 @@ package cl.ubiobio.silkcorp.polygen_research.DataBase.DatosCrf;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -13,17 +15,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import cl.ubiobio.silkcorp.polygen_research.DataBase.CampoCrf.CampoCrfService;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.Crf.CrfService;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.export.ExcelReporteService;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.export.StataExportService; // NUEVO IMPORT
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.StataPreviewDTO; // NUEVO IMPORT
-import org.springframework.web.bind.annotation.ResponseBody; // NUEVO IMPORT
+import cl.ubiobio.silkcorp.polygen_research.DataBase.export.ExcelReporteService; // NUEVO IMPORT
+import cl.ubiobio.silkcorp.polygen_research.DataBase.export.StataExportService; // NUEVO IMPORT
 
 @Controller
 @RequestMapping("/datos-crf")
@@ -44,16 +43,14 @@ public class DatosCrfController {
     }
 
     @GetMapping("/list")
-    public String mostrarReporteDeDatos(Model model) {
-        
-        // 1. Llama al método del servicio que pivota los datos
-        CrfResumenViewDTO data = crfService.getCrfResumenView();
-        
-        // 2. Pasamos las dos variables que el HTML necesita
-        model.addAttribute("camposColumnas", data.getCamposActivos()); // Los <th>
-        model.addAttribute("filasCrf", data.getFilas());         // Los <tr>
-        
-        // 3. Devuelve el nombre del archivo HTML que te pasaste
+    public String mostrarReporteDeDatos(Model model,
+            @RequestParam(name = "codigoPaciente", required = false) String codigoBusqueda) {
+        CrfResumenViewDTO data = crfService.getCrfResumenView(codigoBusqueda);
+
+        model.addAttribute("camposColumnas", data.getCamposActivos());
+        model.addAttribute("filasCrf", data.getFilas());
+
+        // Return the logical name of the view template
         return "dev/DatosCrfTemp/datos-crf-list"; 
     }
 

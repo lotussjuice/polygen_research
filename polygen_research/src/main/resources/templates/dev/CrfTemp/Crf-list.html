@@ -1,76 +1,163 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security6"
+    th:replace="~{layout/main-layout :: ~{}}">
 
-<head></head>
+<head>
+</head>
+
 <body>
 
-<div th:fragment="contenido">
+    <div th:fragment="contenido">
 
-    <style>
-        .table-responsive-wrapper {
-            overflow-x: auto;
-            margin-top: 20px;
-        }
-    </style>
-
-    <div class="card">
-        <div class="card-header">
-            <h3><i class="ph-bold ph-table"></i> Listado Completo de CRFs</h3>
-        </div>
-        <div class="card-body">
-            
-            <p>Reporte completo. Cada fila representa un CRF, incluyendo todos los datos del paciente y los campos del estudio.</p>
-            
-            <a th:href="@{/crf/nuevo}" class="btn btn-primary mb-3">
-                <i class="ph-bold ph-plus"></i> Agregar Nuevo CRF
-            </a>
-
-            <div th:if="${#lists.isEmpty(filasCrf)}" class="alert" style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
-                No se han encontrado CRFs para mostrar.
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="ph-bold ph-table"></i> Gestión de CRFs</h3>
+                <div style="display: flex; align-items: center;">
+                    <form th:action="@{/crf/list}" method="get"
+                        style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="text" name="codigoPaciente" class="form-control"
+                            placeholder="Buscar por Cód. Paciente..." th:value="${param.codigoPaciente}" />
+                        <button type="submit" class="btn-primario">Buscar</button>
+                        <a th:href="@{/crf/list}" class="btn-secundario" title="Limpiar búsqueda">Limpiar</a>
+                    </form>
+                </div>
+                <a th:href="@{/crf/nuevo}" class="btn-primario btn-sm">
+                    <i class="ph-bold ph-plus"></i> Agregar Nuevo CRF
+                </a>
             </div>
+            <div class="card-body">
 
-            <div class="table-responsive-wrapper" th:if="${!#lists.isEmpty(filasCrf)}">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID CRF</th>
-                            <th>Fecha Creación</th>
-                            <th>Cód. Paciente</th>
-                            <th>Nombre</th>
-                            <th>Apellido</th>
-                            <th>Número</th>
-                            <th>Dirección</th>
-                            <th>Estado Paciente</th>
-                            
-                            <th th:each="campo : ${camposColumnas}" th:text="${campo.nombre}">...</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="fila : ${filasCrf}">
-                            
-                            <td th:text="${fila.crf.idCrf}">...</td>
-                            <td th:text="${fila.crf.fechaConsulta != null ? #temporals.format(fila.crf.fechaConsulta, 'dd/MM/yyyy') : 'N/A'}">...</td>
-                            <td th:text="${fila.crf.datosPaciente?.codigoPaciente}">...</td>
-                            <td th:text="${fila.crf.datosPaciente?.nombre}">...</td>
-                            <td th:text="${fila.crf.datosPaciente?.apellido}">...</td>
-                            <td th:text="${fila.crf.datosPaciente?.numero}">...</td>
-                            <td th:text="${fila.crf.datosPaciente?.direccion}">...</td>
-                            <td th:text="${fila.crf.datosPaciente?.estado}">...</td>
-                            
-                            <td th:each="campo : ${camposColumnas}">
-                                <span th:text="${fila.valores.get(campo.idCampo) ?: '-'}"></span>
-                            </td>
+                <p>Listado completo de todos los CRFs registrados. Cada fila representa un formulario completado.</p>
 
-                            <td>
-                                <a th:href="@{/crf/editar/{id}(id=${fila.crf.idCrf})}" 
-                                class="btn btn-sm btn-outline-primary" 
-                                title="Editar">
-                                <i class="ph-bold ph-pencil-simple"></i> </a>
-                            </td>
+                <div th:if="${#lists.isEmpty(filasCrf)}" class="alert"
+                    style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
+                    No se han encontrado CRFs para mostrar.
+                </div>
 
-                        </tr>
-                    </tbody>
-                </table>
-            </div> </div> </div> </div> </body>
+                <div class="table-responsive-wrapper" th:if="${!#lists.isEmpty(filasCrf)}">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID CRF</th>
+                                <th>Fecha Creación</th>
+                                <th>Cód. Paciente</th>
+                                <th>Nombre Paciente</th>
+                                <th>Apellido Paciente</th>
+                                <th>Número</th>
+                                <th>Dirección</th>
+                                <th>Estado Paciente</th>
+
+                                <th th:each="campo : ${camposColumnas}" th:text="${campo.nombre}">...</th>
+
+                                <th style="text-align: right; min-width: 150px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="fila : ${filasCrf}" th:id="'row-crf-' + ${fila.crf.idCrf}">
+
+                                <td th:text="${fila.crf.idCrf}">...</td>
+                                <td
+                                    th:text="${fila.crf.fechaConsulta != null ? #temporals.format(fila.crf.fechaConsulta, 'dd/MM/yyyy') : 'N/A'}">
+                                    ...</td>
+                                <td th:text="${fila.crf.datosPaciente?.codigoPaciente ?: '-'}">...</td>
+                                <td th:text="${fila.crf.datosPaciente?.nombre ?: '-'}">...</td>
+                                <td th:text="${fila.crf.datosPaciente?.apellido ?: '-'}">...</td>
+                                <td th:text="${fila.crf.datosPaciente?.numero ?: '-'}">...</td>
+                                <td th:text="${fila.crf.datosPaciente?.direccion ?: '-'}">...</td>
+                                <td th:text="${fila.crf.datosPaciente?.estado ?: '-'}">...</td>
+
+                                <td th:each="campo : ${camposColumnas}">
+                                    <span th:text="${fila.valores.get(campo.idCampo) ?: '-'}"></span>
+                                </td>
+
+                                <td class="actions-cell" style="text-align: right;">
+                                    <button>
+                                    <a th:href="@{/crf/pdf/{id}(id=${fila.crf.idCrf})}" 
+                                        class="btn btn-sm btn-outline-danger" 
+                                        title="Descargar PDF"
+                                        target="_blank"> <i class="ph-bold ph-file-pdf"></i>
+                                        </a>
+                                    </button>
+                                    <a th:href="@{/crf/editar/{id}(id=${fila.crf.idCrf})}" class="btn-secundario btn-sm"
+                                        title="Editar CRF">
+                                        <i class="ph-bold ph-pencil-simple"></i>
+                                    </a>
+                                    <button type="button" class="btn-error btn-sm"
+                                        th:attr="data-crf-id=${fila.crf.idCrf}" onclick="confirmarEliminarCRF(this)"
+                                        title="Eliminar CRF">
+                                        <i class="ph-bold ph-trash"></i>
+                                    </button>
+
+
+                                    
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div id="modalConfirmacionEliminarCRF" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2>Confirmar Eliminación</h2>
+                    <span class="close-modal" onclick="cerrarConfirmacionEliminarCRF()">&times;</span>
+                </div>
+                <div class="modal-body">
+                    <p>¿Estás seguro de que deseas eliminar permanentemente el CRF con ID <strong
+                            id="confirm-crf-id-text"></strong>?</p>
+                    <p style="color: var(--color-error); font-weight: bold;">Esta acción no se puede deshacer y
+                        eliminará todos los datos asociados.</p>
+                    <input type="hidden" id="confirm-crf-id" value="" />
+                </div>
+                <div class="modal-footer" style="justify-content: space-between;">
+                    <button type="button" class="btn-secundario"
+                        onclick="cerrarConfirmacionEliminarCRF()">Cancelar</button>
+                    <button type="button" class="btn-error" onclick="ejecutarEliminacionCRF()">Sí, Eliminar CRF</button>
+                </div>
+            </div>
+        </div>
+
+        <th:block th:fragment="pageScript">
+            <script th:inline="javascript">
+                /*<![CDATA[*/
+                const modalConfirmacionCRF = document.getElementById('modalConfirmacionEliminarCRF');
+                const confirmCrfIdText = document.getElementById('confirm-crf-id-text');
+                const confirmCrfIdInput = document.getElementById('confirm-crf-id');
+
+                function confirmarEliminarCRF(button) {
+                    const crfId = button.getAttribute('data-crf-id');
+                    confirmCrfIdText.textContent = crfId;
+                    confirmCrfIdInput.value = crfId;
+                    if (modalConfirmacionCRF) modalConfirmacionCRF.style.display = 'block';
+                }
+
+                function cerrarConfirmacionEliminarCRF() {
+                    if (modalConfirmacionCRF) modalConfirmacionCRF.style.display = 'none';
+                    confirmCrfIdText.textContent = '';
+                    confirmCrfIdInput.value = '';
+                }
+
+                async function ejecutarEliminacionCRF() {
+                    const crfId = confirmCrfIdInput.value;
+                    if (!crfId) return;
+
+                    const csrfToken = document.querySelector('meta[name="_csrf"]') ? document.querySelector('meta[name="_csrf"]').getAttribute('content') : null;
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]') ? document.querySelector('meta[name="_csrf_header"]').getAttribute('content') : null;
+                    const headers = { 'Accept': 'application/json' };
+                    if (csrfToken && csrfHeader) { headers[csrfHeader] = csrfToken; }
+                }
+
+                window.onclick = function (event) {
+                    if (event.target == modalConfirmacionCRF) {
+                        cerrarConfirmacionEliminarCRF();
+                    }
+                }
+                /*]]>*/
+            </script>
+        </th:block>
+
+    </div>
+</body>
+
 </html>

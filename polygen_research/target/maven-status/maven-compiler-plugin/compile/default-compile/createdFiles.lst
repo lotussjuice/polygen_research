@@ -12,6 +12,7 @@ cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuarioController.cl
 cl\ubiobio\silkcorp\polygen_research\DataBase\DatosPaciente\DatosPacienteController.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\export\ExcelReporteService$1.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\Usuario\UsuarioRepository.class
+cl\ubiobio\silkcorp\polygen_research\DataBase\export\PdfService.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\DatosCrf\DatosCrfRepository.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\util\CalculoService.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\Whitelist\WhitelistService.class

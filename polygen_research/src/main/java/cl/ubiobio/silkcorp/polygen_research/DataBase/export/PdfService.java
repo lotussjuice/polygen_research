@@ -1,0 +1,165 @@
+package cl.ubiobio.silkcorp.polygen_research.DataBase.export; // O tu paquete
+
+import java.awt.Color;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.springframework.stereotype.Service;
+
+import com.lowagie.text.Chunk;
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Element;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
+
+import cl.ubiobio.silkcorp.polygen_research.DataBase.Crf.CrfService;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosCrf.DatosCrf;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPaciente;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfForm;
+
+@Service
+public class PdfService {
+
+    private final CrfService crfService; 
+
+    public PdfService(CrfService crfService) {
+        this.crfService = crfService;
+    }
+
+    /**
+     * Genera un PDF para un único CRF usando el DTO CrfForm.
+     */
+    public Map<String, Object> generarPdfCrf(Integer crfId) {
+        
+        // 1. Obtener TODOS los datos (¡Solo se declara UNA VEZ!)
+        CrfForm form = crfService.prepararCrfFormParaEditar(crfId);
+        DatosPaciente paciente = form.getDatosPaciente(); // <-- Declaración correcta
+
+        Document document = new Document(PageSize.A4);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Map<String, Object> resultado = new HashMap<>();
+
+        try {
+            PdfWriter.getInstance(document, out);
+            document.open();
+
+            // --- Fuentes ---
+            Font fontTitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
+            Font fontSubtitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Color.BLUE);
+            Font fontHeaderTabla = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.WHITE);
+            Font fontCelda = FontFactory.getFont(FontFactory.HELVETICA, 10);
+            Font fontCeldaBold = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
+
+            // --- Título ---
+            Paragraph titulo = new Paragraph("Reporte de Formulario CRF", fontTitulo);
+            titulo.setAlignment(Element.ALIGN_CENTER);
+            document.add(titulo);
+            document.add(Chunk.NEWLINE);
+
+            // --- Sección 1: Datos del Paciente ---
+            document.add(new Paragraph("1. Datos del Paciente", fontSubtitulo));
+            document.add(Chunk.NEWLINE);
+            
+            // <-- ¡AQUÍ ESTABA EL ERROR! (Se eliminó la declaración duplicada)
+            
+            PdfPTable tablaPaciente = new PdfPTable(2);
+            tablaPaciente.setWidthPercentage(100);
+            addCeldaTabla(tablaPaciente, "Cód. Paciente:", fontCeldaBold);
+            addCeldaTabla(tablaPaciente, paciente.getCodigoPaciente(), fontCelda);
+            addCeldaTabla(tablaPaciente, "Nombre:", fontCeldaBold);
+            addCeldaTabla(tablaPaciente, paciente.getNombre() + " " + paciente.getApellido(), fontCelda);
+            addCeldaTabla(tablaPaciente, "Número Contacto:", fontCeldaBold);
+            addCeldaTabla(tablaPaciente, paciente.getNumero(), fontCelda);
+            addCeldaTabla(tablaPaciente, "Dirección:", fontCeldaBold);
+            addCeldaTabla(tablaPaciente, paciente.getDireccion(), fontCelda);
+            document.add(tablaPaciente);
+
+            // --- Sección 2: Datos del Estudio ---
+            document.add(Chunk.NEWLINE);
+            document.add(new Paragraph("2. Datos del Estudio", fontSubtitulo));
+            document.add(Chunk.NEWLINE);
+
+            PdfPTable tablaEstudio = new PdfPTable(2);
+            tablaEstudio.setWidthPercentage(100);
+            
+            addCeldaTabla(tablaEstudio, "Tipo de Estudio:", fontCeldaBold);
+            addCeldaTabla(tablaEstudio, form.isEsCasoEstudio() ? "Caso Estudio" : "Caso Control", fontCelda);
+            addCeldaTabla(tablaEstudio, "Observaciones:", fontCeldaBold);
+            // (Usando getObservacion() como en tu código original)
+            addCeldaTabla(tablaEstudio, form.getObservacion() != null ? form.getObservacion() : "N/A", fontCelda);
+            document.add(tablaEstudio);
+            
+            // --- Sección 3: Campos Dinámicos ---
+            document.add(Chunk.NEWLINE);
+            document.add(new Paragraph("3. Campos del Formulario", fontSubtitulo));
+            document.add(Chunk.NEWLINE);
+
+            PdfPTable tablaDatos = new PdfPTable(2); 
+            tablaDatos.setWidthPercentage(100);
+
+            // Encabezado
+            PdfPCell headerPregunta = new PdfPCell(new Phrase("Campo", fontHeaderTabla));
+            headerPregunta.setBackgroundColor(Color.DARK_GRAY);
+            tablaDatos.addCell(headerPregunta);
+            
+            PdfPCell headerRespuesta = new PdfPCell(new Phrase("Valor", fontHeaderTabla));
+            headerRespuesta.setBackgroundColor(Color.DARK_GRAY);
+            tablaDatos.addCell(headerRespuesta);
+
+            // Filas de datos
+            for (DatosCrf dato : form.getDatosCrfList()) {
+                addCeldaTabla(tablaDatos, dato.getCampoCrf().getNombre(), fontCeldaBold);
+
+                String valor = dato.getValor();
+                if ("SI/NO".equals(dato.getCampoCrf().getTipo())) {
+                    valor = "1".equals(valor) ? "Sí" : "No";
+                }
+                if (valor == null || valor.trim().isEmpty()) {
+                    valor = "-";
+                }
+                addCeldaTabla(tablaDatos, valor, fontCelda);
+            }
+            document.add(tablaDatos);
+
+            document.close();
+
+            // --- Lógica del Nombre de Archivo ---
+            // (Esta lógica ahora usa la variable 'paciente' declarada al inicio)
+            String codigoLimpio = paciente.getCodigoPaciente();
+            
+            if (codigoLimpio != null && (codigoLimpio.startsWith("C") || codigoLimpio.startsWith("E"))) {
+                codigoLimpio = codigoLimpio.substring(1);
+            }
+
+            String prefijo = form.isEsCasoEstudio() ? "E" : "C";
+            String filename = prefijo + codigoLimpio + ".pdf";
+
+            resultado.put("pdfStream", new ByteArrayInputStream(out.toByteArray()));
+            resultado.put("filename", filename); 
+
+        } catch (DocumentException e) {
+            e.printStackTrace();
+            resultado.put("pdfStream", new ByteArrayInputStream(new byte[0])); 
+            resultado.put("filename", "Error_CRF_" + crfId + ".pdf");
+        }
+
+        return resultado; // Devuelve el mapa
+    }
+
+    // Método de ayuda para añadir celdas
+    private void addCeldaTabla(PdfPTable table, String texto, Font font) {
+        PdfPCell cell = new PdfPCell(new Phrase(texto, font));
+        cell.setPadding(5);
+        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+        table.addCell(cell);
+    }
+}

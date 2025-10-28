@@ -1,25 +1,28 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <script>
-      (function() {
-        try {
-          var theme = localStorage.getItem('theme');
-          if (theme === 'dark') {
-            document.documentElement.classList.add('dark-mode');
-          }
-        } catch (e) { console.error("No se pudo aplicar el tema desde localStorage", e); }
-      })();
+        (function () {
+            try {
+                var theme = localStorage.getItem('theme');
+                if (theme === 'dark') {
+                    document.documentElement.classList.add('dark-mode');
+                }
+            } catch (e) { console.error("No se pudo aplicar el tema desde localStorage", e); }
+        })();
     </script>
 
     <title>DataClinic - Polygen Research</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+    <meta name="_csrf" th:content="${_csrf?.token}" />
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}" />
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
     <link rel="stylesheet" th:href="@{/css/styles.css}" />
 </head>
+
 <body class="">
 
     <div id="app-wrapper">
@@ -56,7 +59,7 @@
                         </a>
                     </li>
                     <li>
-                         <a th:href="@{/crf/list}" class="nav-link"> <!-- Enlace para Gestionar/Listar -->
+                        <a th:href="@{/crf/list}" class="nav-link"> <!-- Enlace para Gestionar/Listar -->
                             <i class="ph-bold ph-table"></i> <!-- Icono de tabla -->
                             <span class="link-text">Gestionar CRF</span>
                         </a>
@@ -87,19 +90,21 @@
                 <i class="ph-bold ph-caret-double-left"></i> </button>
 
             <div class="sidebar-footer">
-                 <p><i class="ph-fill ph-lock-simple"></i> <span class="link-text">Conexión Segura (Cifrado)</span></p>
+                <p><i class="ph-fill ph-lock-simple"></i> <span class="link-text">Conexión Segura (Cifrado)</span></p>
             </div>
         </aside>
 
         <main id="main-content">
 
             <header id="app-header" th:fragment="header">
-                 <div class="header-left">
-                     <button onclick="alert('Función DESHACER (simulada)')" title="Deshacer"><i class="ph-bold ph-arrow-counter-clockwise"></i></button>
-                     <button onclick="alert('Función REHACER (simulada)')" title="Rehacer"><i class="ph-bold ph-arrow-clockwise"></i></button>
-                     <span id="save-status"><i class="ph-fill ph-check-circle"></i> Autoguardado...</span>
-                 </div>
-                 <div class="header-right">
+                <div class="header-left">
+                    <button onclick="alert('Función DESHACER (simulada)')" title="Deshacer"><i
+                            class="ph-bold ph-arrow-counter-clockwise"></i></button>
+                    <button onclick="alert('Función REHACER (simulada)')" title="Rehacer"><i
+                            class="ph-bold ph-arrow-clockwise"></i></button>
+                    <span id="save-status"><i class="ph-fill ph-check-circle"></i> Autoguardado...</span>
+                </div>
+                <div class="header-right">
                     <label class="switch" title="Cambiar Modo" style="margin-right: 1rem;">
                         <input type="checkbox" id="dark-mode-toggle">
                         <span class="slider"></span>
@@ -108,7 +113,6 @@
                         <i class="ph-bold ph-bell"></i>
                         <span class="notification-dot"></span>
                     </button>
-                 <div class="header-right">
                     <div class="profile-menu">
                         <img src="https://i.pravatar.cc/150?img=12" alt="Avatar">
                         <span th:text="${#authentication.principal.nombreUsuario}">Nombre del Usuario</span>
@@ -121,8 +125,10 @@
                         <form th:action="@{/logout}" method="post" id="logoutForm" style="display: none;">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                         </form>
+
+
                     </div>
-                 </div>
+                </div>
             </header>
 
             <div id="page-container">
@@ -139,4 +145,5 @@
 
     <script th:src="@{/js/main.js}"></script>
 </body>
+
 </html>

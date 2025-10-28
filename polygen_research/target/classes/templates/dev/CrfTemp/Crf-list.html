@@ -12,6 +12,15 @@
         <div class="card">
             <div class="card-header">
                 <h3><i class="ph-bold ph-table"></i> Gestión de CRFs</h3>
+                <div style="display: flex; align-items: center;">
+                    <form th:action="@{/crf/list}" method="get"
+                        style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="text" name="codigoPaciente" class="form-control"
+                            placeholder="Buscar por Cód. Paciente..." th:value="${param.codigoPaciente}" />
+                        <button type="submit" class="btn-primario">Buscar</button>
+                        <a th:href="@{/crf/list}" class="btn-secundario" title="Limpiar búsqueda">Limpiar</a>
+                    </form>
+                </div>
                 <a th:href="@{/crf/nuevo}" class="btn-primario btn-sm">
                     <i class="ph-bold ph-plus"></i> Agregar Nuevo CRF
                 </a>
@@ -62,26 +71,25 @@
                                 </td>
 
                                 <td class="actions-cell" style="text-align: right;">
-                                    <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
-
-                                        <button
-                                            th:onclick="|alert('Ver detalles CRF ${fila.crf.idCrf} - Pendiente implementar modal')|"
-                                            class="btn-secundario btn-sm" title="Ver Detalles Completos">
-                                            <i class="ph-bold ph-eye"></i>
-                                        </button>
-
-                                        <a th:href="@{/crf/editar/{id}(id=${fila.crf.idCrf})}"
-                                            class="btn-secundario btn-sm" title="Editar CRF">
-                                            <i class="ph-bold ph-pencil-simple"></i>
+                                    <button>
+                                    <a th:href="@{/crf/pdf/{id}(id=${fila.crf.idCrf})}" 
+                                        class="btn btn-sm btn-outline-danger" 
+                                        title="Descargar PDF"
+                                        target="_blank"> <i class="ph-bold ph-file-pdf"></i>
                                         </a>
+                                    </button>
+                                    <a th:href="@{/crf/editar/{id}(id=${fila.crf.idCrf})}" class="btn-secundario btn-sm"
+                                        title="Editar CRF">
+                                        <i class="ph-bold ph-pencil-simple"></i>
+                                    </a>
+                                    <button type="button" class="btn-error btn-sm"
+                                        th:attr="data-crf-id=${fila.crf.idCrf}" onclick="confirmarEliminarCRF(this)"
+                                        title="Eliminar CRF">
+                                        <i class="ph-bold ph-trash"></i>
+                                    </button>
 
-                                        <button type="button" class="btn-error btn-sm"
-                                            th:attr="data-crf-id=${fila.crf.idCrf}" onclick="confirmarEliminarCRF(this)"
-                                            title="Eliminar CRF">
-                                            <i class="ph-bold ph-trash"></i>
-                                        </button>
 
-                                    </div>
+                                    
                                 </td>
                             </tr>
                         </tbody>

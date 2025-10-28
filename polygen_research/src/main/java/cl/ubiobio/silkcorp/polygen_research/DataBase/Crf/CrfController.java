@@ -1,5 +1,12 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.Crf; // O el paquete que corresponda
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.util.Map;
+
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -8,57 +15,60 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfForm;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO;
-
+import cl.ubiobio.silkcorp.polygen_research.DataBase.export.PdfService;
 
 @Controller
 @RequestMapping("/crf") // Ruta base para este controlador
 public class CrfController {
 
     private final CrfService crfService;
+    private final PdfService pdfService;
 
-    public CrfController(CrfService crfService) {
+    public CrfController(CrfService crfService, PdfService pdfService) {
         this.crfService = crfService;
+        this.pdfService = pdfService;
     }
 
     /**
-     * Muestra el formulario de CRF dinámico.
-     * Llama al servicio para preparar el DTO (CrfForm)
-     * con los campos de paciente y la lista de campos dinámicos.
+     * Muestra el formulario de CRF dinámico. Llama al servicio para preparar el
+     * DTO (CrfForm) con los campos de paciente y la lista de campos dinámicos.
      */
     @GetMapping("/nuevo")
     public String mostrarNuevoCrfForm(Model model) {
         // Prepara el DTO (con paciente vacío y lista de respuestas vacías
         // pero asociadas a sus 'CamposCRF'
         CrfForm form = crfService.prepararNuevoCrfForm();
-        
+
         model.addAttribute("crfForm", form);
         return "dev/CrfTemp/crf-form"; // El nombre de tu archivo HTML de Thymeleaf
     }
 
     @GetMapping("/editar/{id}")
     public String mostrarFormularioEditarCrf(@PathVariable("id") Integer crfId, Model model) {
-        
+
         // Llama al nuevo método del servicio
         CrfForm form = crfService.prepararCrfFormParaEditar(crfId);
-        
+
         model.addAttribute("crfForm", form);
-        
+
         // Reutiliza la misma vista del formulario
-        return "dev/CrfTemp/Crf-form"; 
+        return "dev/CrfTemp/Crf-form";
     }
 
     /**
-     * Recibe los datos del formulario (paciente + respuestas dinámicas).
-     * El @ModelAttribute "crfForm" une todos los campos del HTML
-     * con el DTO CrfForm.
+     * Recibe los datos del formulario (paciente + respuestas dinámicas). El
+     *
+     * @ModelAttribute "crfForm" une todos los campos del HTML con el DTO
+     * CrfForm.
      */
     @PostMapping("/guardar")
     public String guardarNuevoCrf(@ModelAttribute CrfForm crfForm, Model model) {
-        
+
         try {
             // --- ¡NUEVA LÓGICA DE DECISIÓN! ---
             if (crfForm.getIdCrf() == null) {
@@ -73,14 +83,13 @@ public class CrfController {
             // Manejo básico de errores (devuelve al usuario al formulario)
             model.addAttribute("errorMessage", "Error al guardar el CRF: " + e.getMessage());
             // Recarga el formulario con los datos que el usuario ya tenía
-            model.addAttribute("crfForm", crfForm); 
+            model.addAttribute("crfForm", crfForm);
             return "dev/CrfTemp/Crf-form";
         }
 
         // Redirige a la lista de CRFs
-        return "redirect:/crf/list"; 
+        return "redirect:/crf/list";
     }
-
 
     @GetMapping("/api/crf/{id}") // Nueva ruta para la API
     @ResponseBody
@@ -96,32 +105,50 @@ public class CrfController {
      */
     @GetMapping("/reporte")
     public String mostrarReporteCrf(Model model) {
-        
+
         // 1. Llama al nuevo método del servicio
         CrfResumenViewDTO data = crfService.getCrfResumenView();
-        
+
         // 2. Pasamos las dos partes a la vista
         model.addAttribute("camposColumnas", data.getCamposActivos()); // Los <th>
         model.addAttribute("filasCrf", data.getFilas());         // Los <tr>
-        
+
         // 3. El nombre de tu nuevo archivo HTML
         return "crf-reporte";
     }
 
-    
     @GetMapping("/list")
-        public String listarTodosLosCrfs(Model model) {
-            
-            // 1. Llama al servicio que ya creamos (getCrfResumenView)
-            // Este servicio hace todo el trabajo de "pivotar" los datos.
-            CrfResumenViewDTO data = crfService.getCrfResumenView();
-            
-            // 2. Pasamos las dos variables que el HTML necesita
-            model.addAttribute("camposColumnas", data.getCamposActivos());
-            model.addAttribute("filasCrf", data.getFilas());
-            
-            
-            return "dev/CrfTemp/Crf-list"; 
-        }
+    public String listarTodosLosCrfs(Model model,
+            // Cambia el parámetro a String codigoPaciente
+            @RequestParam(name = "codigoPaciente", required = false) String codigoBusqueda) {
+
+        // Llama al servicio pasando el código (puede ser null o vacío)
+        CrfResumenViewDTO data = crfService.getCrfResumenView(codigoBusqueda); // Usará el String ahora
+
+        // Pasa datos a la vista
+        model.addAttribute("camposColumnas", data.getCamposActivos());
+        model.addAttribute("filasCrf", data.getFilas());
+
+        // Devuelve el nombre de la vista
+        return "dev/CrfTemp/Crf-list"; 
+    }
+
+    @GetMapping("/pdf/{id}")
+    public ResponseEntity<InputStreamResource> descargarCrfPdf(@PathVariable("id") Integer crfId) throws IOException {
+
+        Map<String, Object> pdfData = pdfService.generarPdfCrf(crfId);
+
+        ByteArrayInputStream pdfStream = (ByteArrayInputStream) pdfData.get("pdfStream");
+        String filename = (String) pdfData.get("filename"); // <-- Obtiene el nombre del Map
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"");
+
+        return ResponseEntity
+                .ok()
+                .headers(headers)
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(new InputStreamResource(pdfStream));
+    }
 
 }
