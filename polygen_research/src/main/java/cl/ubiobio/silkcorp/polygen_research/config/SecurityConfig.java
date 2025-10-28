@@ -1,3 +1,5 @@
+// Archivo: src/main/java/cl/ubiobio/silkcorp/polygen_research/config/SecurityConfig.java
+
 package cl.ubiobio.silkcorp.polygen_research.config;
 
 import org.springframework.context.annotation.Bean;
@@ -21,33 +23,30 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
-                // Permisos publicos
+                //Permisos públicos (Login, Registro, Estilos)
                 .requestMatchers("/login", "/register", "/css/**", "/js/**").permitAll()
 
-                //  Permisos específicos por rol
+                //Permisos solo para DEV
+                .requestMatchers("/usuarios/**", "/roles/**", "/whitelist/**").hasAnyRole("DEV","ADMINISTRADOR")
 
-                // DEV y ADMIN tienen acceso a todo 
-                // Usamos hasAnyRole para permitir a cualquiera de los dos
-                .requestMatchers("/dev/**").hasAnyRole("DEV", "ADMINISTRADOR") // En caso de añadir rutas de devs
+                //Permisos para DEV, ADMINISTRADOR, e INVESTIGADOR
+                .requestMatchers(
+                    "/pacientes/**", 
+                    "/crf/**", 
+                    "/campos/**", 
+                    "/datos-crf/**",  // "Ver Datos (Valores)"
+                    "/registros/**"   // "Historial de modificacion"
+                ).hasAnyRole("DEV", "ADMINISTRADOR", "INVESTIGADOR")
 
-                // ADMIN puede gestionar usuarios, roles y credenciales
-                .requestMatchers("/usuarios/**", "/roles/**", "/whitelist/**").hasAnyRole("ADMINISTRADOR", "DEV")
+                
+                .requestMatchers("/inicio", "/dashboard/**").authenticated() 
 
-                // INVESTIGADOR y ADMIN pueden gestionar datos clínicos
-                .requestMatchers("/pacientes/**", "/crf/**", "/campos/**").hasAnyRole("INVESTIGADOR", "ADMINISTRADOR")
-
-                // En casod de querer restringir a admin
-                .requestMatchers("/registros/**").hasAnyRole("ADMINISTRADOR", "INVESTIGADOR")
-
-                // La página de inicio es para cualquier usuario logueado
-                .requestMatchers("/inicio", "/datos-crf/**").authenticated() // Cualquier rol logueado
-
-                .anyRequest().authenticated()
+                .anyRequest().authenticated() // Cualquier otra URL requiere al menos estar logueado
             )
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
-                .defaultSuccessUrl("/inicio", true) // Redirige a /inicio al loguearse
+                .defaultSuccessUrl("/inicio", true) // Siempre redirige a /inicio
                 .failureUrl("/login?error")
                 .permitAll()
             )
@@ -56,8 +55,6 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/login?logout")
                 .permitAll()
             );            
-
-            
 
         return http.build();
     }

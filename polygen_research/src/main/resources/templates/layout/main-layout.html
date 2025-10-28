@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
 <head>
     <script>
@@ -32,6 +33,7 @@
                 <i class="ph-bold ph-first-aid-kit"></i>
                 <h1 class="link-text">Polygen Research</h1>
             </div>
+            
             <nav>
                 <ul>
                     <li>
@@ -40,52 +42,52 @@
                             <span class="link-text">Inicio</span>
                         </a>
                     </li>
-                    <li>
+                    
+                    <li sec:authorize="hasAnyRole('DEV', 'ADMINISTRADOR', 'INVESTIGADOR')">
                         <a th:href="@{/crf/nuevo}" class="nav-link">
                             <i class="ph-bold ph-clipboard-text"></i>
                             <span class="link-text">Ingresar CRF</span>
                         </a>
                     </li>
-                    <li>
+                    <li sec:authorize="hasAnyRole('DEV', 'ADMINISTRADOR', 'INVESTIGADOR')">
                         <a th:href="@{/pacientes/list}" class="nav-link">
                             <i class="ph-bold ph-users"></i>
                             <span class="link-text">Gestionar Pacientes</span>
                         </a>
                     </li>
-                    <li>
+                    <li sec:authorize="hasAnyRole('DEV', 'ADMINISTRADOR', 'INVESTIGADOR')">
                         <a th:href="@{/campos/list}" class="nav-link">
                             <i class="ph-bold ph-pencil-simple"></i>
                             <span class="link-text">Gestor de Campos</span>
                         </a>
                     </li>
-                    <li>
-                        <a th:href="@{/crf/list}" class="nav-link"> <!-- Enlace para Gestionar/Listar -->
-                            <i class="ph-bold ph-table"></i> <!-- Icono de tabla -->
+                    <li sec:authorize="hasAnyRole('DEV', 'ADMINISTRADOR', 'INVESTIGADOR')">
+                        <a th:href="@{/crf/list}" class="nav-link">
+                            <i class="ph-bold ph-table"></i>
                             <span class="link-text">Gestionar CRF</span>
                         </a>
                     </li>
-                    <li>
+                    <li sec:authorize="hasAnyRole('DEV', 'ADMINISTRADOR', 'INVESTIGADOR')">
                         <a th:href="@{/datos-crf/list}" class="nav-link">
                             <i class="ph-bold ph-chart-line"></i>
                             <span class="link-text">Ver Datos (Valores)</span>
                         </a>
                     </li>
-
-                    <li>
-                        <a th:href="@{/whitelist/list}" class="nav-link">
-                            <i class="ph-bold ph-shield-check"></i>
-                            <span class="link-text">Adm. Usuarios</span>
-                        </a>
-                    </li>
-                    <li>
+                    <li sec:authorize="hasAnyRole('DEV', 'ADMINISTRADOR', 'INVESTIGADOR')">
                         <a th:href="@{/registros/list}" class="nav-link">
                             <i class="ph-bold ph-archive"></i>
                             <span class="link-text">Historial de modificacion</span>
                         </a>
                     </li>
+
+                    <li sec:authorize="hasRole('DEV')">
+                        <a th:href="@{/whitelist/list}" class="nav-link">
+                            <i class="ph-bold ph-shield-check"></i>
+                            <span class="link-text">Adm. Usuarios</span>
+                        </a>
+                    </li>
                 </ul>
             </nav>
-
             <button id="sidebar-toggle" onclick="toggleMenu()" title="Colapsar/Expandir Menú">
                 <i class="ph-bold ph-caret-double-left"></i> </button>
 
@@ -125,7 +127,6 @@
                         <form th:action="@{/logout}" method="post" id="logoutForm" style="display: none;">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                         </form>
-
 
                     </div>
                 </div>
