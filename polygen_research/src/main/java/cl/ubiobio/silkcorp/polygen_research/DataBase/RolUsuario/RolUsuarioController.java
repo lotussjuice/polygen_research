@@ -30,7 +30,7 @@ public class RolUsuarioController {
 
     @PostMapping("/guardar")
     public String guardarRol(@ModelAttribute RolUsuario rol) {
-        RolUsuario.saveRol(rol);
+        rolUsuarioService.saveRol(rol);
         return "redirect:/roles/list";
     }
 }

@@ -25,4 +25,8 @@ public class RolUsuarioService {
         return rolUsuarioRepository.findByNombreRol("VISITANTE")
                 .orElseThrow(() -> new RuntimeException("Error fatal: El rol 'VISITANTE' no se encontró en la base de datos."));
     }
+
+    public RolUsuario saveRol(RolUsuario rol) {
+        return rolUsuarioRepository.save(rol);
+    }
 }

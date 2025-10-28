@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap; // Importante para mantener el orden
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,26 +32,22 @@ public class StataExportService {
 
     private final CrfService crfService;
     private final CalculoService calculoService;
-    private final ExcelReporteService excelReporteService; // Reutilizaremos lógica
+    private final ExcelReporteService excelReporteService;
     private final ObjectMapper objectMapper;
 
     public StataExportService(CrfService crfService, CalculoService calculoService, ExcelReporteService excelReporteService) {
         this.crfService = crfService;
         this.calculoService = calculoService;
-        this.excelReporteService = excelReporteService; // Inyectar el servicio existente
+        this.excelReporteService = excelReporteService;
         this.objectMapper = new ObjectMapper();
     }
 
-
     public ByteArrayInputStream generarReporteStata(String criteriosJson) throws IOException {
-        // 1. Obtener los datos preparados (DTO)
         StataPreviewDTO data = prepararDatosStata(criteriosJson);
 
-        // 2. Usar Apache POI para escribir el archivo
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Datos_STATA");
 
-            // 3. Escribir Encabezado (Headers)
             Row headerRow = sheet.createRow(0);
             List<String> headers = data.getHeadersStata();
             for (int i = 0; i < headers.size(); i++) {
@@ -59,7 +55,6 @@ public class StataExportService {
                 cell.setCellValue(headers.get(i));
             }
 
-            // 4. Escribir Filas de Datos
             int rowIdx = 1;
             List<Map<String, String>> filas = data.getFilasStata();
 
@@ -67,9 +62,8 @@ public class StataExportService {
                 Row dataRow = sheet.createRow(rowIdx++);
                 for (int i = 0; i < headers.size(); i++) {
                     String header = headers.get(i);
-                    String valor = fila.get(header); // Obtener valor por header STATA
+                    String valor = fila.get(header);
                     
-                    // STATA trata los números como números
                     try {
                         double valorNum = Double.parseDouble(valor);
                         dataRow.createCell(i).setCellValue(valorNum);
@@ -88,15 +82,12 @@ public class StataExportService {
         return prepararDatosStata(criteriosJson);
     }
 
-
     private StataPreviewDTO prepararDatosStata(String criteriosJson) throws IOException {
 
-        // --- 1. OBTENER DATOS (Lógica similar a ExcelReporteService) ---
         CrfResumenViewDTO data = crfService.getCrfResumenView();
         List<CampoCrf> columnasDinamicas = data.getCamposActivos();
         List<CrfResumenRowDTO> filas = data.getFilas();
 
-        // Parsear criterios
         Map<Integer, List<CriterioDTO>> criteriosMap;
         try {
             criteriosMap = objectMapper.readValue(criteriosJson, new TypeReference<HashMap<Integer, List<CriterioDTO>>>() {});
@@ -104,17 +95,13 @@ public class StataExportService {
             throw new IOException("Error parseando JSON de criterios", e);
         }
 
-        // Pre-calcular medias y medianas
         Map<String, Double> puntosDeCorte = excelReporteService.preCalcularPuntosDeCorte(filas, criteriosMap);
 
-        // --- 2. PREPARAR ESTRUCTURAS DE DATOS ---
         List<String> headersOriginal = new ArrayList<>();
         List<String> headersStata = new ArrayList<>();
         List<Map<String, String>> filasOriginal = new ArrayList<>();
         List<Map<String, String>> filasStata = new ArrayList<>();
 
-        // --- 3. PROCESAR HEADERS (ENCABEZADOS) ---
-        
         // Headers Fijos
         Map<String, String> fixedHeaders = new LinkedHashMap<>();
         fixedHeaders.put("ID_CRF", "id_crf");
@@ -129,11 +116,9 @@ public class StataExportService {
 
         // Headers Dinámicos (Crudos + Dicotomizados)
         for (CampoCrf campo : columnasDinamicas) {
-            // Columna de Dato Crudo
             headersOriginal.add(campo.getNombre());
             headersStata.add(StataFormateador.formatarNombreVariable(campo.getNombre()));
 
-            // Nuevas Columnas (Dicotomizadas)
             if (criteriosMap.containsKey(campo.getIdCampo())) {
                 for (CriterioDTO criterio : criteriosMap.get(campo.getIdCampo())) {
                     String nombreColOriginal = excelReporteService.getNombreColumnaDicotomizada(campo.getNombre(), criterio);
@@ -180,17 +165,38 @@ public class StataExportService {
                 filaOrig.put(headerOrigCrudo, valorCrudo);
                 filaStata.put(headerStataCrudo, StataFormateador.formatarValor(valorCrudo));
 
-                // Columnas Dicotomizadas
+                // ✅ CAMBIO CRÍTICO: Columnas Dicotomizadas
                 if (criteriosMap.containsKey(campoId)) {
+                    
+                    // ✅ 1. Parsear el valor crudo UNA SOLA VEZ
+                    double valorNum = excelReporteService.parseDouble(valorCrudo);
+                    
                     for (CriterioDTO criterio : criteriosMap.get(campoId)) {
-                        int valorDicotomizado = excelReporteService.calcularValorDicotomizado(valorCrudo, criterio, puntosDeCorte.get(campoId + "_" + criterio.getTipo()));
-                        String valorDicoStr = String.valueOf(valorDicotomizado);
+                        
+                        String valorDicoStr;
+                        
+                        // ✅ 2. Verificar si es NaN (valor no numérico)
+                        if (Double.isNaN(valorNum)) {
+                            // Si no es número, celda vacía
+                            valorDicoStr = "";
+                        } else {
+                            // ✅ 3. Si es número válido, calcular dicotomización
+                            double puntoCorteCalculado = puntosDeCorte.getOrDefault(campoId + "_" + criterio.getTipo(), 0.0);
+                            
+                            // ✅ 4. AQUÍ ESTÁ EL FIX: Pasar valorNum (double) en lugar de valorCrudo (String)
+                            int valorDicotomizado = excelReporteService.calcularValorDicotomizado(
+                                valorNum,              // ✅ double en lugar de String
+                                criterio, 
+                                puntoCorteCalculado
+                            );
+                            valorDicoStr = String.valueOf(valorDicotomizado);
+                        }
 
                         String headerOrigDico = excelReporteService.getNombreColumnaDicotomizada(campo.getNombre(), criterio);
                         String headerStataDico = StataFormateador.formatarNombreVariable(headerOrigDico);
                         
                         filaOrig.put(headerOrigDico, valorDicoStr);
-                        filaStata.put(headerStataDico, valorDicoStr); // El valor 0 o 1 no necesita formateo
+                        filaStata.put(headerStataDico, valorDicoStr);
                     }
                 }
             }
