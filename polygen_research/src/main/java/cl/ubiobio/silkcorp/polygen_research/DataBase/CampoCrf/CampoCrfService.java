@@ -1,9 +1,9 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.CampoCrf;
 
 import java.util.List;
-import java.util.Optional; 
+import java.util.Optional;
 
-import org.springframework.stereotype.Service; 
+import org.springframework.stereotype.Service;
 
 @Service
 public class CampoCrfService {
@@ -19,13 +19,16 @@ public class CampoCrfService {
     }
 
     public CampoCrf saveCampo(CampoCrf campoCrf) {
+        if (campoCrf.getIdCampo() == null && campoCrf.getActivo() == null) { 
+            campoCrf.setActivo(true);
+        }
         return campoCrfRepository.save(campoCrf);
     }
-    
+
     public Optional<CampoCrf> getCampoById(Integer id) {
         return campoCrfRepository.findById(id);
     }
-    
+
     public void toggleEstadoCampo(Integer id) {
         CampoCrf campo = getCampoById(id)
                 .orElseThrow(() -> new RuntimeException("Campo no encontrado con ID: " + id));
@@ -33,5 +36,5 @@ public class CampoCrfService {
         campo.setActivo(!estadoActual);
         campoCrfRepository.save(campo);
     }
-    
+
 }
