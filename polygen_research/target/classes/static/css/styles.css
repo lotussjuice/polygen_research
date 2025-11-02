@@ -1,4 +1,4 @@
-/* --- 1. Configuración General y Variables --- */
+/* 1 Configuración General y Variables */
 :root {
     --color-primario: #005a9c;
     --color-secundario: #00a8e8;
@@ -13,12 +13,11 @@
     --sombra-tarjeta: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
-/* --- ¡CAMBIO AQUÍ! Paleta de Modo Oscuro actualizada a Negro y Verde --- */
 .dark-mode {
-    --color-primario: #00b377;     /* Verde principal */
-    --color-secundario: #00d98f;  /* Verde secundario */
-    --color-fondo: #121212;         /* Negro */
-    --color-tarjeta: #1e1e1e;      /* Gris oscuro */
+    --color-primario: #00b377;     
+    --color-secundario: #00d98f;  
+    --color-fondo: #121212;        
+    --color-tarjeta: #1e1e1e;      
     --color-texto: #e0e0e0;
     --color-texto-secundario: #a0a0a0;
     --color-borde: #333;
@@ -34,11 +33,10 @@
 body {
     background-color: var(--color-fondo);
     color: var(--color-texto);
-    transition: background-color 0.3s ease, color 0.3s ease; /* Transición base */
+    transition: background-color 0.3s ease, color 0.3s ease; 
     overflow-x: hidden;
 }
 
-/* --- ¡CAMBIO AQUÍ! Transiciones "vistosas" añadidas --- */
 #sidebar,
 #app-header,
 .card,
@@ -53,9 +51,8 @@ th,
 td {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
-/* --------------------------------------------------- */
 
-/* --- 2. Página de Login --- */
+/* 2 Página de Login  */
 #pagina-login {
     display: flex;
     justify-content: center;
@@ -120,7 +117,6 @@ td {
 }
 
 .btn-primario:hover {
-    /* Considera definir un --color-primario-hover en :root y .dark-mode */
     background-color: #004578;
 }
 
@@ -140,15 +136,15 @@ td {
     text-decoration: underline;
 }
 
-/* --- 3. Contenedor Principal de la App --- */
+/* 3 Contenedor Principal de la App  */
 #app-wrapper {
     display: flex;
     height: 100vh;
 }
 
-/* --- 4. Barra Lateral --- */
+/*  4 Barra Lateral  */
 #sidebar {
-    width: var(--sidebar-width); /* Usamos la variable */
+    width: var(--sidebar-width); 
     background-color: var(--color-tarjeta);
     border-right: 1px solid var(--color-borde);
     padding: 1.5rem;
@@ -157,19 +153,17 @@ td {
     box-shadow: var(--sombra-tarjeta);
     z-index: 100;
     flex-shrink: 0;
-    /* Transición para ESCRITORIO (width, padding) */
     transition: width 0.3s ease-in-out, padding 0.3s ease-in-out, background-color 0.3s ease, border-color 0.3s ease;
-    /* Estado base visible */
     transform: translateX(0);
-    overflow: hidden; /* Oculta contenido si se encoge */
-    position: relative; /* Necesario para posicionar el botón toggle abajo */
+    overflow: hidden; 
+    position: relative;
 }
 
 #sidebar:not(.open) {
-    width: 70px; /* Ancho mínimo para iconos, ajústalo si es necesario */
-    padding-left: 0.5rem; /* Padding reducido para centrar iconos */
+    width: 70px; 
+    padding-left: 0.5rem; 
     padding-right: 0.5rem;
-    border-right: 1px solid var(--color-borde); /* Mantenemos un borde */
+    border-right: 1px solid var(--color-borde);
 }
 
 .sidebar-header {
@@ -191,7 +185,7 @@ td {
 
 #sidebar nav ul {
     list-style: none;
-    padding: 0; /* Asegúrate que no haya padding por defecto */
+    padding: 0; 
     flex-grow: 1;
 }
 
@@ -212,10 +206,10 @@ td {
 }
 #sidebar nav a i {
     font-size: 1.3rem;
-    flex-shrink: 0; /* Evita que el icono se encoja */
+    flex-shrink: 0; 
 }
 
-/* Estilos para el texto dentro de los enlaces */
+
 .link-text {
     opacity: 1;
     transition: opacity 0.2s ease-out 0.1s; 
@@ -225,12 +219,12 @@ td {
     margin-left: 12px; 
 }
 
-/* Ocultar texto cuando el sidebar está colapsado */
+
 #sidebar:not(.open) .link-text {
     opacity: 0;
     width: 0;
     margin-left: 0;
-    transition: opacity 0.1s ease-in, width 0s linear 0.1s; /* Desaparece rápido */
+    transition: opacity 0.1s ease-in, width 0s linear 0.1s; 
 }
 
 #sidebar nav a:hover,
@@ -245,7 +239,7 @@ td {
     color: #999;
 }
 
-/* Estilos para el nuevo botón de colapsar/expandir */
+
 #sidebar-toggle {
     background: none;
     border: 1px solid var(--color-borde);
@@ -253,9 +247,9 @@ td {
     padding: 0.5rem;
     cursor: pointer;
     color: var(--color-texto-secundario);
-    margin-top: 1rem; /* Espacio antes del footer */
-    margin-bottom: 0.5rem; /* Espacio antes del footer */
-    align-self: center; /* Centrar el botón */
+    margin-top: 1rem; 
+    margin-bottom: 0.5rem; 
+    align-self: center; 
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 #sidebar-toggle:hover {
@@ -263,8 +257,8 @@ td {
 }
 #sidebar-toggle i {
     font-size: 1.2rem;
-    display: block; /* Asegura tamaño correcto */
-    transition: transform 0.3s ease-in-out; /* Para animar cambio de icono si es necesario */
+    display: block; 
+    transition: transform 0.3s ease-in-out; 
 }
 
 .sidebar-footer i {
@@ -272,20 +266,19 @@ td {
     vertical-align: middle;
 }
 
-/* --- 5. Contenido Principal */
+/* 5 Contenido Principal */
 #main-content {
     flex-grow: 1;
     display: flex;
     flex-direction: column;
-    overflow-y: auto; /* Permite scroll vertical */
+    overflow-y: auto; 
     height: 100vh;
-    /* Margen izquierdo por defecto y animación */
-    margin-left: var(--sidebar-width); /* Usamos la variable */
+    margin-left: var(--sidebar-width); 
     transition: margin-left 0.3s ease-in-out;
 }
 
 #sidebar:not(.open) ~ #main-content {
-    margin-left: 0px; /* Debe coincidir con el width colapsado del sidebar */
+    margin-left: 0px; 
 }
 
 /* 5.1 Encabezado Superior */
@@ -320,7 +313,7 @@ td {
 }
 .header-left button i {
     font-size: 1.2rem;
-    display: block; /* Asegura que el icono no cause espacio extra */
+    display: block;
 }
 #save-status {
     font-size: 0.875rem;
@@ -377,7 +370,7 @@ td {
     flex-grow: 1;
 }
 
-/* --- 6. Componentes Comunes (Tarjetas, Botones, Tablas) --- */
+/* 6. Componentes Comunes (Botones, Tablas, etc.) */
 .card {
     background-color: var(--color-tarjeta);
     border-radius: 12px;
@@ -397,12 +390,12 @@ td {
 }
 .card-header h3 {
     margin: 0;
-    display: flex; /* Para alinear el icono con el texto */
+    display: flex; 
     align-items: center;
-    gap: 0.5rem; /* Espacio entre icono y texto */
+    gap: 0.5rem; 
 }
 .card-header h3 i {
-    font-size: 1.2em; /* Tamaño del icono relativo al h3 */
+    font-size: 1.2em; 
 }
 
 .btn-secundario {
@@ -420,9 +413,9 @@ td {
 .btn-primario.btn-sm, .btn-secundario.btn-sm {
      padding: 0.6rem 1rem;
      width: auto;
-     display: inline-flex; /* Asegura alineación del icono */
+     display: inline-flex; 
      align-items: center;
-     gap: 0.4rem; /* Espacio entre icono y texto del botón */
+     gap: 0.4rem; 
 }
 .btn-exito { background-color: var(--color-exito); color: white; border: none; }
 .btn-exito:hover { background-color: #218838; }
@@ -455,12 +448,12 @@ tr:hover {
     margin-right: 5px;
     padding: 0.3rem 0.6rem;
     text-decoration: none;
-    display: inline-flex; /* Centra el icono dentro del botón */
+    display: inline-flex; 
     align-items: center;
     justify-content: center;
 }
 .actions-cell button i, .actions-cell a i {
-    font-size: 1.1rem; /* Tamaño de iconos en botones de acción */
+    font-size: 1.1rem; 
 }
 
 .grid-2 {
@@ -469,7 +462,7 @@ tr:hover {
     gap: 1.5rem;
 }
 
-/* --- 7. Estilos de Páginas Específicas --- */
+/* 7 Estilos de Páginas Específicas */
 
 #form-paciente {
     display: grid;
@@ -538,7 +531,7 @@ tr:hover {
     display: inline-block;
     width: 50px;
     height: 28px;
-    flex-shrink: 0; /* Evita que se encoja en flex containers */
+    flex-shrink: 0; 
 }
 .switch input { opacity: 0; width: 0; height: 0; }
 .slider {
@@ -554,7 +547,6 @@ tr:hover {
 }
 .slider:before {
     position: absolute;
-    /* --- ¡CAMBIO AQUÍ! Añadimos icono de sol ☀️ --- */
     content: '☀️';
     height: 20px;
     width: 20px;
@@ -563,26 +555,22 @@ tr:hover {
     background-color: white;
     transition: .4s;
     border-radius: 50%;
-    /* Centrado del icono */
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 14px;
     color: #333;
-    /* --- FIN DEL CAMBIO --- */
 }
 input:checked + .slider {
     background-color: var(--color-primario);
 }
 input:checked + .slider:before {
     transform: translateX(22px);
-    /* --- ¡CAMBIO AQUÍ! Añadimos icono de luna 🌙 --- */
     content: '🌙';
     color: white;
-    /* --- FIN DEL CAMBIO --- */
 }
 
-/* --- 8. Modal (Pop-up) --- */
+/* 8 Modal (Pop-up) */
 .modal {
     display: none;
     position: fixed;
@@ -627,32 +615,28 @@ input:checked + .slider:before {
 }
 .patient-data-grid {
     display: grid;
-    grid-template-columns: auto 1fr; /* Columna de etiquetas ajustada al contenido */
+    grid-template-columns: auto 1fr;
     gap: 1rem;
 }
 .patient-data-grid strong {
     color: var(--color-texto-secundario);
-    font-weight: 600; /* Un poco más de énfasis */
+    font-weight: 600;
 }
 
-/* --- 9. Responsividad --- */
+/*  9. Responsividad  */
 @media (max-width: 768px) {
 
 
-
-    /* 1. Reducir tamaño de fuente general */
     body {
-        font-size: 14px; /* Un poco más pequeño */
+        font-size: 14px;
     }
 
-    /* 2. Sidebar más estrecho */
     #sidebar {
-        width: 60px; /* Más estrecho que los 70px anteriores */
-        padding-left: 0.4rem; /* Menos padding lateral */
+        width: 60px;
+        padding-left: 0.4rem;
         padding-right: 0.4rem;
-        padding-top: 1rem; /* Menos padding superior */
+        padding-top: 1rem;
         padding-bottom: 1rem;
-        /* Mantenemos posición y ocultar texto */
         position: sticky; top: 0; height: 100vh;
         z-index: 100;
         box-shadow: var(--sombra-tarjeta);
@@ -660,72 +644,65 @@ input:checked + .slider:before {
         overflow: hidden;
     }
 
-    /* Ocultamos texto (igual que antes) */
     #sidebar .link-text,
     #sidebar .sidebar-footer .link-text,
-    #sidebar .sidebar-header h1 { /* Ocultamos H1 también */
-        display: none; /* Más directo que opacity/width */
+    #sidebar .sidebar-header h1 {
+        display: none;
     }
 
-    /* Ajustar header del sidebar */
      #sidebar .sidebar-header {
-         margin-bottom: 1.5rem; /* Menos espacio inferior */
-         justify-content: center; /* Centrar icono */
-         padding-left: 0; /* Sin padding extra */
+         margin-bottom: 1.5rem; 
+         justify-content: center; 
+         padding-left: 0; 
          padding-right: 0;
      }
      #sidebar .sidebar-header i {
-         font-size: 2rem; /* Icono del header un poco más pequeño */
+         font-size: 2rem; 
      }
 
 
-    /* 3. Iconos de navegación más pequeños y menos espaciados */
+    
     #sidebar nav a {
-        padding: 0.6rem; /* Menos padding */
-        gap: 8px; /* Menos gap (aunque el texto está oculto) */
-        justify-content: center; /* Centrar icono */
+        padding: 0.6rem; 
+        gap: 8px; 
+        justify-content: center; 
     }
     #sidebar nav a i {
-        font-size: 1.2rem; /* Iconos más pequeños */
-        margin: 0; /* Quitamos margen si lo hubiera */
+        font-size: 1.2rem; 
+        margin: 0; 
     }
 
-    /* Ocultar footer o hacerlo más compacto */
     .sidebar-footer {
         padding: 0.5rem;
         text-align: center;
     }
      .sidebar-footer i {
-         font-size: 0.9rem; /* Icono del candado más pequeño */
+         font-size: 0.9rem; 
      }
 
-    /* 4. Contenido principal con margen ajustado */
     #main-content {
         width: auto;
-        margin-left: 60px; /* Coincide con el nuevo ancho del sidebar */
+        margin-left: 60px; 
         transition: none;
     }
 
-    /* 5. Header superior más compacto */
     #app-header {
         position: sticky; top: 0; z-index: 900;
-        padding: 0.5rem 1rem; /* Menos padding vertical */
-        min-height: 55px; /* Altura menor */
+        padding: 0.5rem 1rem; 
+        min-height: 55px; 
     }
-    .header-left { flex-wrap: nowrap; overflow: hidden; gap: 0.5rem; /* Menos gap */}
-    .header-left button { padding: 0.4rem; /* Botones más pequeños */ }
-    .header-left button i { font-size: 1.1rem; /* Iconos más pequeños */ }
+    .header-left { flex-wrap: nowrap; overflow: hidden; gap: 0.5rem; }
+    .header-left button { padding: 0.4rem; }
+    .header-left button i { font-size: 1.1rem; }
 
-    .header-right { gap: 1rem; /* Menos gap */ }
-    .header-right .icon-btn { font-size: 1.3rem; /* Iconos más pequeños */ }
-    .profile-menu img { width: 32px; height: 32px; /* Avatar más pequeño */ }
+    .header-right { gap: 1rem; }
+    .header-right .icon-btn { font-size: 1.3rem; }
+    .profile-menu img { width: 32px; height: 32px; }
 
-    /* Ocultamos botón inferior (igual que antes) */
     #sidebar-toggle {
         display: none;
     }
 
-    /* Mantenemos otros ajustes (igual que antes) */
     #page-container { padding: 1rem; }
     .grid-2 { grid-template-columns: 1fr; }
     .profile-menu span { display: none; }
@@ -733,7 +710,7 @@ input:checked + .slider:before {
 
 }
 
-/* --- 10. Estilos de Alertas y Mensajes --- */
+/* 10 Estilos de Alertas y Mensajes */
 .alert {
     padding: 1rem;
     margin-bottom: 1.5rem;
@@ -747,7 +724,6 @@ input:checked + .slider:before {
     background-color: #d4edda;
     border-color: #c3e6cb;
 }
-/* Estilos modo oscuro para alertas */
 .dark-mode .alert-success {
     color: #c3e6cb;
     background-color: #1d3c2a;
@@ -759,38 +735,34 @@ input:checked + .slider:before {
     background-color: #f8d7da;
     border-color: #f5c6cb;
 }
-/* Estilos modo oscuro para alertas */
 .dark-mode .alert-error {
     color: #f5c6cb;
     background-color: #58151c;
     border-color: #842029;
 }
 
-/* --- 11. Estilos de Advertencia de Tabla --- */
+/* 11 Estilos de Advertencia de Tabla */
 tr.fila-incompleta {
     border-left: 4px solid var(--color-error);
-    /* Fondo muy sutil, ajustado para ambos modos */
     background-color: rgba(220, 53, 69, 0.05);
 }
 tr.fila-incompleta:hover {
-    /* Mantenemos el hover normal */
     background-color: var(--color-fondo);
 }
 tr.fila-incompleta td {
     cursor: help;
 }
 
-/* --- 12. Estilos Responsivos para Tablas (NUEVO) --- */
+/* 12 Estilos Responsivos para Tablas */
 
 .table-responsive-wrapper {
-    overflow-x: auto; /* Habilita el scroll horizontal si es necesario */
-    width: 100%;       /* Ocupa todo el ancho disponible */
-    -webkit-overflow-scrolling: touch; /* Mejora el scroll en iOS */
+    overflow-x: auto; 
+    width: 100%;   
+    -webkit-overflow-scrolling: touch;
 }
 
-/* Opcional: Ancho mínimo para la tabla antes de que aparezca el scroll */
 .table-responsive-wrapper table {
-    min-width: 600px; /* Ajusta este valor si necesitas más o menos espacio */
+    min-width: 600px; 
 }
 
 /* Estilos para el botón '+' y los tags de criterios */
@@ -800,19 +772,19 @@ tr.fila-incompleta td {
     line-height: 1;
     font-size: 0.8em;
     border-radius: 50%;
-    border: 1px solid var(--color-primario); /* Usar variable */
-    background-color: var(--color-fondo); /* Usar variable */
-    color: var(--color-primario); /* Usar variable */
+    border: 1px solid var(--color-primario); 
+    background-color: var(--color-fondo); 
+    color: var(--color-primario); 
     cursor: pointer;
 }
 .btn-add-criterion:hover {
-    background-color: #e9ecef; /* Ajustar para modo oscuro si es necesario */
+    background-color: #e9ecef; 
 }
 .criterion-tag {
     display: inline-block;
     font-size: 0.75em;
     background-color: #e9ecef; /* Color base claro, ajustar para modo oscuro */
-    color: var(--color-texto-secundario); /* Usar variable */
+    color: var(--color-texto-secundario); 
     border-radius: 4px;
     padding: 3px 6px;
     margin-top: 4px;
@@ -827,7 +799,7 @@ tr.fila-incompleta td {
     border: none;
     background: none;
     padding: 0 0 0 5px;
-    color: var(--color-error); /* Usar variable */
+    color: var(--color-error); 
     font-weight: bold;
     cursor: pointer;
     opacity: 0.7;
@@ -835,7 +807,7 @@ tr.fila-incompleta td {
  .criterion-tag .btn-remove:hover {
     opacity: 1;
  }
-/* --- 13. ESTILOS DEL DASHBOARD (Versión Final) --- */
+/* 13 ESTILOS DEL DASHBOARD */
 
 /* Cabecera del Dashboard */
 .dashboard-header {
@@ -847,22 +819,19 @@ tr.fila-incompleta td {
     color: var(--color-texto);
 }
 
-/* Layout principal de 2 columnas */
 .dashboard-grid-2col {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* 50% y 50% */
+    grid-template-columns: 1fr 1fr; 
     gap: 2rem;
     align-items: flex-start; 
 }
 
-/* Columna Izquierda: Cuadrícula de 2x2 para mini-tarjetas */
 .dashboard-stats-grid-2x2 {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* 2 columnas */
+    grid-template-columns: 1fr 1fr; 
     gap: 1.5rem;
 }
 
-/* Mini-Tarjeta ("Pestañita") Individual */
 .mini-stat-card {
     background-color: var(--color-tarjeta);
     border: 1px solid var(--color-borde);
@@ -905,7 +874,6 @@ tr.fila-incompleta td {
     margin-top: auto; 
 }
 
-/* Columna Derecha: Contenedor del Gráfico */
 .chart-container {
     background-color: var(--color-tarjeta);
     border: 1px solid var(--color-borde);
@@ -931,7 +899,6 @@ tr.fila-incompleta td {
     margin: 0 auto;
 }
 
-/* Estilo para el Rol del Usuario */
 .dashboard-user-role {
     position: fixed;
     bottom: 20px;
@@ -947,7 +914,7 @@ tr.fila-incompleta td {
     z-index: 100;
 }
 
-/* --- 14. RESPONSIVIDAD DEL DASHBOARD (Versión Final) --- */
+/* --- 14. RESPONSIVIDAD DEL DASHBOARD ( */
 @media (max-width: 1200px) {
     .dashboard-stats-grid-2x2 {
         grid-template-columns: 1fr;
@@ -974,4 +941,32 @@ tr.fila-incompleta td {
     .chart-container h3 {
         font-size: 1.2rem;
     }
+}
+
+/* 15. ESTILOS FORMULARIO CRF (SI/NO) */
+.radio-group-sino {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    align-items: center;
+    margin-top: 0.5rem;
+    width: auto; 
+    padding: 0.25rem;
+}
+
+.radio-group-sino .radio-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: normal;
+    margin-bottom: 0;
+    cursor: pointer;
+}
+
+.radio-group-sino input[type="radio"] {
+    width: auto !important; 
+    height: 1.2em;
+    cursor: pointer;
+    position: relative;
+    top: -1px;
 }

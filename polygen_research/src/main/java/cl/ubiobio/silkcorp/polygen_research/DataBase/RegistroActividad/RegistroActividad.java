@@ -30,12 +30,10 @@ public class RegistroActividad {
     @Column(name = "Tipo_actividad", length = 50)
     private String tipoActividad;
 
-    // --- Clave Foránea (Relación N-a-1) a Crf ---
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "CRF_ID", nullable = false)
     private Crf crf;
 
-    // --- Clave Foránea (Relación N-a-1) a Usuario ---
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "Usuario_ID", nullable = false)
     private Usuario usuario;

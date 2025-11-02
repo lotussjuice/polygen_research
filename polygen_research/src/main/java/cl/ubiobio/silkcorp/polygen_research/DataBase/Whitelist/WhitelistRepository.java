@@ -1,10 +1,10 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.Whitelist;
 
-import org.springframework.data.jpa.repository.EntityGraph; // Importar EntityGraph
+import org.springframework.data.jpa.repository.EntityGraph; 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List; // Importar List
+import java.util.List; 
 import java.util.Optional;
 
 @Repository

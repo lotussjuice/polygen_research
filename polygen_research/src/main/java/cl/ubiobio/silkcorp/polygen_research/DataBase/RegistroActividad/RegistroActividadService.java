@@ -27,9 +27,6 @@ public class RegistroActividadService {
     }
 
     public RegistroActividad saveRegistro(RegistroActividad registro) {
-        // Lógica de negocio:
-        // Ej: Asignar la 'Fecha_actividad' al momento de guardar
-        // registro.setFechaActividad(LocalDate.now());
         return registroRepository.save(registro);
     }
 
@@ -40,22 +37,21 @@ public class RegistroActividadService {
 
     public void logCrfActivity(String tipoActividad, Crf crf) {
         try {
-            // 2. Obtenemos el email del usuario logueado
+            // Obtener el email del usuario logueado
             String usernameEmail = SecurityContextHolder.getContext().getAuthentication().getName();
             
-            // 3. Buscamos en la Whitelist usando el email
+            // Buscar en la Whitelist usando el email
             Whitelist whitelistEntry = whitelistRepository.findByCorreo(usernameEmail)
                 .orElseThrow(() -> new RuntimeException("Email no encontrado en Whitelist: " + usernameEmail));
 
-            // 4. Obtenemos el Usuario desde la Whitelist
-            // (Asumo que tu entidad Whitelist tiene un método getUsuario())
+            // Obtener el Usuario desde la Whitelist
             Usuario usuarioActual = whitelistEntry.getUsuario();
             
             if (usuarioActual == null) {
                 throw new RuntimeException("La entrada de Whitelist no tiene un usuario asociado.");
             }
 
-            // 5. Creamos y guardamos el log (esto es igual que antes)
+            // Crear y guardar el log
             RegistroActividad registro = new RegistroActividad();
             registro.setFechaActividad(LocalDateTime.now());
             registro.setTipoActividad(tipoActividad);

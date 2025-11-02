@@ -1,5 +1,3 @@
-// Archivo: src/main/java/cl/ubiobio/silkcorp/polygen_research/config/SecurityConfig.java
-
 package cl.ubiobio.silkcorp.polygen_research.config;
 
 import org.springframework.context.annotation.Bean;
@@ -23,13 +21,13 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(authorize -> authorize
-                //Permisos públicos (Login, Registro, Estilos)
+                // Permisos públicos (Login, Registro, Estilos)
                 .requestMatchers("/login", "/register", "/css/**", "/js/**").permitAll()
 
-                //Permisos solo para DEV
+                // Permisos solo para DEV
                 .requestMatchers("/usuarios/**", "/roles/**", "/whitelist/**").hasAnyRole("DEV","ADMINISTRADOR")
 
-                //Permisos para DEV, ADMINISTRADOR, e INVESTIGADOR
+                // Permisos para DEV, ADMINISTRADOR, e INVESTIGADOR
                 .requestMatchers(
                     "/pacientes/**", 
                     "/crf/**", 
@@ -55,7 +53,6 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/login?logout")
                 .permitAll()
             );            
-
         return http.build();
     }
 }

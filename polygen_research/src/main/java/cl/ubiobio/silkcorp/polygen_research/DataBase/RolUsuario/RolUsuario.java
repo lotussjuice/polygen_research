@@ -25,8 +25,7 @@ public class RolUsuario {
     @Column(name = "Nombre_Rol", length = 20)
     private String nombreRol;
 
-    // --- Relación Inversa ---
-    // Un Rol puede tener MUCHOS Usuarios.
+    
     @OneToMany(mappedBy = "rolUsuario")
     private List<Usuario> usuarios;
 
@@ -38,7 +37,6 @@ public class RolUsuario {
         this.nombreRol = nombreRol;
     }
 
-    // You might need to add getters/setters for idRol and usuarios too if Thymeleaf needs them
     public Integer getIdRol() { return idRol; }
     public void setIdRol(Integer idRol) { this.idRol = idRol; }
     public List<Usuario> getUsuarios() { return usuarios; }

@@ -1,4 +1,4 @@
-package cl.ubiobio.silkcorp.polygen_research.DataBase.Crf; // O el paquete que corresponda
+package cl.ubiobio.silkcorp.polygen_research.DataBase.Crf; 
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -23,7 +23,7 @@ import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.export.PdfService;
 
 @Controller
-@RequestMapping("/crf") // Ruta base para este controlador
+@RequestMapping("/crf")
 public class CrfController {
 
     private final CrfService crfService;
@@ -34,43 +34,30 @@ public class CrfController {
         this.pdfService = pdfService;
     }
 
-    /**
-     * Muestra el formulario de CRF dinámico. Llama al servicio para preparar el
-     * DTO (CrfForm) con los campos de paciente y la lista de campos dinámicos.
-     */
+
     @GetMapping("/nuevo")
     public String mostrarNuevoCrfForm(Model model) {
-        // Prepara el DTO (con paciente vacío y lista de respuestas vacías
-        // pero asociadas a sus 'CamposCRF'
         CrfForm form = crfService.prepararNuevoCrfForm();
 
         model.addAttribute("crfForm", form);
-        return "dev/CrfTemp/crf-form"; // El nombre de tu archivo HTML de Thymeleaf
+        return "dev/CrfTemp/crf-form";
     }
 
     @GetMapping("/editar/{id}")
     public String mostrarFormularioEditarCrf(@PathVariable("id") Integer crfId, Model model) {
 
-        // Llama al nuevo método del servicio
         CrfForm form = crfService.prepararCrfFormParaEditar(crfId);
 
         model.addAttribute("crfForm", form);
 
-        // Reutiliza la misma vista del formulario
+
         return "dev/CrfTemp/Crf-form";
     }
 
-    /**
-     * Recibe los datos del formulario (paciente + respuestas dinámicas). El
-     *
-     * @ModelAttribute "crfForm" une todos los campos del HTML con el DTO
-     * CrfForm.
-     */
     @PostMapping("/guardar")
     public String guardarNuevoCrf(@ModelAttribute CrfForm crfForm, Model model) {
 
         try {
-            // --- ¡NUEVA LÓGICA DE DECISIÓN! ---
             if (crfForm.getIdCrf() == null) {
                 // Si NO hay ID, es un CRF Nuevo
                 crfService.guardarCrfCompleto(crfForm);
@@ -94,42 +81,34 @@ public class CrfController {
     @GetMapping("/api/crf/{id}") // Nueva ruta para la API
     @ResponseBody
     public ResponseEntity<Crf> getCrfByIdApi(@PathVariable Integer id) {
-        // Asumiendo que tienes un método getCrfById en tu CrfService
-        return crfService.getCrfById(id) // Necesitas crear este método en CrfService si no existe
+        return crfService.getCrfById(id) 
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
-    /**
-     * Muestra el reporte de CRFs en formato de tabla pivotada.
-     */
     @GetMapping("/reporte")
     public String mostrarReporteCrf(Model model) {
 
-        // 1. Llama al nuevo método del servicio
+        // Llama al nuevo método del servicio
         CrfResumenViewDTO data = crfService.getCrfResumenView();
 
-        // 2. Pasamos las dos partes a la vista
-        model.addAttribute("camposColumnas", data.getCamposActivos()); // Los <th>
-        model.addAttribute("filasCrf", data.getFilas());         // Los <tr>
+        // Pasamos las dos partes a la vista
+        model.addAttribute("camposColumnas", data.getCamposActivos()); 
+        model.addAttribute("filasCrf", data.getFilas());  
 
-        // 3. El nombre de tu nuevo archivo HTML
         return "crf-reporte";
     }
 
     @GetMapping("/list")
     public String listarTodosLosCrfs(Model model,
-            // Cambia el parámetro a String codigoPaciente
             @RequestParam(name = "codigoPaciente", required = false) String codigoBusqueda) {
 
-        // Llama al servicio pasando el código (puede ser null o vacío)
-        CrfResumenViewDTO data = crfService.getCrfResumenView(codigoBusqueda); // Usará el String ahora
 
-        // Pasa datos a la vista
+        CrfResumenViewDTO data = crfService.getCrfResumenView(codigoBusqueda);
+
         model.addAttribute("camposColumnas", data.getCamposActivos());
         model.addAttribute("filasCrf", data.getFilas());
 
-        // Devuelve el nombre de la vista
         return "dev/CrfTemp/Crf-list"; 
     }
 
@@ -139,7 +118,7 @@ public class CrfController {
         Map<String, Object> pdfData = pdfService.generarPdfCrf(crfId);
 
         ByteArrayInputStream pdfStream = (ByteArrayInputStream) pdfData.get("pdfStream");
-        String filename = (String) pdfData.get("filename"); // <-- Obtiene el nombre del Map
+        String filename = (String) pdfData.get("filename");
 
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + filename + "\"");

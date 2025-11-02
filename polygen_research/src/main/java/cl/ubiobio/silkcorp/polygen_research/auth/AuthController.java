@@ -17,8 +17,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes; 
 
-import java.util.List; // Esta importación ya no es necesaria aquí, pero no daña
-
 @Controller
 public class AuthController {
 
@@ -27,6 +25,7 @@ public class AuthController {
     private final RolUsuarioService rolUsuarioService;
     private final PasswordEncoder passwordEncoder;
 
+    // Creación de objetos de para la instancia
     public AuthController(UsuarioService usuarioService, WhitelistService whitelistService,
                           RolUsuarioService rolUsuarioService, PasswordEncoder passwordEncoder) {
         this.usuarioService = usuarioService;
@@ -35,91 +34,71 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // Show Login Page
     @GetMapping("/login")
     public String showLoginPage() {
         return "startpoint/login";
     }
 
-    // Show Registration Page
     @GetMapping("/register")
     public String showRegisterPage(Model model) {
-        // We need a DTO (Data Transfer Object) to hold registration data
+        // DTO para holdear la información momentaneamente
         model.addAttribute("registerDto", new RegisterDto());
-        
-        // ==== CAMBIO AQUÍ ====
-        // Ya no pasamos la lista de roles al formulario
-        // List<RolUsuario> roles = rolUsuarioService.getAllRoles(); // <-- LÍNEA ELIMINADA
-        // model.addAttribute("roles", roles); // <-- LÍNEA ELIMINADA
-        // ==== FIN DEL CAMBIO ====
-        
-        // Corresponds to /resources/templates/register.html
         return "startpoint/register";
     }
 
-    // Process Registration Form
+    // Procesamiento de un registro
     @PostMapping("/register")
     public String processRegistration(@ModelAttribute("registerDto") RegisterDto registerDto,
-                                      BindingResult result, // For validation results
-                                      RedirectAttributes redirectAttributes) { // To show success/error messages
+                                      BindingResult result, // Para validar resultados
+                                      RedirectAttributes redirectAttributes) { // Para mensages
 
-        // ==== CAMBIO EN VALIDACIÓN ====
-        // Se quita la validación de 'registerDto.getIdRol()'
+    
         if (registerDto.getCorreo() == null || registerDto.getCorreo().isEmpty() ||
             registerDto.getPassword() == null || registerDto.getPassword().isEmpty() ||
             registerDto.getNombreUsuario() == null || registerDto.getNombreUsuario().isEmpty()) {
-            // Add an error message if validation fails
             result.reject("globalError", "Todos los campos son obligatorios.");
         }
-        // ==== FIN DEL CAMBIO ====
 
-
-        // Check if email already exists
+        // Chequea que correo no exista en el registro
+        // Proximamente conexión con correos reales de ser posible
         if (whitelistService.existsByCorreo(registerDto.getCorreo())) {
              result.rejectValue("correo", "error.correo", "El correo electrónico ya está registrado.");
         }
 
 
         if (result.hasErrors()) {
-            // If there are errors, return to the registration form
-            // Need to add roles back to the model for the dropdown
             redirectAttributes.addFlashAttribute("org.springframework.validation.BindingResult.registerDto", result);
-            redirectAttributes.addFlashAttribute("registerDto", registerDto); // Keep user input
-            return "redirect:/register?error"; // Redirect to avoid form resubmission
+            redirectAttributes.addFlashAttribute("registerDto", registerDto); // Mantener input
+            return "redirect:/register?error";
         }
 
-        // --- Registration Logic ---
         try {
-            // 1. Create Usuario
+            // Crear usuario
             Usuario nuevoUsuario = new Usuario();
             nuevoUsuario.setNombreUsuario(registerDto.getNombreUsuario());
-            nuevoUsuario.setEstado("Activo"); // Set default state
+            nuevoUsuario.setEstado("Activo"); // Status default
 
-            // ==== CAMBIO EN ASIGNACIÓN DE ROL ====
-            // En lugar de obtener el rol del DTO, asignamos "VISITANTE" por defecto
+            // Rol visitante por defecto
             RolUsuario rolVisitante = rolUsuarioService.getRolVisitantePorDefecto();
             nuevoUsuario.setRolUsuario(rolVisitante);
-            // ==== FIN DEL CAMBIO ====
             
-            Usuario usuarioGuardado = usuarioService.saveUsuario(nuevoUsuario); // Save and get ID
+            Usuario usuarioGuardado = usuarioService.saveUsuario(nuevoUsuario); 
 
-            // 2. Create Whitelist (Credentials) - SIN CAMBIOS
+            // Guardar credenciales en whitelist
             Whitelist credencial = new Whitelist();
             credencial.setCorreo(registerDto.getCorreo());
-            // Encode the password before saving!
+            // Guardar contraseña hasheada
             credencial.setContrasena(passwordEncoder.encode(registerDto.getPassword()));
-            credencial.setUsuario(usuarioGuardado); // Link to the saved Usuario
+            credencial.setUsuario(usuarioGuardado); 
 
             whitelistService.saveCredencial(credencial);
 
         } catch (Exception e) {
-             // Handle potential errors during save
              redirectAttributes.addFlashAttribute("errorMessage", "Error al registrar el usuario.");
              return "redirect:/register?error";
         }
 
-        // Add success message
         redirectAttributes.addFlashAttribute("successMessage", "¡Usuario registrado con éxito! Por favor, inicie sesión.");
-        return "redirect:/login"; // Redirect to login page after successful registration
+        return "redirect:/login"; 
     }
 }

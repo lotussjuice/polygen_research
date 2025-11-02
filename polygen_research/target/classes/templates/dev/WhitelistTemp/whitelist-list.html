@@ -8,7 +8,6 @@
 
         <div class="card-header">
             <h3><i class="ph-bold ph-shield-check"></i> Administración de Credenciales y Roles</h3>
-            <!-- El botón de nuevo puede quedarse o quitarse según tu flujo -->
             <a th:href="@{/whitelist/nuevo}" class="btn-primario btn-sm">
                 <i class="ph-bold ph-plus"></i> Registrar Nueva Credencial
             </a>
@@ -16,7 +15,6 @@
 
         <div class="card-body">
 
-            <!-- Mensajes Flash -->
             <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
             <div th:if="${errorMessage}" class="alert alert-error" th:text="${errorMessage}"></div>
 
@@ -32,19 +30,18 @@
                             <th>Correo (Login)</th>
                             <th>Usuario Asociado</th>
                             <th>Rol Actual</th>
-                            <th style="min-width: 250px;">Cambiar Rol</th> <!-- Columna para el select y botón -->
+                            <th style="min-width: 250px;">Cambiar Rol</th> 
                             <th style="text-align: right; width: 100px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Iteramos sobre las credenciales -->
                         <tr th:each="w : ${credenciales}" th:id="'row-user-' + ${w.usuario?.idUsuario}">
                             <td th:text="${w.correo}">...</td>
                             <td th:text="${w.usuario?.nombreUsuario ?: 'N/A - DESVINCULADO'}">...</td>
-                            <!-- Mostramos el rol actual -->
+                            <!-- Mostrar el rol actual -->
                             <td th:text="${w.usuario?.rolUsuario?.nombreRol ?: 'N/A'}">...</td>
 
-                            <!-- Celda para cambiar rol (solo si hay usuario asociado) -->
+                            <!-- Celda para cambiar rol -->
                             <td>
                                 <div th:if="${w.usuario != null}"
                                     style="display: flex; gap: 0.5rem; align-items: center;">
@@ -54,9 +51,8 @@
                                         <option th:value="${w.usuario.rolUsuario.idRol}"
                                             th:text="${w.usuario.rolUsuario.nombreRol}" selected>
                                         </option>
-                                        <!-- Iteramos sobre TODOS los roles disponibles -->
+                                        <!-- Iterar sobre roles disponibles -->
                                         <th:block th:each="rol : ${todosLosRoles}">
-                                            <!-- Mostramos solo los roles DIFERENTES al actual -->
                                             <option th:if="${rol.idRol != w.usuario.rolUsuario.idRol}"
                                                 th:value="${rol.idRol}" th:text="${rol.nombreRol}">
                                             </option>
@@ -71,7 +67,7 @@
                                 <span th:unless="${w.usuario != null}">-</span>
                             </td>
 
-                            <!-- Celda de Acciones (Eliminar) -->
+                            <!-- Celda de Acciones -->
                             <td class="actions-cell" style="text-align: right;">
                                 <button th:if="${w.usuario != null}" type="button" class="btn-error btn-sm"
                                     title="Eliminar Usuario"
@@ -84,11 +80,11 @@
                         </tr>
                     </tbody>
                 </table>
-            </div> <!-- fin table-responsive-wrapper -->
-        </div> <!-- fin card-body -->
-    </div> <!-- fin card -->
+            </div> 
+        </div> 
+    </div> 
 
-    <!-- Modal de Confirmación para Eliminar -->
+    <!-- Modal de confirmacion -->
     <div id="modalConfirmacionEliminar" class="modal" style="display: none;">
         <div class="modal-content" style="max-width: 500px;">
             <div class="modal-header">
@@ -111,7 +107,6 @@
 
     <!-- Script para manejo de AJAX y Modal -->
     <script th:inline="javascript">
-        /*<![CDATA[*/
 
         // Obtener el token CSRF (necesario para PUT/DELETE con Spring Security)
         const csrfToken = document.querySelector('meta[name="_csrf"]') ? document.querySelector('meta[name="_csrf"]').getAttribute('content') : null;
@@ -141,7 +136,6 @@
             const usuarioId = confirmUsuarioIdInput.value;
             if (!usuarioId) return;
 
-            // Preparamos headers si CSRF está habilitado
             const headers = { 'Accept': 'application/json' };
             if (csrfToken && csrfHeader) {
                 headers[csrfHeader] = csrfToken;
@@ -156,13 +150,12 @@
                 const message = await response.text();
 
                 if (response.ok) {
-                    // Eliminación exitosa: quitar la fila de la tabla
+                    // Eliminación exitosa
                     const rowToRemove = document.getElementById(`row-user-${usuarioId}`);
                     if (rowToRemove) {
                         rowToRemove.remove();
                     }
                     cerrarConfirmacionEliminar();
-                    // Opcional: Mostrar mensaje de éxito (ej. usando una librería de notificaciones)
                     alert('Usuario eliminado con éxito.'); // Simple alert por ahora
                 } else {
                     // Error en la eliminación
@@ -177,21 +170,20 @@
             }
         }
 
-        // --- Función para Guardar Nuevo Rol ---
-        // --- Función para Guardar Nuevo Rol ---
+        // 
+        // Función para Guardar Nuevo Rol 
         async function guardarNuevoRol(button) {
             const usuarioId = button.getAttribute('data-usuario-id');
             const selectElement = document.getElementById(`select-rol-${usuarioId}`);
             const nuevoRolId = selectElement.value;
 
-            // --- INICIO: Corrección CSRF ---
             // Leer el token y el nombre del header desde las meta tags
             const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
             const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
             const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : null;
             const csrfHeader = csrfHeaderMeta ? csrfHeaderMeta.getAttribute('content') : null;
 
-            // Preparamos headers
+            // Preparar headers
             const headers = {
                 'Accept': 'application/json',
                 'Content-Type': 'application/x-www-form-urlencoded' // Para que @RequestParam funcione
@@ -203,7 +195,6 @@
             } else {
                 console.warn("CSRF Meta Tags not found or empty. Request might be blocked if CSRF is enabled."); // Advertencia
             }
-            // --- FIN: Corrección CSRF ---
 
             // Body para @RequestParam (formato x-www-form-urlencoded)
             const body = `rolId=${encodeURIComponent(nuevoRolId)}`;
@@ -212,7 +203,7 @@
                 // Enviar la petición fetch con los headers actualizados
                 const response = await fetch(`/whitelist/usuario/${usuarioId}/rol`, {
                     method: 'PUT',
-                    headers: headers, // Usar los headers con el token CSRF
+                    headers: headers, 
                     body: body
                 });
 
@@ -233,10 +224,6 @@
                 alert('Error de red al intentar actualizar el rol. Verifique la consola.');
             }
         }
-
-        /*]]>*/
     </script>
-
 </div>
-
 </html>

@@ -85,7 +85,6 @@
                     </div>
                 </div>
 
-                <!-- Modal Criterio -->
                 <div class="modal fade" id="modalCriterio" tabindex="-1" aria-labelledby="modalCriterioLabel"
                     aria-hidden="true">
                     <div class="modal-dialog">
@@ -142,7 +141,6 @@
                     </div>
                 </div>
 
-                <!-- Modal STATA Preview -->
                 <div class="modal fade" id="modalStataPreview" tabindex="-1" aria-labelledby="modalStataLabel"
                     aria-hidden="true">
                     <div class="modal-dialog modal-xl">
@@ -172,7 +170,6 @@
                         const modalElement = document.getElementById('modalCriterio');
                         const modalStataElement = document.getElementById('modalStataPreview');
 
-                        // Intenta cargar Bootstrap JS si no está presente
                         if (typeof bootstrap === 'undefined' || typeof bootstrap.Modal === 'undefined') {
                             console.warn("Bootstrap JS no detectado, intentando cargar...");
                             if (!document.querySelector('script[src*="bootstrap.bundle.min.js"]')) {
@@ -202,7 +199,6 @@
                         const btnGuardarCriterio = document.getElementById('btnGuardarCriterio');
                         const exportForm = document.getElementById('exportForm');
 
-                        // Elementos STATA
                         const btnStataPreview = document.getElementById('btn-stata-preview');
                         const btnConfirmarDescargaStata = document.getElementById('btn-confirmar-descarga-stata');
                         const stataExportForm = document.getElementById('stataExportForm');
@@ -215,7 +211,6 @@
                                 return;
                             }
 
-                            // Inicializar Modal Criterio
                             if (modalElement && !modalCriterio) {
                                 modalCriterio = new bootstrap.Modal(modalElement);
                                 console.log("Modal de Criterio inicializado.");
@@ -225,7 +220,6 @@
                                 }
                             }
 
-                            // Inicializar Modal STATA
                             if (modalStataElement && !modalStata) {
                                 modalStata = new bootstrap.Modal(modalStataElement);
                                 console.log("Modal de STATA inicializado.");
@@ -258,7 +252,6 @@
                             if (modalCriterio) modalCriterio.hide();
                         }
 
-                        // Mostrar/Ocultar campos de "Personalizado"
                         if (selectTipoCriterio) {
                             selectTipoCriterio.addEventListener('change', () => {
                                 if (divPersonalizado) {
@@ -267,7 +260,6 @@
                             });
                         }
 
-                        // Abrir el Modal al hacer clic en '+'
                         document.querySelectorAll('.btn-add-criterion').forEach(button => {
                             button.addEventListener('click', (e) => {
                                 if (!modalCriterio) {
@@ -289,7 +281,7 @@
                             });
                         });
 
-                        // Dibujar los 'tags'
+                        // Generar tags
                         function actualizarTagsUI() {
                             document.querySelectorAll('.criteria-tags').forEach(div => div.innerHTML = '');
 
@@ -320,7 +312,7 @@
                             }
                         }
 
-                        // Borrar un 'tag'
+                        // Borrar un tag
                         document.body.addEventListener('click', (e) => {
                             if (e.target.classList.contains('btn-remove')) {
                                 const campoId = e.target.dataset.campoId;
@@ -335,7 +327,7 @@
                             }
                         });
 
-                        // Interceptar submit de exportación (Excel)
+                        // Interceptar exportación (Excel)
                         if (exportForm) {
                             exportForm.addEventListener('submit', (e) => {
                                 const jsonCriterios = JSON.stringify(criterios);
@@ -409,7 +401,6 @@
                                 </tr>`;
                             }
 
-                            // Ejemplo de primera fila
                             html += '<tr><td colspan="2" style="background-color: var(--color-fondo); text-align: center; font-weight: bold;"><i>Ejemplo de 1ra Fila de Datos</i></td></tr>';
 
                             if (data.filasOriginal && data.filasOriginal.length > 0) {

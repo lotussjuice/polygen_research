@@ -15,9 +15,6 @@ public class DatosCrfService {
     }
 
     public DatosCrf saveDatoCrf(DatosCrf datoCrf) {
-        // Lógica de negocio:
-        // Asegurar que el 'crf' y 'campoCrf' asociados no sean nulos
-        // Validar el 'valor' según el 'tipo' del campo (ej. si es numérico)
         return datosCrfRepository.save(datoCrf);
     }
 

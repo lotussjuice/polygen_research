@@ -24,10 +24,8 @@ public class Whitelist {
     private String correo;
 
     @Column(name = "Contrasena", length = 100)
-    private String contrasena; // Recuerda encriptar esto en el servicio
+    private String contrasena;
 
-    // --- Relación Uno-a-Uno ---
-    // Esta entidad (Whitelist) "posee" la clave foránea.
     @OneToOne
     @JoinColumn(name = "Usuario_ID", referencedColumnName = "ID_Usuario", unique = true)
     private Usuario usuario;

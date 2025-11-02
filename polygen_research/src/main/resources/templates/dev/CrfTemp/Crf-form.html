@@ -75,13 +75,26 @@
 
                         <input th:case="'FECHA'" type="date" class="form-control" th:id="${'valor-' + stat.index}"
                             th:field="*{datosCrfList[__${stat.index}__].valor}">
-
-                        <div th:case="'SI/NO'" style="margin-top: 0.5rem;"> <input type="checkbox"
-                                th:id="${'valor-' + stat.index}" th:name="${'datosCrfList[' + stat.index + '].valor'}"
-                                value="1" th:checked="${#strings.equals(dato.valor, '1')}"
-                                style="width: 1.2em; height: 1.2em; vertical-align: middle;" /> <input type="hidden"
-                                th:name="${'_' + 'datosCrfList[' + stat.index + '].valor'}" value="on" />
+                        
+                        <div th:case="'SI/NO'" class="radio-group-sino">
+                            <label class="radio-label">
+                                <input type="radio"
+                                       th:name="${'datosCrfList[' + stat.index + '].valor'}"
+                                       value="1"
+                                       th:checked="${#strings.equals(dato.valor, '1')}"
+                                       class="radio-deselect" />
+                                <span>Sí</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio"
+                                       th:name="${'datosCrfList[' + stat.index + '].valor'}"
+                                       value="0"
+                                       th:checked="${#strings.equals(dato.valor, '0')}"
+                                       class="radio-deselect" />
+                                <span>No</span>
+                            </label>
                         </div>
+                       
                         <input th:case="*" type="text" class="form-control" th:id="${'valor-' + stat.index}"
                             th:field="*{datosCrfList[__${stat.index}__].valor}">
                     </div>

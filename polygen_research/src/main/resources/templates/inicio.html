@@ -7,7 +7,7 @@
     
     <div class="dashboard-header">
         <h1 th:text="'¡Bienvenido, ' + ${#authentication.principal.nombreUsuario} + '!'">¡Bienvenido!</h1>
-        </div>
+    </div>
 
     <div class="dashboard-grid-2col">
 
@@ -33,6 +33,7 @@
                 <span class="stat-value-small" th:text="${fechaUltimoCambio}">N/A</span>
             </div>
         </div>
+        
         <div class="chart-container">
             <h3>Tipos de Paciente</h3>
             <div class="chart-canvas-wrapper">
@@ -52,7 +53,7 @@
     <script th:inline="javascript">
         /*<![CDATA[*/
         
-        const casosEstudio = /*[[${casosEstudio}]]*/ 0;
+        const casosEstudio =  /*[[${casosEstudio}]]*/ 0;
         const casosConsulta = /*[[${casosConsulta}]]*/ 0;
 
         const data = {
@@ -92,6 +93,5 @@
         
         /*]]>*/
     </script>
-
 </div>
 </html>

@@ -9,17 +9,17 @@ public class StataPreviewDTO {
     private List<String> headersOriginal;
     private List<String> headersStata;
     
-    // Lista de filas. Cada fila es un mapa [HeaderOriginal -> ValorOriginal]
+    
     private List<Map<String, String>> filasOriginal;
     
-    // Lista de filas. Cada fila es un mapa [HeaderStata -> ValorFormateado]
+    
     private List<Map<String, String>> filasStata;
 
-    // --- Constructor Vacío (necesario) ---
+    
     public StataPreviewDTO() {
     }
 
-    // --- Constructor Completo (necesario) ---
+    
     public StataPreviewDTO(List<String> headersOriginal, List<String> headersStata, List<Map<String, String>> filasOriginal, List<Map<String, String>> filasStata) {
         this.headersOriginal = headersOriginal;
         this.headersStata = headersStata;
@@ -27,7 +27,6 @@ public class StataPreviewDTO {
         this.filasStata = filasStata;
     }
 
-    // --- GETTERS Y SETTERS MANUALES ---
 
     public List<String> getHeadersOriginal() {
         return headersOriginal;

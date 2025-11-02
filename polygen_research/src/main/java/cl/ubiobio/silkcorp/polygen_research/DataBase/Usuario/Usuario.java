@@ -31,19 +31,15 @@ public class Usuario {
     @Column(name = "Estado", length = 20)
     private String estado;
 
-    // --- Clave Foránea (Relación N-a-1) a RolUsuario ---
+   
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "Rol_Usuario_ID", nullable = false)
-    @ToString.Exclude // Mantén esto si lo añadiste
+    @ToString.Exclude // placeholder, quitar si no cuenta con implementación 
     private RolUsuario rolUsuario;
 
-    // --- Relación Inversa (Uno-a-Uno) con Whitelist ---
-    // "mappedBy" indica que la entidad "Whitelist" es la dueña de esta relación
-    // y ya la definió en su campo "usuario".
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL)
     private Whitelist whitelist;
 
-    // --- Relación Inversa (Uno-a-Muchos) con RegistroActividad ---
     @OneToMany(mappedBy = "usuario")
     private List<RegistroActividad> registrosActividad;
 

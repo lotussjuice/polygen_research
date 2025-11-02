@@ -128,7 +128,7 @@ public class StataExportService {
             }
         }
 
-        // --- 4. PROCESAR FILAS ---
+        
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         for (CrfResumenRowDTO fila : filas) {
@@ -165,27 +165,21 @@ public class StataExportService {
                 filaOrig.put(headerOrigCrudo, valorCrudo);
                 filaStata.put(headerStataCrudo, StataFormateador.formatarValor(valorCrudo));
 
-                // ✅ CAMBIO CRÍTICO: Columnas Dicotomizadas
                 if (criteriosMap.containsKey(campoId)) {
-                    
-                    // ✅ 1. Parsear el valor crudo UNA SOLA VEZ
                     double valorNum = excelReporteService.parseDouble(valorCrudo);
                     
                     for (CriterioDTO criterio : criteriosMap.get(campoId)) {
                         
                         String valorDicoStr;
                         
-                        // ✅ 2. Verificar si es NaN (valor no numérico)
                         if (Double.isNaN(valorNum)) {
                             // Si no es número, celda vacía
                             valorDicoStr = "";
                         } else {
-                            // ✅ 3. Si es número válido, calcular dicotomización
                             double puntoCorteCalculado = puntosDeCorte.getOrDefault(campoId + "_" + criterio.getTipo(), 0.0);
-                            
-                            // ✅ 4. AQUÍ ESTÁ EL FIX: Pasar valorNum (double) en lugar de valorCrudo (String)
+                    
                             int valorDicotomizado = excelReporteService.calcularValorDicotomizado(
-                                valorNum,              // ✅ double en lugar de String
+                                valorNum,
                                 criterio, 
                                 puntoCorteCalculado
                             );

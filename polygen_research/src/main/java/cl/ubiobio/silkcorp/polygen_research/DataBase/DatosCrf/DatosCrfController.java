@@ -20,9 +20,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.CampoCrf.CampoCrfService;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.Crf.CrfService;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.StataPreviewDTO; // NUEVO IMPORT
-import cl.ubiobio.silkcorp.polygen_research.DataBase.export.ExcelReporteService; // NUEVO IMPORT
-import cl.ubiobio.silkcorp.polygen_research.DataBase.export.StataExportService; // NUEVO IMPORT
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.StataPreviewDTO; 
+import cl.ubiobio.silkcorp.polygen_research.DataBase.export.ExcelReporteService; 
+import cl.ubiobio.silkcorp.polygen_research.DataBase.export.StataExportService;
 
 @Controller
 @RequestMapping("/datos-crf")
@@ -74,7 +74,7 @@ public class DatosCrfController {
 
     */
 
-   @PostMapping("/list/exportar") // Esta URL coincide con el 'th:action' del form
+   @PostMapping("/list/exportar")
     public ResponseEntity<InputStreamResource> exportarReporte(
             @RequestParam("criteriosJson") String criteriosJson) throws IOException {
 
@@ -93,18 +93,17 @@ public class DatosCrfController {
     }
 
     @PostMapping("/api/preview-stata")
-    @ResponseBody // Devuelve JSON
+    @ResponseBody
     public ResponseEntity<StataPreviewDTO> getStataPreview(@RequestParam("criteriosJson") String criteriosJson) {
         try {
             StataPreviewDTO previewData = stataExportService.getPreview(criteriosJson);
             return ResponseEntity.ok(previewData);
         } catch (IOException e) {
-            // Manejo de error (simplificado)
             return ResponseEntity.badRequest().build();
         }
     }
     
-    // --- NUEVO ENDPOINT PARA DESCARGA STATA ---
+    // Nuevo endpoint para descargar STATA
     @PostMapping("/list/exportar-stata")
     public ResponseEntity<InputStreamResource> exportarReporteStata(
             @RequestParam("criteriosJson") String criteriosJson) throws IOException {

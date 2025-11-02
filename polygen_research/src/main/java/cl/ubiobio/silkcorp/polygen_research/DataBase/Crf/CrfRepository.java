@@ -13,6 +13,6 @@ public interface CrfRepository extends JpaRepository<Crf, Integer> {
     // Cuenta cuántos CRFs tienen el campo 'esCasoEstudio' en true
     long countByEsCasoEstudioTrue();
     
-    // Cuenta cuántos CRFs tienen el campo 'esCasoEstudio' en false
+    // Lo contrario
     long countByEsCasoEstudioFalse();
 }

@@ -1,11 +1,11 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query; // 1. IMPORTAR
-import org.springframework.data.repository.query.Param; // 2. IMPORTAR
+import org.springframework.data.jpa.repository.Query; 
+import org.springframework.data.repository.query.Param; 
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional; // 3. IMPORTAR
+import java.util.Optional;
 
 @Repository
 public interface DatosPacienteRepository extends JpaRepository<DatosPaciente, Integer> {

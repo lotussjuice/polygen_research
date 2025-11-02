@@ -7,7 +7,7 @@ import java.util.List;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosCrf.DatosCrf;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPaciente;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.RegistroActividad.RegistroActividad;
-import jakarta.persistence.CascadeType; // Usamos LocalDate para fechas, es más moderno
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -39,7 +39,7 @@ public class Crf {
     @Column(name = "Observacion", length = 200)
     private String observacion;
 
-    @ManyToOne(fetch = FetchType.LAZY) // LAZY es bueno para performance
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "Datos_Paciente_ID", nullable = false)
     private DatosPaciente datosPaciente;
 
@@ -114,10 +114,7 @@ public class Crf {
     }
 
     public void addDato(DatosCrf dato) {
-        // Agrega la respuesta a la lista de este CRF
         datosCrfList.add(dato);
-        // Establece la relación inversa (le dice a la respuesta quién es su "padre"
-        // Crf)
         dato.setCrf(this);
     }
 }

@@ -7,6 +7,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface CampoCrfRepository extends JpaRepository<CampoCrf, Integer> {
-    // Spring Data JPA creará la consulta automáticamente
     List<CampoCrf> findByActivoTrueOrderByNombre();
 }

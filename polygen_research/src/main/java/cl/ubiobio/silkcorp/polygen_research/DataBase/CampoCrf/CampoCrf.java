@@ -31,11 +31,9 @@ public class CampoCrf {
     @Column(name = "Descripcion", length = 100)
     private String descripcion;
 
-    @Column(name = "Activo") // tinyint(1) se mapea bien a Boolean
+    @Column(name = "Activo") 
     private Boolean activo;
 
-    // --- Relación Inversa ---
-    // Un Campo puede estar en MUCHOS registros de DatosCrf.
     @OneToMany(mappedBy = "campoCrf", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DatosCrf> datosCrfList;
 

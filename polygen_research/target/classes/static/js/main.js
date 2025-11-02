@@ -1,25 +1,20 @@
 const sidebar = document.getElementById('sidebar');
-const sidebarToggleBtn = document.getElementById('sidebar-toggle'); // Referencia al NUEVO botón
-const sidebarToggleIcon = sidebarToggleBtn ? sidebarToggleBtn.querySelector('i') : null; // Icono dentro del botón
+const sidebarToggleBtn = document.getElementById('sidebar-toggle');
+const sidebarToggleIcon = sidebarToggleBtn ? sidebarToggleBtn.querySelector('i') : null;
 
-// Función para mostrar/ocultar (colapsar/expandir) la barra lateral.
+// Función para mostrar/ocultar
 function toggleMenu() {
-    // Verificamos que existan sidebar Y el icono del botón nuevo
     if (!sidebar || !sidebarToggleIcon) {
         console.error("Elementos del sidebar (#sidebar) o botón (#sidebar-toggle > i) no encontrados.");
         return;
     }
 
-    // 1. Añade o quita la clase '.open' al sidebar
     sidebar.classList.toggle('open');
 
-    // 2. Comprueba el estado DESPUÉS de cambiar la clase
     const isExpanded = sidebar.classList.contains('open');
 
-    // 3. Guarda el estado en localStorage
     localStorage.setItem('sidebarState', isExpanded ? 'expanded' : 'collapsed');
 
-    // 4. Cambia el icono del botón y su tooltip
     if (isExpanded) {
         sidebarToggleIcon.classList.remove('ph-caret-double-right');
         sidebarToggleIcon.classList.add('ph-caret-double-left');
@@ -31,51 +26,57 @@ function toggleMenu() {
     }
 }
 
-// --- Código de INICIALIZACIÓN (Ejecutar al cargar la página) ---
 document.addEventListener('DOMContentLoaded', () => {
-    // Verificamos de nuevo por si acaso
     if (!sidebar || !sidebarToggleBtn || !sidebarToggleIcon) return;
 
-    // 1. Añadir clase 'preload' para desactivar transiciones temporalmente
     document.body.classList.add('preload-transitions');
 
-    // 2. Leer el estado guardado
     const savedState = localStorage.getItem('sidebarState');
 
-    // 3. Aplicar estado guardado (Colapsado por defecto si no hay nada guardado)
     if (savedState === 'expanded') {
-        sidebar.classList.add('open'); // Aseguramos que tenga la clase
+        sidebar.classList.add('open');
         sidebarToggleIcon.classList.remove('ph-caret-double-right');
         sidebarToggleIcon.classList.add('ph-caret-double-left');
         sidebarToggleBtn.setAttribute('title', 'Colapsar Menú');
-    } else { // Estado 'collapsed' o null
-        sidebar.classList.remove('open'); // Aseguramos que NO tenga la clase
+    } else {
+        sidebar.classList.remove('open');
         sidebarToggleIcon.classList.remove('ph-caret-double-left');
         sidebarToggleIcon.classList.add('ph-caret-double-right');
         sidebarToggleBtn.setAttribute('title', 'Expandir Menú');
     }
 
-    // 4. Quitar la clase 'preload' después de un instante para reactivar transiciones
     setTimeout(() => {
         document.body.classList.remove('preload-transitions');
-    }, 50); // 50ms suele ser suficiente
+    }, 50);
+
+    function setupRadioDeselect() {
+        const radios = document.querySelectorAll('.radio-deselect');
+    
+        radios.forEach(radio => {
+            radio.addEventListener('mousedown', function() {
+                this.dataset.wasChecked = this.checked;
+            });
+      
+            radio.addEventListener('click', function() {
+                if (this.dataset.wasChecked === 'true') {
+                    this.checked = false;
+                    this.dataset.wasChecked = 'false';
+                }
+            });
+        });
+    }
+    setupRadioDeselect();
 });
 
-/* --- Lógica para Marcar el Enlace Activo en el Menú --- */
-// Selecciona todos los enlaces de navegación en la barra lateral.
-const navLinks = document.querySelectorAll('#sidebar nav a'); // Más específico
-const currentPath = window.location.pathname; // Obtiene la URL actual
+const navLinks = document.querySelectorAll('#sidebar nav a');
+const currentPath = window.location.pathname;
 
 navLinks.forEach(link => {
     const linkHref = link.getAttribute('href');
-    // Comprueba si el href del enlace coincide exactamente con la ruta actual
-    // O si la ruta actual comienza con el href del enlace (para subpáginas)
-    // Se asegura que el link no sea solo "/" para evitar marcarlo siempre.
     if (linkHref && (linkHref === currentPath || (linkHref !== '/' && currentPath.startsWith(linkHref)))) {
-        link.classList.add('active'); // Añade la clase 'active' para resaltarlo (usando el CSS)
+        link.classList.add('active');
     }
 
-    // Añade un listener para cerrar el menú en móvil al hacer clic en un enlace
     link.addEventListener('click', (e) => {
         if (window.innerWidth <= 768) {
             const sidebar = document.getElementById('sidebar');
@@ -83,28 +84,25 @@ navLinks.forEach(link => {
                 sidebar.classList.remove('open');
             }
         }
-        // IMPORTANTE: No se usa e.preventDefault(), se deja que el enlace (th:href) funcione.
+        // No se usa e.preventDefault(), se deja que el enlace (th:href) funcione.
     });
 });
 
-/* --- Lógica para Modales (Pop-ups) --- */
+/*Lógica para Modales */
 
-// Obtiene las referencias a los modales (si existen en la página actual)
 const modalPaciente = document.getElementById('modal-ver-paciente');
 const modalCrf = document.getElementById('modal-ver-crf');
 
-// Función asíncrona para mostrar detalles de un Paciente
 // Función asíncrona para mostrar detalles de un Paciente
 async function verPaciente(pacienteId) {
     if (!modalPaciente) {
         console.error("El modal 'modal-ver-paciente' no se encuentra en esta página.");
         return;
     }
-    
+
     // Referencia al nuevo contenedor de datos CRF
     const crfDataContainer = document.getElementById('modal-pac-crf-data');
 
-    // Muestra el modal y un mensaje de carga
     document.getElementById('modal-patient-id').innerText = 'Cargando...';
     // Limpia campos anteriores
     document.getElementById('modal-pac-codigo').innerText = '';
@@ -115,40 +113,36 @@ async function verPaciente(pacienteId) {
     modalPaciente.style.display = 'block';
 
     try {
-        // Llama a la API (esto ya lo tenías)
+        // Llama a la API
         const response = await fetch(`/pacientes/api/paciente/${pacienteId}`);
         if (!response.ok) {
             throw new Error(`Paciente no encontrado (ID: ${pacienteId}), Estado: ${response.status}`);
         }
-        const paciente = await response.json(); 
+        const paciente = await response.json();
 
-        // Rellena el modal con los datos personales (esto ya lo tenías)
         document.getElementById('modal-patient-id').innerText = `Detalles del Paciente: ${paciente.codigoPaciente || 'N/A'}`;
         document.getElementById('modal-pac-codigo').innerText = paciente.codigoPaciente || 'N/A';
         document.getElementById('modal-pac-nombre').innerText = paciente.nombre || 'N/A';
         document.getElementById('modal-pac-apellido').innerText = paciente.apellido || 'N/A';
         document.getElementById('modal-pac-estado').innerText = paciente.estado || 'N/A';
 
-        // --- ¡NUEVA LÓGICA PARA DATOS DE ESTUDIO! ---
-        
-        // 1. Revisa si el paciente tiene CRFs
+        // Logica CRF
         if (paciente.crfs && paciente.crfs.length > 0) {
-            let html = ''; // Variable para construir el HTML
-            
-            // 2. Itera sobre cada CRF del paciente
+            let html = '';
+
+            // Itera sobre cada CRF del paciente
             for (const crf of paciente.crfs) {
-                // Añade un título para este CRF
                 html += `<div class="card" style="margin-top: 1rem; background-color: var(--color-fondo);">
                            <div class="card-header" style="padding: 0.75rem 1rem;">
                              <strong>CRF ID: ${crf.idCrf}</strong>
                              <a href="/crf/editar/${crf.idCrf}" class="btn-secundario btn-sm">Editar CRF</a>
                            </div>
                            <div class="card-body" style="padding: 1rem;">`;
-                
-                // 3. Revisa si este CRF tiene datos dinámicos
+
+                // Revisa si este CRF tiene datos dinámicos
                 if (crf.datosCrfList && crf.datosCrfList.length > 0) {
-                    
-                    // 4. Itera sobre cada dato (pregunta y respuesta)
+
+                    // tera sobre cada dato
                     for (const dato of crf.datosCrfList) {
                         html += `<div class="patient-data-grid" style="gap: 0.5rem 1rem;">
                                    <strong>${dato.campoCrf ? dato.campoCrf.nombre : 'Campo desconocido'}:</strong>
@@ -158,10 +152,10 @@ async function verPaciente(pacienteId) {
                 } else {
                     html += '<p>Este CRF no tiene datos registrados.</p>';
                 }
-                html += '</div></div>'; // Cierra card-body y card
+                html += '</div></div>';
             }
             crfDataContainer.innerHTML = html; // Inserta todo el HTML en el div
-            
+
         } else {
             // Si el paciente no tiene CRFs
             crfDataContainer.innerHTML = '<p>Este paciente no tiene ningún CRF asociado.</p>';
@@ -183,13 +177,11 @@ function cerrarModal() {
 
 // Función asíncrona para mostrar detalles de un CRF
 async function verCrf(crfId) {
-     if (!modalCrf) {
+    if (!modalCrf) {
         console.error("El modal 'modal-ver-crf' no se encuentra en esta página.");
         return;
     }
-    // Muestra el modal y mensaje de carga
     document.getElementById('modal-crf-titulo').innerText = 'Cargando...';
-     // Limpia campos anteriores
     document.getElementById('modal-crf-id').innerText = '';
     document.getElementById('modal-crf-paciente').innerText = '';
     document.getElementById('modal-crf-grupo').innerText = '';
@@ -200,17 +192,16 @@ async function verCrf(crfId) {
 
     try {
         // Realiza petición fetch al endpoint del backend para CRF
-        // NOTA: Necesitas crear este endpoint @GetMapping("/crfs/api/crf/{id}") en tu CrfController que devuelva JSON.
         const response = await fetch(`/crfs/api/crf/${crfId}`);
         if (!response.ok) {
-             throw new Error(`CRF no encontrado (ID: ${crfId}), Estado: ${response.status}`);
+            throw new Error(`CRF no encontrado (ID: ${crfId}), Estado: ${response.status}`);
         }
         const crf = await response.json(); // Convierte la respuesta JSON
 
         // Rellena el modal con los datos del CRF
         document.getElementById('modal-crf-titulo').innerText = `Detalles del CRF: ${crf.idCrf || 'N/A'}`;
         document.getElementById('modal-crf-id').innerText = crf.idCrf || 'N/A';
-        // Accede a los datos del paciente anidado (si el backend los incluye)
+        // Accede a los datos del paciente anidado
         document.getElementById('modal-crf-paciente').innerText = crf.datosPaciente ? (crf.datosPaciente.codigoPaciente || 'N/A') : 'N/A';
         document.getElementById('modal-crf-grupo').innerText = crf.grupo || 'N/A';
         document.getElementById('modal-crf-fecha').innerText = crf.fechaConsulta || 'N/A';
@@ -231,7 +222,7 @@ function cerrarModalCrf() {
 }
 
 // Listener global para cerrar los modales si se hace clic fuera de su contenido.
-window.onclick = function(event) {
+window.onclick = function (event) {
     if (event.target == modalPaciente) {
         cerrarModal();
     }
@@ -240,17 +231,13 @@ window.onclick = function(event) {
     }
 }
 
-/* --- Lógica de Personalización (Modo Oscuro) --- */
+/* Lógica de Personalización Para el Modo Oscuro */
 const darkModeToggle = document.getElementById('dark-mode-toggle');
 
 if (darkModeToggle) {
-    // Listener para el cambio en el interruptor
     darkModeToggle.addEventListener('change', () => {
-        // --- ¡CAMBIO AQUÍ! ---
-        // Ahora aplicamos/quitamos la clase en documentElement (<html>)
         document.documentElement.classList.toggle('dark-mode');
 
-        // Guardar preferencia en localStorage (revisando documentElement)
         if (document.documentElement.classList.contains('dark-mode')) {
             localStorage.setItem('theme', 'dark');
         } else {
@@ -259,34 +246,20 @@ if (darkModeToggle) {
     });
 
     if (localStorage.getItem('theme') === 'dark') {
-        // Comprobamos si el interruptor existe antes de marcarlo
         if (darkModeToggle) {
-             darkModeToggle.checked = true;
+            darkModeToggle.checked = true;
         }
     }
 }
 
-/* --- Lógica de Personalización (Color Primario - Ejemplo) --- */
-// Función simple para cambiar la variable CSS --color-primario.
-// Podrías llamarla desde botones o un selector de color.
 function cambiarColorPrimario(color) {
     if (color) {
         document.documentElement.style.setProperty('--color-primario', color);
-        // Opcional: Guardar preferencia en localStorage
         localStorage.setItem('primaryColor', color);
     }
 }
 
-// Opcional: Cargar color primario guardado al iniciar
 const savedColor = localStorage.getItem('primaryColor');
 if (savedColor) {
     cambiarColorPrimario(savedColor);
 }
-
-
-/* --- FUNCIONES SIMULADAS ELIMINADAS --- */
-// - simularLogin: No necesaria, Spring Security maneja el login.
-// - ingresarDatos: No necesaria, los formularios HTML (th:action) envían los datos.
-// - simularExportar: Reemplazada por enlaces directos a endpoints del backend.
-// - mostrarNotificaciones: Reemplazada por mensajes flash de Thymeleaf/Spring.
-// - iniciarAutoguardado: Eliminada por complejidad, implementar si es necesario más adelante.

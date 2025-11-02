@@ -4,16 +4,16 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional; // Importar Transactional
+import org.springframework.transaction.annotation.Transactional; 
 
 import cl.ubiobio.silkcorp.polygen_research.DataBase.RolUsuario.RolUsuario;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.RolUsuario.RolUsuarioRepository; // Importar Optional
+import cl.ubiobio.silkcorp.polygen_research.DataBase.RolUsuario.RolUsuarioRepository; 
 
 @Service
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
-    private final RolUsuarioRepository rolUsuarioRepository; // Necesario para buscar el nuevo rol
+    private final RolUsuarioRepository rolUsuarioRepository; 
 
     public UsuarioService(UsuarioRepository usuarioRepository, RolUsuarioRepository rolUsuarioRepository) {
         this.usuarioRepository = usuarioRepository;
@@ -25,20 +25,12 @@ public class UsuarioService {
     }
 
     public Usuario saveUsuario(Usuario usuario) {
-        // Lógica de negocio:
-        // Ej: Asegurar que el rolUsuario no sea nulo.
-        // Ej: Si se crea un usuario, poner 'Estado' en 'Activo'.
         return usuarioRepository.save(usuario);
     }
 
-    // --- NUEVO MÉTODO ---
-    /**
-     * Actualiza únicamente el rol de un usuario existente.
-     * @param usuarioId El ID del usuario a modificar.
-     * @param rolId El ID del nuevo rol a asignar.
-     * @throws RuntimeException si el usuario o el rol no se encuentran.
-     */
-    @Transactional // Asegura que la operación sea atómica
+  
+    // Actualizar un rol (formulario en plataforma)
+    @Transactional // Operación atómica
     public void updateUserRole(Integer usuarioId, Integer rolId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + usuarioId));
@@ -51,11 +43,7 @@ public class UsuarioService {
     }
 
 
-    /**
-     * Elimina un usuario por su ID.
-     * eliminar la credencial asociada.
-     * @param usuarioId El ID del usuario a eliminar.
-     */
+    // Elimina usuario y su credencial 
     @Transactional 
     public void deleteUsuario(Integer usuarioId) {
         if (!usuarioRepository.existsById(usuarioId)) {
@@ -69,6 +57,4 @@ public class UsuarioService {
     public Optional<Usuario> getUsuarioById(Integer id) {
         return usuarioRepository.findById(id);
     }
-
-
 }

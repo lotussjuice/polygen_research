@@ -8,7 +8,6 @@ public class CriterioDTO {
     private String nombre;
     private String puntoCorte; 
 
-    // --- Getters y Setters ---
 
     public String getTipo() {
         return tipo;

@@ -26,27 +26,23 @@ public class DashboardService {
         this.registroActividadRepository = registroActividadRepository;
     }
 
-    /**
-     * Obtiene las estadísticas visuales para el Dashboard (basado en el dibujo).
-     */
+    // Establecer estadisticas para los mapas / gráficos
     public Map<String, Object> getDashboardStats() {
         Map<String, Object> stats = new HashMap<>();
 
-        // --- Lógica del Gráfico Circular ---
+        // Logica del gráfico circular / pastel
         long casosEstudio = crfRepository.countByEsCasoEstudioTrue();
         long casosConsulta = crfRepository.countByEsCasoEstudioFalse();
         
         stats.put("casosEstudio", casosEstudio);
         stats.put("casosConsulta", casosConsulta);
 
-        // --- Lógica de Estadísticas de Texto ---
         long totalCrfs = casosEstudio + casosConsulta;
         stats.put("totalCrfs", totalCrfs);
 
-        // --- Lógica de Última Actividad ---
         Optional<RegistroActividad> ultimoRegistro = registroActividadRepository.findTopByOrderByFechaActividadDesc();
         
-        String fechaUltimoCambio = "N/A"; // Valor por defecto
+        String fechaUltimoCambio = "N/A"; 
         if (ultimoRegistro.isPresent()) {
             LocalDateTime fecha = ultimoRegistro.get().getFechaActividad();
             fechaUltimoCambio = fecha.format(formatter);

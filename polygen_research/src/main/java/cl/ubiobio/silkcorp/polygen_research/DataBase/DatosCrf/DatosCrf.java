@@ -32,12 +32,10 @@
         @Column(name = "valor", length = 30)
         private String valor;
 
-        // --- Clave Foránea (Relación N-a-1) a Crf ---
         @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "crf_id", nullable = false)
         private Crf crf;
 
-        // --- Clave Foránea (Relación N-a-1) a CampoCrf ---
         @ManyToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "campo_crf_id", nullable = false)
         private CampoCrf campoCrf;
