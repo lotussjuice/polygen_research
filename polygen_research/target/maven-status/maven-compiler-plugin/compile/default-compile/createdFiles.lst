@@ -4,14 +4,18 @@ cl\ubiobio\silkcorp\polygen_research\DataBase\DatosCrf\DatosCrfController.class
 cl\ubiobio\silkcorp\polygen_research\auth\RegisterDto.class
 cl\ubiobio\silkcorp\polygen_research\config\SecurityConfig.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuarioService.class
+cl\ubiobio\silkcorp\polygen_research\DataBase\util\StataFormateador.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\RegistroActividad\RegistroActividad.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuario.class
 cl\ubiobio\silkcorp\polygen_research\PolygenResearchApplication.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\RegistroActividad\RegistroActividadService.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuarioController.class
+cl\ubiobio\silkcorp\polygen_research\DataBase\dto\CrfResumenRowDTO.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\DatosPaciente\DatosPacienteController.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\export\ExcelReporteService$1.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\Usuario\UsuarioRepository.class
+cl\ubiobio\silkcorp\polygen_research\DataBase\export\StataExportService$1.class
+cl\ubiobio\silkcorp\polygen_research\dashboard\DashboardService.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\export\PdfService.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\DatosCrf\DatosCrfRepository.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\util\CalculoService.class
@@ -24,6 +28,7 @@ cl\ubiobio\silkcorp\polygen_research\auth\AuthController.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\Crf\CrfController.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\export\ExcelReporteService.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\Crf\CrfRepository.class
+cl\ubiobio\silkcorp\polygen_research\DataBase\dto\CrfResumenViewDTO.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\Crf\CrfService.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\DatosPaciente\DatosPaciente.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\dto\CriterioDTO.class
@@ -40,6 +45,8 @@ cl\ubiobio\silkcorp\polygen_research\DataBase\CampoCrf\CampoCrfRepository.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\Usuario\UsuarioController.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\Whitelist\WhitelistController.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\Whitelist\WhitelistRepository.class
+cl\ubiobio\silkcorp\polygen_research\DataBase\export\StataExportService.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\RegistroActividad\RegistroActividadController.class
+cl\ubiobio\silkcorp\polygen_research\DataBase\dto\StataPreviewDTO.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\CampoCrf\CampoCrf.class
 cl\ubiobio\silkcorp\polygen_research\security\CustomUserDetailService.class

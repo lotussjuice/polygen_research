@@ -5,38 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <style>
-        /* Estilos CSS adicionales para el campo de contraseña */
-        .password-container {
-            position: relative;
-            /* Asegura que el input y el icono se muestren correctamente */
-            display: flex;
-            align-items: center;
-        }
-
-        .password-container input {
-            /* Permite que el input ocupe el espacio y el icono se posicione encima */
-            width: 100%;
-            padding-right: 2.5rem; /* Espacio para el icono */
-        }
-
-        .toggle-password {
-            position: absolute;
-            right: 0.75rem;
-            cursor: pointer;
-            color: var(--color-texto-secundario);
-            font-size: 1.25rem;
-            line-height: 1; /* Para alinear mejor el icono */
-        }
-        
-        /* Estilo para el mensaje de error de validación de confirmación */
-        .error-confirmacion {
-            font-size: 0.8rem; 
-            color: var(--color-error);
-            margin-top: 0.25rem;
-            display: none; /* Inicialmente oculto */
-        }
-    </style>
 </head>
 <body id="pagina-login">
 
@@ -49,7 +17,7 @@
 
         <h2 style="margin-bottom: 1.5rem; font-weight: 600; color: var(--color-texto-secundario);">Crear Nueva Cuenta</h2>
 
-        <form th:action="@{/register}" th:object="${registerDto}" method="post" id="registerForm" style="text-align: left;"> 
+        <form th:action="@{/register}" th:object="${registerDto}" method="post" style="text-align: left;">
 
             <div th:if="${errorMessage}" class="alert alert-error" style="margin-bottom: 1rem;" th:text="${errorMessage}"></div>
             <div th:if="${#fields.hasErrors('global')}" class="alert alert-error" style="margin-bottom: 1rem;">
@@ -70,20 +38,8 @@
             
             <div class="form-group">
                 <label for="password">Contraseña:</label>
-                <div class="password-container">
-                    <input type="password" id="password" th:field="*{password}" class="form-control" required />
-                    <i class="ph-bold ph-eye toggle-password" data-target="password"></i>
-                </div>
+                <input type="password" id="password" th:field="*{password}" class="form-control" required />
                 <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="alert-error-text" style="font-size: 0.8rem; color: var(--color-error);"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="confirmPassword">Confirmar Contraseña:</label>
-                <div class="password-container">
-                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" required />
-                    <i class="ph-bold ph-eye toggle-password" data-target="confirmPassword"></i>
-                </div>
-                <span id="passwordMatchError" class="error-confirmacion">Las contraseñas no coinciden.</span>
             </div>
         
             
@@ -97,66 +53,5 @@
             <a th:href="@{/login}" style="margin-left: 5px;">Inicia sesión aquí</a>
         </div>
     </div>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const passwordInput = document.getElementById('password');
-            const confirmInput = document.getElementById('confirmPassword');
-            const form = document.getElementById('registerForm');
-            const matchError = document.getElementById('passwordMatchError');
-            const toggleButtons = document.querySelectorAll('.toggle-password');
-
-            // --- 1. FUNCIÓN VER CONTRASEÑA ---
-            toggleButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    const targetId = this.getAttribute('data-target');
-                    const targetInput = document.getElementById(targetId);
-                    
-                    // Si el input es de tipo password, cámbialo a texto y el icono a "eye-slash"
-                    if (targetInput.type === 'password') {
-                        targetInput.type = 'text';
-                        this.classList.remove('ph-eye');
-                        this.classList.add('ph-eye-slash');
-                    } else {
-                        // Si es de tipo texto, cámbialo a password y el icono a "eye"
-                        targetInput.type = 'password';
-                        this.classList.remove('ph-eye-slash');
-                        this.classList.add('ph-eye');
-                    }
-                });
-            });
-
-            // --- 2. FUNCIÓN DOBLE VALIDACIÓN DE CONTRASEÑA ---
-            form.addEventListener('submit', function(event) {
-                // Previene el envío por defecto para la validación
-                if (passwordInput.value !== confirmInput.value) {
-                    event.preventDefault(); // Detiene el envío del formulario
-                    
-                    // Muestra el mensaje de error y aplica un estilo visual
-                    matchError.style.display = 'block';
-                    confirmInput.classList.add('input-error-border'); // Necesitarás un CSS para 'input-error-border'
-
-                    // Enfoca el campo para que el usuario sepa dónde corregir
-                    confirmInput.focus(); 
-                    
-                } else {
-                    // Si coinciden, oculta el error y permite el envío
-                    matchError.style.display = 'none';
-                    confirmInput.classList.remove('input-error-border');
-                    
-                    // El formulario continuará con el envío POST (th:action="@{/register}")
-                }
-            });
-            
-            // Ocultar el error de nuevo si el usuario empieza a escribir
-            confirmInput.addEventListener('input', function() {
-                if (matchError.style.display === 'block' && passwordInput.value === confirmInput.value) {
-                    matchError.style.display = 'none';
-                    confirmInput.classList.remove('input-error-border');
-                }
-            });
-
-        });
-    </script>
 </body>
 </html>

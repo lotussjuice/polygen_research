@@ -10,21 +10,15 @@
                 <th>ID CRF</th>
                 <th>Tipo Actividad</th>
                 <th>Fecha</th>
-                <th>Acción</th> </tr>
+            </tr>
         </thead>
         <tbody>
             <tr th:each="r : ${registros}">
                 <td th:text="${r.idRegistro}">...</td>
-                <td th:text="${r.usuario?.nombreUsuario}">...</td> <td th:text="${r.crf?.idCrf}">...</td> <td th:text="${r.tipoActividad}">...</td>
-                <td th:text="${r.fechaActividad != null ? #temporals.format(r.fechaActividad, 'dd-MM-yyyy HH:mm:ss') : ''}">...</td>
-
-                <td class="actions-cell" style="text-align: center;">
-                    <a th:if="${r?.crf != null}" th:href="@{/crf/editar/{id}(id=${r.crf.idCrf})}"
-                       class="btn-secundario btn-sm" title="Editar CRF asociado">
-                        <i class="ph-bold ph-pencil-simple"></i>
-                    </a>
-                    <span th:unless="${r?.crf != null}">N/A</span>
-                </td>
+                <td th:text="${r.usuario?.nombreUsuario}">...</td>
+                <td th:text="${r.crf?.idCrf}">...</td>
+                <td th:text="${r.tipoActividad}">...</td>
+                <td th:text="${r.fechaActividad}">...</td>
             </tr>
         </tbody>
     </table>

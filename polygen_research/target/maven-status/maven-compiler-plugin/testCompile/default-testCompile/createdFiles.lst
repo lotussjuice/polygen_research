@@ -1,1 +1,6 @@
+cl\ubiobio\silkcorp\polygen_research\DataBase\CustomUserDetailServiceTest.class
+cl\ubiobio\silkcorp\polygen_research\DataBase\AuthControllerTest.class
 cl\ubiobio\silkcorp\polygen_research\PolygenResearchApplicationTests.class
+cl\ubiobio\silkcorp\polygen_research\DataBase\CampoCrfServiceTest.class
+cl\ubiobio\silkcorp\polygen_research\DataBase\CrfServiceTest.class
+cl\ubiobio\silkcorp\polygen_research\DataBase\WhitelistServiceTest.class
