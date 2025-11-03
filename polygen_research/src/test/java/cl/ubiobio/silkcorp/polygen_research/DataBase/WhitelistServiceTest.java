@@ -27,7 +27,7 @@ class WhitelistServiceTest {
     private WhitelistService whitelistService;
 
     @Test
-    void testCodificacionContraseña() {
+    void testHashContraseña() {
         // Creamos una credencial sin guardar
         Whitelist credencialSinGuardar = new Whitelist();
         credencialSinGuardar.setCorreo("nuevo@usuario.com");
@@ -45,7 +45,7 @@ class WhitelistServiceTest {
         verify(passwordEncoder, never()).encode(anyString());
         verify(whitelistRepository, times(1)).save(whitelistCaptor.capture());
 
-        // Aqui se hace la verificación final de ver que la contraseña no fue encriptada
+        // Verificacion de que la contraseña fue hasheada
         Whitelist credencialCapturada = whitelistCaptor.getValue();
         assertEquals("password123", credencialCapturada.getContrasena());
     }

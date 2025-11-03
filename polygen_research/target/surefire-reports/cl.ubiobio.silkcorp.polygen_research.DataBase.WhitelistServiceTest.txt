@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: cl.ubiobio.silkcorp.polygen_research.DataBase.WhitelistServiceTest
+-------------------------------------------------------------------------------
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.010 s -- in cl.ubiobio.silkcorp.polygen_research.DataBase.WhitelistServiceTest

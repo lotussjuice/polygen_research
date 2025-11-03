@@ -49,6 +49,7 @@ class AuthControllerTest {
     @Test
     void testProcessRegistration_Success() {
 
+        // Configuramos los datos de entrada
         RegisterDto dto = new RegisterDto();
         dto.setCorreo("test@example.com");
         dto.setNombreUsuario("Test User");
@@ -57,11 +58,12 @@ class AuthControllerTest {
         RolUsuario rolVisitanteFalso = new RolUsuario();
         rolVisitanteFalso.setNombreRol("VISITANTE");
 
+        // Configuramos los comportamientos esperados de los Mocks
         Usuario usuarioGuardado = new Usuario();
         usuarioGuardado.setIdUsuario(123);
         usuarioGuardado.setNombreUsuario("Test User");
 
-        when(mockBindingResult.hasErrors()).thenReturn(false);  
+        when(mockBindingResult.hasErrors()).thenReturn(false);      
         when(rolUsuarioService.getRolVisitantePorDefecto()).thenReturn(rolVisitanteFalso);
         when(usuarioService.saveUsuario(any(Usuario.class))).thenReturn(usuarioGuardado);
         when(passwordEncoder.encode("password123")).thenReturn("hash_abc123");
@@ -69,7 +71,7 @@ class AuthControllerTest {
         // Aqui ejecutamos el método a probar 
         String viewName = authController.processRegistration(dto, mockBindingResult, mockRedirectAttributes);
 
-      
+    
         assertEquals("redirect:/login", viewName);
 
         verify(usuarioService, times(1)).saveUsuario(any(Usuario.class));

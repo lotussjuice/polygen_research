@@ -5,7 +5,7 @@ public class RegisterDto {
     private String correo;
     private String password;
     private String nombreUsuario;
-    private Integer idRol; // Store the ID of the selected role
+    private Integer idRol; 
 
     public String getCorreo(){
         return correo;
