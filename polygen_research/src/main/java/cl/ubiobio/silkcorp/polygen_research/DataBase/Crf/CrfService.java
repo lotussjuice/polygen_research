@@ -1,4 +1,4 @@
-package cl.ubiobio.silkcorp.polygen_research.DataBase.Crf; // O el paquete que corresponda
+package cl.ubiobio.silkcorp.polygen_research.DataBase.Crf; 
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set; 
 import java.util.stream.Collectors;
 
 import org.hibernate.Hibernate;
@@ -19,6 +20,7 @@ import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosCrf.DatosCrf;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPaciente;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPacienteRepository;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.RegistroActividad.RegistroActividadService;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CampoCrfStatsDTO; 
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfForm;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenRowDTO; 
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO; 
@@ -60,14 +62,11 @@ public class CrfService {
     @Transactional
     public void guardarCrfCompleto(CrfForm form) {
 
-        // Guardar o actualizar Paciente
         DatosPaciente pacienteGuardado = datosPacienteRepository.save(form.getDatosPaciente());
 
-        // Crear el Contenedor CRF y asociarlo al paciente
         Crf crf = new Crf();
         crf.setDatosPaciente(pacienteGuardado);
 
-        // Mueve los nuevos datos del DTO a la Entidad 
         crf.setCasoEstudio(form.isEsCasoEstudio());
         crf.setObservacion(form.getObservacion());
         crf.setEstado("ACTIVO");
@@ -77,7 +76,6 @@ public class CrfService {
         }
         pacienteGuardado.getCrfs().add(crf);
 
-        // Procesa y asocia las respuestas 
         procesarYAdjuntarRespuestas(form.getDatosCrfList(), crf);
 
         crfRepository.save(crf);
@@ -97,8 +95,26 @@ public class CrfService {
     public CrfResumenViewDTO getCrfResumenView() {
         List<CampoCrf> campos = camposCRFRepository.findByActivoTrueOrderByNombre();
         List<Crf> crfs = crfRepository.findAll();
+        return construirResumenView(campos, crfs);
+    }
+
+    @Transactional(readOnly = true)
+    public CrfResumenViewDTO getCrfResumenView(String codigoPaciente) { 
+        List<CampoCrf> campos = camposCRFRepository.findByActivoTrueOrderByNombre();
+        List<Crf> crfs; 
+
+        if (codigoPaciente != null && !codigoPaciente.trim().isEmpty()) {
+            Optional<Crf> crfOptional = crfRepository.findByDatosPacienteCodigoPacienteIgnoreCase(codigoPaciente.trim());
+            crfs = crfOptional.map(Collections::singletonList).orElseGet(Collections::emptyList);
+        } else {
+            crfs = crfRepository.findAll();
+        }
+
+        return construirResumenView(campos, crfs);
+    }
+
+    private CrfResumenViewDTO construirResumenView(List<CampoCrf> campos, List<Crf> crfs) {
         CrfResumenViewDTO viewDTO = new CrfResumenViewDTO();
-        viewDTO.setCamposActivos(campos);
         List<CrfResumenRowDTO> filasDTO = new ArrayList<>();
 
         for (Crf crf : crfs) {
@@ -117,9 +133,34 @@ public class CrfService {
             rowDTO.setValores(valoresMap);
             filasDTO.add(rowDTO);
         }
+        
+        List<CampoCrfStatsDTO> camposConStats = new ArrayList<>();
+        for (CampoCrf campo : campos) {
+            long countVacios = 0;
+            long countCeros = 0;
+            long countUnos = 0;
+            Integer campoId = campo.getIdCampo();
+
+            for (CrfResumenRowDTO fila : filasDTO) {
+                String valor = fila.getValores().get(campoId);
+                
+                if (valor == null || valor.trim().isEmpty() || valor.equals("-")) {
+                    countVacios++;
+                } else if ("0".equals(valor)) {
+                    countCeros++;
+                } else if ("1".equals(valor)) {
+                    countUnos++;
+                }
+            }
+            
+            camposConStats.add(new CampoCrfStatsDTO(campo, countVacios, countCeros, countUnos));
+        }
+
+        viewDTO.setCamposConStats(camposConStats);
         viewDTO.setFilas(filasDTO);
         return viewDTO;
     }
+
 
     @Transactional(readOnly = true)
     public CrfForm prepararCrfFormParaEditar(Integer crfId) {
@@ -130,7 +171,6 @@ public class CrfService {
         Hibernate.initialize(crf.getDatosPaciente());
         Hibernate.initialize(crf.getDatosCrfList());
 
-        // Convierte las respuestas guardadas en un Mapa para búsqueda rápida
         Map<Integer, DatosCrf> respuestasGuardadas = crf.getDatosCrfList().stream()
                 .collect(Collectors.toMap(
                     dato -> dato.getCampoCrf().getIdCampo(), 
@@ -142,14 +182,11 @@ public class CrfService {
         form.setIdCrf(crf.getIdCrf());
         form.setDatosPaciente(crf.getDatosPaciente());
 
-        // Carga los datos simples del CRF (observaciones, tipo estudio) al DTO
         form.setEsCasoEstudio(crf.isCasoEstudio());
         form.setObservacion(crf.getObservacion());
 
-        // Carga TODOS los campos activos (igual que en /nuevo)
         List<CampoCrf> todosCamposActivos = camposCRFRepository.findByActivoTrueOrderByNombre();
 
-        // Construye la lista final para el formulario
         List<DatosCrf> listaParaForm = new ArrayList<>();
         for (CampoCrf campo : todosCamposActivos) {
             DatosCrf respuesta = respuestasGuardadas.get(campo.getIdCampo());
@@ -169,10 +206,8 @@ public class CrfService {
     @Transactional
     public void actualizarCrfCompleto(CrfForm form) {
         
-        // Validar que los IDs existen
         Integer crfId = form.getIdCrf();
         
-        // Corregido para usar 'id_Paciente' (basado en tu HTML)
         Integer pacienteId = form.getDatosPaciente().getIdPaciente(); 
         
         if (crfId == null || pacienteId == null) {
@@ -217,16 +252,14 @@ public class CrfService {
             String valorFinal = null;
             String valorOriginal = respuestaForm.getValor(); 
 
-            if ("SI/NO".equals(campoReal.getTipo())) {
-                if ("1".equals(valorOriginal)) {
-                    valorFinal = "1";
-                    guardarEsteDato = true;
-                } else if ("0".equals(valorOriginal)) {
-                    valorFinal = "0";
+            if ("SI/NO".equals(campoReal.getTipo()) || "SELECCION_UNICA".equals(campoReal.getTipo())) {
+                if (valorOriginal != null) {
+                    valorFinal = valorOriginal;
                     guardarEsteDato = true;
                 } else {
-                    guardarEsteDato = false; 
+                    guardarEsteDato = false;
                 }
+
             } else { 
                 if (valorOriginal != null && !valorOriginal.trim().isEmpty()) {
                     valorFinal = valorOriginal.trim();
@@ -245,40 +278,27 @@ public class CrfService {
     }
 
     @Transactional(readOnly = true)
-    public CrfResumenViewDTO getCrfResumenView(String codigoPaciente) { 
+    public List<String> getMissingFields(Integer crfId) {
+        // 1. Obtener el CRF con sus datos actuales
+        Crf crf = crfRepository.findById(crfId)
+                .orElseThrow(() -> new RuntimeException("CRF no encontrado con ID: " + crfId));
+        Hibernate.initialize(crf.getDatosCrfList());
 
-        List<CampoCrf> campos = camposCRFRepository.findByActivoTrueOrderByNombre();
-        List<Crf> crfs; 
+        // 2. Obtener todos los campos activos (la plantilla)
+        List<CampoCrf> allActiveFields = camposCRFRepository.findByActivoTrueOrderByNombre();
 
-        if (codigoPaciente != null && !codigoPaciente.trim().isEmpty()) {
-            Optional<Crf> crfOptional = crfRepository.findByDatosPacienteCodigoPacienteIgnoreCase(codigoPaciente.trim());
-            crfs = crfOptional.map(Collections::singletonList).orElseGet(Collections::emptyList);
-        } else {
+        // 3. Obtener un Set de los IDs de campos que SÍ tiene guardados
+        Set<Integer> savedFieldIds = crf.getDatosCrfList().stream()
+                .filter(dato -> dato.getCampoCrf() != null && dato.getValor() != null && !dato.getValor().trim().isEmpty()) // Chequea que el valor no sea nulo o vacío
+                .map(dato -> dato.getCampoCrf().getIdCampo())
+                .collect(Collectors.toSet());
 
-            crfs = crfRepository.findAll();
-        }
+        // 4. Filtrar la lista de todos los campos para encontrar los que NO están en el Set
+        List<String> missingFieldNames = allActiveFields.stream()
+                .filter(campo -> !savedFieldIds.contains(campo.getIdCampo()))
+                .map(CampoCrf::getNombre)
+                .collect(Collectors.toList());
 
-        CrfResumenViewDTO viewDTO = new CrfResumenViewDTO();
-        viewDTO.setCamposActivos(campos);
-        List<CrfResumenRowDTO> filasDTO = new ArrayList<>();
-
-        for (Crf crf : crfs) {
-            Hibernate.initialize(crf.getDatosPaciente());
-            Hibernate.initialize(crf.getDatosCrfList());
-            CrfResumenRowDTO rowDTO = new CrfResumenRowDTO();
-            rowDTO.setCrf(crf);
-            Map<Integer, String> valoresMap = crf.getDatosCrfList().stream()
-                    .filter(dato -> dato.getCampoCrf() != null)
-                    .collect(Collectors.toMap(
-                        dato -> dato.getCampoCrf().getIdCampo(),
-                        DatosCrf::getValor,
-                        (v1, v2) -> v1
-                    ));
-            rowDTO.setValores(valoresMap);
-            filasDTO.add(rowDTO);
-        }
-
-        viewDTO.setFilas(filasDTO);
-        return viewDTO;
+        return missingFieldNames;
     }
 }

@@ -1,13 +1,24 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.CampoCrf;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import java.util.ArrayList;
 import java.util.List;
 
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosCrf.DatosCrf;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.OpcionCampoCrf.OpcionCampoCrf; 
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "campo_crf")
@@ -36,6 +47,17 @@ public class CampoCrf {
 
     @OneToMany(mappedBy = "campoCrf", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DatosCrf> datosCrfList;
+
+    @OneToMany(
+        mappedBy = "campoCrf", 
+        cascade = CascadeType.ALL, 
+        orphanRemoval = true, 
+        fetch = FetchType.LAZY 
+    )
+    @OrderBy("orden ASC") 
+    private List<OpcionCampoCrf> opciones = new ArrayList<>();
+
+
 
     public Integer getIdCampo() {
         return idCampo;
@@ -83,5 +105,23 @@ public class CampoCrf {
 
     public void setDatosCrfList(List<DatosCrf> datosCrfList) {
         this.datosCrfList = datosCrfList;
+    }
+
+    public List<OpcionCampoCrf> getOpciones() {
+        return opciones;
+    }
+
+    public void setOpciones(List<OpcionCampoCrf> opciones) {
+        this.opciones = opciones;
+    }
+
+    public void addOpcion(OpcionCampoCrf opcion) {
+        opciones.add(opcion);
+        opcion.setCampoCrf(this);
+    }
+
+    public void removeOpcion(OpcionCampoCrf opcion) {
+        opciones.remove(opcion);
+        opcion.setCampoCrf(null);
     }
 }

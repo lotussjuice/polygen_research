@@ -5,72 +5,21 @@
 
     <form th:action="@{/crf/guardar}" th:object="${crfForm}" method="post">
 
-        <div class="card">
-            <div class="card-header">
-                <h3><i class="ph-bold ph-user-plus"></i> 1. Datos del Paciente</h3>
-            </div>
-            <div class="card-body">
-
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label for="codigoPaciente">Código</label>
-                        <input type="text" class="form-control" id="codigoPaciente"
-                            th:field="*{datosPaciente.codigoPaciente}" required>
-                    </div>
-                </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label for="nombre">Nombre</label>
-                        <input type="text" class="form-control" id="nombre" th:field="*{datosPaciente.nombre}" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="apellido">Apellido</label>
-                        <input type="text" class="form-control" id="apellido" th:field="*{datosPaciente.apellido}"
-                            required>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label for="numero">Número Contacto</label>
-                    <input type="text" class="form-control" id="numero" th:field="*{datosPaciente.numero}">
-                </div>
-                <div class="form-group">
-                    <label for="direccion">Dirección</label>
-                    <input type="text" class="form-control" id="direccion" th:field="*{datosPaciente.direccion}">
-                </div>
-
-
-                <input type="hidden" th:field="*{datosPaciente.estado}">
-
-            </div>
-        </div>
-
         <div class="card" style="margin-top: 1.5rem;">
             <div class="card-header">
                 <h3><i class="ph-bold ph-clipboard-text"></i> 2. Datos del Estudio (CRF)</h3>
             </div>
             <div class="card-body">
 
-                <label>
-                    <input type="radio" th:field="*{esCasoEstudio}" th:value="false" required> Caso Control
-                </label>
-                <label>
-                    <input type="radio" th:field="*{esCasoEstudio}" th:value="true" required> Caso Estudio
-                </label>
-
-                <div class="form-group" style="margin-top: 1rem;">
-                    <label for="observacion">Observaciones</label>
-                    <textarea class="form-control" id="observacion" th:field="*{observacion}" rows="4"
-                        placeholder="Añadir notas clínicas, antecedentes relevantes u otras observaciones..."></textarea>
-                </div>
-
                 <hr style="margin: 2rem 0;">
                 <div th:each="dato, stat : *{datosCrfList}" class="form-group">
 
                     <label th:for="${'valor-' + stat.index}" th:text="${dato.campoCrf.nombre}"></label>
+                    <small th:if="${dato.campoCrf.descripcion != null}" th:text="${dato.campoCrf.descripcion}" style="display: block; color: var(--color-texto-secundario); margin-bottom: 0.5rem;"></small>
 
                     <div th:switch="${dato.campoCrf.tipo}">
 
-                        <input th:case="'NUMERO'" type="number" class="form-control" th:id="${'valor-' + stat.index}"
+                        <input th:case="'NUMERO'" type="number" step="any" class="form-control" th:id="${'valor-' + stat.index}"
                             th:field="*{datosCrfList[__${stat.index}__].valor}">
 
                         <input th:case="'FECHA'" type="date" class="form-control" th:id="${'valor-' + stat.index}"
@@ -94,7 +43,17 @@
                                 <span>No</span>
                             </label>
                         </div>
-                       
+
+                        <div th:case="'SELECCION_UNICA'" class="radio-group-sino">
+                            <label th:each="opcion : ${dato.campoCrf.opciones}" class="radio-label">
+                                <input type="radio"
+                                       th:name="${'datosCrfList[' + stat.index + '].valor'}"
+                                       th:value="${opcion.orden}"
+                                       th:checked="${#strings.equals(dato.valor, #strings.toString(opcion.orden))}"
+                                       class="radio-deselect" />
+                                <span th:text="${opcion.etiqueta}"></span>
+                            </label>
+                        </div>
                         <input th:case="*" type="text" class="form-control" th:id="${'valor-' + stat.index}"
                             th:field="*{datosCrfList[__${stat.index}__].valor}">
                     </div>

@@ -58,29 +58,47 @@
                                     <tr>
                                         <th>ID CRF</th>
                                         <th>Cód. Paciente</th>
-                                        <th th:each="campo : ${camposColumnas}">
+                                        <th th:each="campoStat : ${camposColumnas}">
                                             <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                <span th:text="${campo.nombre}">...</span>
-                                                <button th:if="${campo.tipo == 'NUMERO'}" type="button"
-                                                    class="btn-add-criterion" th:data-campo-id="${campo.idCampo}"
-                                                    th:data-campo-nombre="${campo.nombre}">
+                                                <span th:text="${campoStat.campoCrf.nombre}">...</span>
+                                                <button th:if="${campoStat.campoCrf.tipo == 'NUMERO'}" type="button"
+                                                    class="btn-add-criterion" th:data-campo-id="${campoStat.campoCrf.idCampo}"
+                                                    th:data-campo-nombre="${campoStat.campoCrf.nombre}">
                                                     +
                                                 </button>
                                             </div>
-                                            <div class="criteria-tags" th:id="'tags-campo-' + ${campo.idCampo}"></div>
+                                            <div class="criteria-tags" th:id="'tags-campo-' + ${campoStat.campoCrf.idCampo}"></div>
                                         </th>
-                                    </tr>
+                                        </tr>
                                 </thead>
                                 <tbody>
                                     <tr th:each="fila : ${filasCrf}">
                                         <td th:text="${fila.crf.idCrf}">...</td>
                                         <td th:text="${fila.crf.datosPaciente?.codigoPaciente}">...</td>
-                                        <td th:each="campo : ${camposColumnas}">
-                                            <span th:text="${fila.valores.get(campo.idCampo) ?: '-'}"></span>
+                                        <td th:each="campoStat : ${camposColumnas}">
+                                            <span
+                                                th:text="${fila.valores.get(campoStat.campoCrf.idCampo) ?: '-'}"></span>
                                         </td>
-                                    </tr>
+                                        </tr>
                                 </tbody>
-                            </table>
+                                <tfoot style="background-color: var(--color-fondo); font-weight: 600;">
+                                    <tr>
+                                        <td colspan="2" style="text-align: right; padding-right: 1rem;">Total Vacíos:</td>
+                                        <td th:each="stat : ${camposColumnas}" th:text="${stat.countVacios}"
+                                            style="text-align: left;">...</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="text-align: right; padding-right: 1rem;">Total Ceros (0):</td>
+                                        <td th:each="stat : ${camposColumnas}" th:text="${stat.countCeros}"
+                                            style="text-align: left;">...</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2" style="text-align: right; padding-right: 1rem;">Total Unos (1):</td>
+                                        <td th:each="stat : ${camposColumnas}" th:text="${stat.countUnos}"
+                                            style="text-align: left;">...</td>
+                                    </tr>
+                                </tfoot>
+                                </table>
                         </div>
                     </div>
                 </div>

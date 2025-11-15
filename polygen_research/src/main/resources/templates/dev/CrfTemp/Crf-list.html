@@ -47,8 +47,7 @@
                                 <th>Dirección</th>
                                 <th>Estado Paciente</th>
 
-                                <th th:each="campo : ${camposColumnas}" th:text="${campo.nombre}">...</th>
-
+                                <th th:each="campoStat : ${camposColumnas}" th:text="${campoStat.campoCrf.nombre}">...</th>
                                 <th style="text-align: right; min-width: 150px;">Acciones</th>
                             </tr>
                         </thead>
@@ -66,18 +65,22 @@
                                 <td th:text="${fila.crf.datosPaciente?.direccion ?: '-'}">...</td>
                                 <td th:text="${fila.crf.datosPaciente?.estado ?: '-'}">...</td>
 
-                                <td th:each="campo : ${camposColumnas}">
-                                    <span th:text="${fila.valores.get(campo.idCampo) ?: '-'}"></span>
+                                <td th:each="campoStat : ${camposColumnas}">
+                                    <span th:text="${fila.valores.get(campoStat.campoCrf.idCampo) ?: '-'}"></span>
                                 </td>
-
                                 <td class="actions-cell" style="text-align: right;">
-                                    <button>
+                                    <button type="button" class="btn-secundario btn-sm" 
+                                        th:onclick="|verDatosFaltantes(${fila.crf.idCrf})|"
+                                        title="Ver Datos Faltantes">
+                                        <i class="ph-bold ph-list-checks"></i>
+                                    </button>
                                     <a th:href="@{/crf/pdf/{id}(id=${fila.crf.idCrf})}" 
                                         class="btn btn-sm btn-outline-danger" 
                                         title="Descargar PDF"
-                                        target="_blank"> <i class="ph-bold ph-file-pdf"></i>
-                                        </a>
-                                    </button>
+                                        target="_blank" style="padding: 0.3rem 0.6rem; text-decoration: none;"> 
+                                        <i class="ph-bold ph-file-pdf"></i>
+                                    </a>
+                                    
                                     <a th:href="@{/crf/editar/{id}(id=${fila.crf.idCrf})}" class="btn-secundario btn-sm"
                                         title="Editar CRF">
                                         <i class="ph-bold ph-pencil-simple"></i>
@@ -118,6 +121,17 @@
             </div>
         </div>
 
+        <div id="modalDatosFaltantes" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h2 id="modal-faltantes-titulo">Datos Faltantes</h2>
+                    <span class="close-modal" onclick="cerrarModalDatosFaltantes()">&times;</span>
+                </div>
+                <div class="modal-body" id="modal-faltantes-body" style="padding-top: 1rem; max-height: 400px; overflow-y: auto;">
+                    <p>Cargando...</p>
+                </div>
+            </div>
+        </div>
         <th:block th:fragment="pageScript">
             <script th:inline="javascript">
                 const modalConfirmacionCRF = document.getElementById('modalConfirmacionEliminarCRF');
@@ -150,6 +164,52 @@
                 window.onclick = function (event) {
                     if (event.target == modalConfirmacionCRF) {
                         cerrarConfirmacionEliminarCRF();
+                    }
+                    if (event.target == modalDatosFaltantes) {
+                        cerrarModalDatosFaltantes();
+                    }
+                }
+
+                const modalDatosFaltantes = document.getElementById('modalDatosFaltantes');
+
+                async function verDatosFaltantes(crfId) {
+                    if (!modalDatosFaltantes) return;
+                    
+                    const titulo = document.getElementById('modal-faltantes-titulo');
+                    const body = document.getElementById('modal-faltantes-body');
+                    
+                    titulo.innerText = 'Datos Faltantes para CRF: ' + crfId;
+                    body.innerHTML = '<p>Cargando...</p>';
+                    modalDatosFaltantes.style.display = 'block';
+
+                    try {
+                        const response = await fetch(`/crf/api/crf/${crfId}/missing-data`);
+                        
+                        if (!response.ok) {
+                            throw new Error('No se pudo cargar la información.');
+                        }
+                        
+                        const missingFields = await response.json();
+                        
+                        if (missingFields.length === 0) {
+                            body.innerHTML = '<p style="color: var(--color-exito); font-weight: 600;">Este CRF está completo. No faltan datos.</p>';
+                        } else {
+                            let html = '<p>Los siguientes campos no tienen un valor registrado:</p><ul style="margin-left: 1.5rem; margin-top: 1rem;">';
+                            for (const field of missingFields) {
+                                html += `<li style="margin-bottom: 0.5rem;">${field}</li>`;
+                            }
+                            html += '</ul>';
+                            body.innerHTML = html;
+                        }
+
+                    } catch (error) {
+                        body.innerHTML = `<p style="color: var(--color-error);">${error.message}</p>`;
+                    }
+                }
+
+                function cerrarModalDatosFaltantes() {
+                    if (modalDatosFaltantes) {
+                        modalDatosFaltantes.style.display = 'none';
                     }
                 }
             </script>

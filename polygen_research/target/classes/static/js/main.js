@@ -51,20 +51,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function setupRadioDeselect() {
         const radios = document.querySelectorAll('.radio-deselect');
-    
         radios.forEach(radio => {
-            radio.addEventListener('mousedown', function() {
+            radio.addEventListener('mousedown', function () {
                 this.dataset.wasChecked = this.checked;
-            });
-      
-            radio.addEventListener('click', function() {
+            })
+            radio.addEventListener('click', function () {
                 if (this.dataset.wasChecked === 'true') {
                     this.checked = false;
                     this.dataset.wasChecked = 'false';
                 }
+
             });
         });
     }
+
     setupRadioDeselect();
 });
 

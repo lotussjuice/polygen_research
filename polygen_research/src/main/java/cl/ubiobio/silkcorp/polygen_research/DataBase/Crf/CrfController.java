@@ -2,6 +2,7 @@ package cl.ubiobio.silkcorp.polygen_research.DataBase.Crf;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.core.io.InputStreamResource;
@@ -59,26 +60,22 @@ public class CrfController {
 
         try {
             if (crfForm.getIdCrf() == null) {
-                // Si NO hay ID, es un CRF Nuevo
+
                 crfService.guardarCrfCompleto(crfForm);
             } else {
-                // Si SÍ hay ID, es una Edición
                 crfService.actualizarCrfCompleto(crfForm);
             }
 
         } catch (Exception e) {
-            // Manejo básico de errores (devuelve al usuario al formulario)
             model.addAttribute("errorMessage", "Error al guardar el CRF: " + e.getMessage());
-            // Recarga el formulario con los datos que el usuario ya tenía
             model.addAttribute("crfForm", crfForm);
             return "dev/CrfTemp/Crf-form";
         }
 
-        // Redirige a la lista de CRFs
         return "redirect:/crf/list";
     }
 
-    @GetMapping("/api/crf/{id}") // Nueva ruta para la API
+    @GetMapping("/api/crf/{id}") 
     @ResponseBody
     public ResponseEntity<Crf> getCrfByIdApi(@PathVariable Integer id) {
         return crfService.getCrfById(id) 
@@ -86,14 +83,23 @@ public class CrfController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/api/crf/{id}/missing-data")
+    @ResponseBody
+    public ResponseEntity<List<String>> getMissingData(@PathVariable("id") Integer crfId) {
+        try {
+            List<String> missingFields = crfService.getMissingFields(crfId);
+            return ResponseEntity.ok(missingFields);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @GetMapping("/reporte")
     public String mostrarReporteCrf(Model model) {
 
-        // Llama al nuevo método del servicio
         CrfResumenViewDTO data = crfService.getCrfResumenView();
 
-        // Pasamos las dos partes a la vista
-        model.addAttribute("camposColumnas", data.getCamposActivos()); 
+        model.addAttribute("camposColumnas", data.getCamposConStats()); 
         model.addAttribute("filasCrf", data.getFilas());  
 
         return "crf-reporte";
@@ -106,7 +112,7 @@ public class CrfController {
 
         CrfResumenViewDTO data = crfService.getCrfResumenView(codigoBusqueda);
 
-        model.addAttribute("camposColumnas", data.getCamposActivos());
+        model.addAttribute("camposColumnas", data.getCamposConStats());
         model.addAttribute("filasCrf", data.getFilas());
 
         return "dev/CrfTemp/Crf-list"; 

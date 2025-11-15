@@ -1,22 +1,5 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.export;
 
-import cl.ubiobio.silkcorp.polygen_research.DataBase.CampoCrf.CampoCrf;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.Crf.CrfService;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenRowDTO;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CriterioDTO;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.StataPreviewDTO;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.util.CalculoService;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.util.StataFormateador;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.stereotype.Service;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -26,6 +9,26 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.stereotype.Service;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import cl.ubiobio.silkcorp.polygen_research.DataBase.CampoCrf.CampoCrf;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.Crf.CrfService;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CampoCrfStatsDTO;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenRowDTO;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CriterioDTO;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.StataPreviewDTO;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.util.CalculoService;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.util.StataFormateador;
 
 @Service
 public class StataExportService {
@@ -85,7 +88,10 @@ public class StataExportService {
     private StataPreviewDTO prepararDatosStata(String criteriosJson) throws IOException {
 
         CrfResumenViewDTO data = crfService.getCrfResumenView();
-        List<CampoCrf> columnasDinamicas = data.getCamposActivos();
+        
+        List<CampoCrfStatsDTO> columnasDinamicasStats = data.getCamposConStats();
+
+        
         List<CrfResumenRowDTO> filas = data.getFilas();
 
         Map<Integer, List<CriterioDTO>> criteriosMap;
@@ -102,7 +108,6 @@ public class StataExportService {
         List<Map<String, String>> filasOriginal = new ArrayList<>();
         List<Map<String, String>> filasStata = new ArrayList<>();
 
-        // Headers Fijos
         Map<String, String> fixedHeaders = new LinkedHashMap<>();
         fixedHeaders.put("ID_CRF", "id_crf");
         fixedHeaders.put("Codigo_Paciente", "cod_paciente");
@@ -114,8 +119,11 @@ public class StataExportService {
             headersStata.add(stata);
         });
 
-        // Headers Dinámicos (Crudos + Dicotomizados)
-        for (CampoCrf campo : columnasDinamicas) {
+
+        for (CampoCrfStatsDTO stat : columnasDinamicasStats) {
+            CampoCrf campo = stat.getCampoCrf(); 
+
+            
             headersOriginal.add(campo.getNombre());
             headersStata.add(StataFormateador.formatarNombreVariable(campo.getNombre()));
 
@@ -135,7 +143,6 @@ public class StataExportService {
             Map<String, String> filaOrig = new LinkedHashMap<>();
             Map<String, String> filaStata = new LinkedHashMap<>();
 
-            // Datos Fijos
             String idCrf = fila.getCrf().getIdCrf().toString();
             String codPac = fila.getCrf().getDatosPaciente() != null ? fila.getCrf().getDatosPaciente().getCodigoPaciente() : "";
             String nomPac = (fila.getCrf().getDatosPaciente() != null) ? fila.getCrf().getDatosPaciente().getNombre() + " " + fila.getCrf().getDatosPaciente().getApellido() : "";
@@ -153,8 +160,10 @@ public class StataExportService {
             filaOrig.put("Fecha_Creacion", fecha);
             filaStata.put("fecha_creacion", StataFormateador.formatarValor(fecha));
 
-            // Datos Dinámicos
-            for (CampoCrf campo : columnasDinamicas) {
+            for (CampoCrfStatsDTO stat : columnasDinamicasStats) {
+                CampoCrf campo = stat.getCampoCrf(); 
+
+            
                 Integer campoId = campo.getIdCampo();
                 String valorCrudo = fila.getValores().get(campoId);
                 valorCrudo = (valorCrudo != null) ? valorCrudo : "";
@@ -173,7 +182,6 @@ public class StataExportService {
                         String valorDicoStr;
                         
                         if (Double.isNaN(valorNum)) {
-                            // Si no es número, celda vacía
                             valorDicoStr = "";
                         } else {
                             double puntoCorteCalculado = puntosDeCorte.getOrDefault(campoId + "_" + criterio.getTipo(), 0.0);
