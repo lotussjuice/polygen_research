@@ -33,7 +33,7 @@ public class CrfService {
     private final CampoCrfRepository camposCRFRepository;
 
     @Autowired
-    private RegistroActividadService registroService;
+    private RegistroActividadService registroService; 
 
     public CrfService(CrfRepository crfRepository,
             DatosPacienteRepository datosPacienteRepository,
@@ -61,12 +61,10 @@ public class CrfService {
 
     @Transactional
     public void guardarCrfCompleto(CrfForm form) {
-
         DatosPaciente pacienteGuardado = datosPacienteRepository.save(form.getDatosPaciente());
 
         Crf crf = new Crf();
         crf.setDatosPaciente(pacienteGuardado);
-
         crf.setCasoEstudio(form.isEsCasoEstudio());
         crf.setObservacion(form.getObservacion());
         crf.setEstado("ACTIVO");
@@ -152,7 +150,6 @@ public class CrfService {
                     countUnos++;
                 }
             }
-            
             camposConStats.add(new CampoCrfStatsDTO(campo, countVacios, countCeros, countUnos));
         }
 
@@ -164,7 +161,6 @@ public class CrfService {
 
     @Transactional(readOnly = true)
     public CrfForm prepararCrfFormParaEditar(Integer crfId) {
-        // Busqueda de CRF por ID
         Crf crf = crfRepository.findById(crfId)
                 .orElseThrow(() -> new RuntimeException("CRF no encontrado con ID: " + crfId));
         
@@ -177,20 +173,17 @@ public class CrfService {
                     dato -> dato                        
                 ));
 
-
         CrfForm form = new CrfForm();
         form.setIdCrf(crf.getIdCrf());
         form.setDatosPaciente(crf.getDatosPaciente());
-
         form.setEsCasoEstudio(crf.isCasoEstudio());
         form.setObservacion(crf.getObservacion());
 
         List<CampoCrf> todosCamposActivos = camposCRFRepository.findByActivoTrueOrderByNombre();
-
         List<DatosCrf> listaParaForm = new ArrayList<>();
+        
         for (CampoCrf campo : todosCamposActivos) {
             DatosCrf respuesta = respuestasGuardadas.get(campo.getIdCampo());
-
             if (respuesta != null) {
                 listaParaForm.add(respuesta);
             } else {
@@ -199,39 +192,41 @@ public class CrfService {
                 listaParaForm.add(respuestaVacia);
             }
         }
-        
         form.setDatosCrfList(listaParaForm);
         return form;
     }
+
     @Transactional
     public void actualizarCrfCompleto(CrfForm form) {
-        
         Integer crfId = form.getIdCrf();
         
-        Integer pacienteId = form.getDatosPaciente().getIdPaciente(); 
-        
-        if (crfId == null || pacienteId == null) {
-            throw new RuntimeException("Error: Se intentó actualizar un CRF o Paciente sin ID.");
+        if (crfId == null) {
+            throw new RuntimeException("Error: Se intentó actualizar un CRF sin ID.");
         }
         
-        DatosPaciente pacienteGuardado = datosPacienteRepository.save(form.getDatosPaciente());
-
         Crf crf = crfRepository.findById(crfId)
                 .orElseThrow(() -> new RuntimeException("CRF no encontrado con ID: " + crfId));
                 
-        crf.setDatosPaciente(pacienteGuardado);
+        DatosPaciente paciente = crf.getDatosPaciente();
+        
 
-        // Mueve los nuevos datos del DTO a la Entidad
+        DatosPaciente formPaciente = form.getDatosPaciente();
+        paciente.setCodigoPaciente(formPaciente.getCodigoPaciente());
+        paciente.setNombre(formPaciente.getNombre());
+        paciente.setApellido(formPaciente.getApellido());
+        paciente.setNumero(formPaciente.getNumero());
+        paciente.setDireccion(formPaciente.getDireccion());
+
         crf.setCasoEstudio(form.isEsCasoEstudio());
         crf.setObservacion(form.getObservacion());
         
-        crf.getDatosCrfList().clear();
 
+        crf.getDatosCrfList().clear();
         procesarYAdjuntarRespuestas(form.getDatosCrfList(), crf);
+
 
         crfRepository.save(crf);
         
-        // Registra la actualización
         registroService.logCrfActivity("ACTUALIZACION_CRF", crf);
     }
 
@@ -252,21 +247,19 @@ public class CrfService {
             String valorFinal = null;
             String valorOriginal = respuestaForm.getValor(); 
 
-            if ("SI/NO".equals(campoReal.getTipo()) || "SELECCION_UNICA".equals(campoReal.getTipo())) {
+            if ("SI/NO".equals(campoReal.getTipo()) || "SELECCION_UNICA".equals(campoReal.getTipo())) { 
                 if (valorOriginal != null) {
                     valorFinal = valorOriginal;
                     guardarEsteDato = true;
                 } else {
                     guardarEsteDato = false;
                 }
-
             } else { 
                 if (valorOriginal != null && !valorOriginal.trim().isEmpty()) {
                     valorFinal = valorOriginal.trim();
                     guardarEsteDato = true;
                 }
             }
-
 
             if (guardarEsteDato) {
                 DatosCrf nuevaRespuesta = new DatosCrf();
@@ -279,21 +272,17 @@ public class CrfService {
 
     @Transactional(readOnly = true)
     public List<String> getMissingFields(Integer crfId) {
-        // 1. Obtener el CRF con sus datos actuales
         Crf crf = crfRepository.findById(crfId)
                 .orElseThrow(() -> new RuntimeException("CRF no encontrado con ID: " + crfId));
         Hibernate.initialize(crf.getDatosCrfList());
 
-        // 2. Obtener todos los campos activos (la plantilla)
         List<CampoCrf> allActiveFields = camposCRFRepository.findByActivoTrueOrderByNombre();
 
-        // 3. Obtener un Set de los IDs de campos que SÍ tiene guardados
         Set<Integer> savedFieldIds = crf.getDatosCrfList().stream()
-                .filter(dato -> dato.getCampoCrf() != null && dato.getValor() != null && !dato.getValor().trim().isEmpty()) // Chequea que el valor no sea nulo o vacío
+                .filter(dato -> dato.getCampoCrf() != null && dato.getValor() != null && !dato.getValor().trim().isEmpty()) 
                 .map(dato -> dato.getCampoCrf().getIdCampo())
                 .collect(Collectors.toSet());
 
-        // 4. Filtrar la lista de todos los campos para encontrar los que NO están en el Set
         List<String> missingFieldNames = allActiveFields.stream()
                 .filter(campo -> !savedFieldIds.contains(campo.getIdCampo()))
                 .map(CampoCrf::getNombre)
