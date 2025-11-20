@@ -970,3 +970,52 @@ tr.fila-incompleta td {
     position: relative;
     top: -1px;
 }
+
+/* Contenedor para input + icono */
+.password-wrapper {
+    position: relative;
+    width: 100%;
+}
+
+.password-wrapper input {
+    padding-right: 40px; /* Espacio para el icono */
+}
+
+/* Estilo del botón ojito */
+.toggle-password-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--color-texto-secundario);
+    display: flex;
+    align-items: center;
+    padding: 0;
+}
+
+.toggle-password-btn:focus {
+    outline: none;
+}
+
+/* Asegurar altura igual en botones paralelos */
+.btn-group-equal {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+}
+
+.btn-group-equal form {
+    flex: 1; /* Ambos ocupan el mismo ancho */
+}
+
+.btn-group-equal button {
+    width: 100%;
+    height: 100%; /* Llenar la altura del contenedor si varía */
+    min-height: 42px; /* Altura mínima consistente */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

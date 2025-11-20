@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Verificar Código</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+<body id="pagina-login">
+
+    <div class="login-container">
+        
+        <div class="sidebar-header" style="margin-bottom: 1.5rem; justify-content: center;">
+            <i class="ph-bold ph-shield-check" style="font-size: 2rem;"></i>
+            <h1 style="font-size: 1.5rem;">Verificación</h1>
+        </div>
+
+        <p style="text-align: center; color: var(--color-texto-secundario); margin-bottom: 1.5rem;">
+            Hemos enviado un código a <strong th:text="${correo}">correo@ejemplo.com</strong>
+        </p>
+
+        <div th:if="${errorMessage}" class="alert alert-error" style="margin-bottom: 1rem;" th:text="${errorMessage}"></div>
+        <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: 1rem;" th:text="${successMessage}"></div>
+
+        <form th:action="@{/register/verify}" method="post" style="text-align: center;">
+            
+            <div class="form-group">
+                <label for="codigo" style="text-align: left; display: block;">Código de Verificación:</label>
+                <input type="text" id="codigo" name="codigo" class="form-control" 
+                       placeholder="12345" maxlength="5" pattern="\d{5}" 
+                       title="Ingrese 5 números" required autofocus 
+                       style="letter-spacing: 5px; text-align: center; font-size: 1.2rem;"/>
+            </div>
+            
+            <div style="margin-top: 1.5rem;">
+                <button type="submit" class="btn-primario" style="width: 100%;">Verificar y Crear Cuenta</button>
+            </div>
+        </form>
+
+        <div class="btn-group-equal" style="margin-top: 1.5rem;">
+            
+            <form th:action="@{/register/resend}" method="post">
+                <button type="submit" class="btn-secundario">
+                    <i class="ph-bold ph-arrow-clockwise" style="margin-right: 5px;"></i> Reenviar
+                </button>
+            </form>
+
+            <form th:action="@{/register/cancel}" method="post">
+                <button type="submit" class="btn-error">
+                    Cancelar
+                </button>
+            </form>
+        </div>
+
+    </div>
+</body>
+</html>

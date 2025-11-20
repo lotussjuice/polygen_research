@@ -22,7 +22,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(authorize -> authorize
                 // Permisos públicos (Login, Registro, Estilos)
-                .requestMatchers("/login", "/register", "/css/**", "/js/**").permitAll()
+                .requestMatchers("/login", "/register/**", "/forgot-password/**", "/reset-password/**", "/css/**", "/js/**").permitAll()
 
                 // Permisos solo para DEV
                 .requestMatchers("/usuarios/**", "/roles/**", "/whitelist/**").hasAnyRole("DEV","ADMINISTRADOR")

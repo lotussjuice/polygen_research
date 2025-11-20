@@ -2,6 +2,7 @@ package cl.ubiobio.silkcorp.polygen_research.DataBase.Whitelist;
 
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -30,5 +31,9 @@ public class WhitelistService {
 
     public boolean existsByCorreo(String correo) {
         return whitelistRepository.findByCorreo(correo).isPresent();
+    }
+
+    public Optional<Whitelist> findByCorreo(String correo) {
+        return whitelistRepository.findByCorreo(correo);
     }
 }

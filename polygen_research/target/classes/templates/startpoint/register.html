@@ -17,34 +17,49 @@
 
         <h2 style="margin-bottom: 1.5rem; font-weight: 600; color: var(--color-texto-secundario);">Crear Nueva Cuenta</h2>
 
+        <div th:if="${errorMessage}" class="alert alert-error" style="margin-bottom: 1rem;" th:text="${errorMessage}"></div>
+        <div th:if="${#fields.hasErrors('${registerDto}')}" class="alert alert-error">
+             <p th:each="err : ${#fields.errors('global')}" th:text="${err}"></p>
+        </div>
+        
         <form th:action="@{/register}" th:object="${registerDto}" method="post" style="text-align: left;">
-
-            <div th:if="${errorMessage}" class="alert alert-error" style="margin-bottom: 1rem;" th:text="${errorMessage}"></div>
-            <div th:if="${#fields.hasErrors('global')}" class="alert alert-error" style="margin-bottom: 1rem;">
-                <p th:each="err : ${#fields.errors('global')}" th:text="${err}"></p>
-            </div>
-
+            
             <div class="form-group">
                 <label for="nombreUsuario">Nombre de Usuario:</label>
                 <input type="text" id="nombreUsuario" th:field="*{nombreUsuario}" class="form-control" required />
-                <span th:if="${#fields.hasErrors('nombreUsuario')}" th:errors="*{nombreUsuario}" class="alert-error-text" style="font-size: 0.8rem; color: var(--color-error);"></span>
+                <span th:if="${#fields.hasErrors('nombreUsuario')}" th:errors="*{nombreUsuario}" class="alert-error-text" style="color: var(--color-error);"></span>
             </div>
             
             <div class="form-group">
                 <label for="correo">Correo Electrónico:</label>
-                <input type="text" id="correo" th:field="*{correo}" class="form-control" required />
-                <span th:if="${#fields.hasErrors('correo')}" th:errors="*{correo}" class="alert-error-text" style="font-size: 0.8rem; color: var(--color-error);"></span>
+                <input type="email" id="correo" th:field="*{correo}" class="form-control" required />
+                <span th:if="${#fields.hasErrors('correo')}" th:errors="*{correo}" class="alert-error-text" style="color: var(--color-error);"></span>
             </div>
             
             <div class="form-group">
                 <label for="password">Contraseña:</label>
-                <input type="password" id="password" th:field="*{password}" class="form-control" required />
-                <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="alert-error-text" style="font-size: 0.8rem; color: var(--color-error);"></span>
+                <div class="password-wrapper">
+                    <input type="password" id="password" th:field="*{password}" class="form-control" required />
+                    <button type="button" class="toggle-password-btn" data-target="password" title="Mantener presionado para ver">
+                        <i class="ph-bold ph-eye"></i>
+                    </button>
+                </div>
+                <span th:if="${#fields.hasErrors('password')}" th:errors="*{password}" class="alert-error-text" style="color: var(--color-error);"></span>
             </div>
-        
-            
+
+            <div class="form-group">
+                <label for="confirmPassword">Repetir Contraseña:</label>
+                <div class="password-wrapper">
+                    <input type="password" id="confirmPassword" th:field="*{confirmPassword}" class="form-control" required />
+                    <button type="button" class="toggle-password-btn" data-target="confirmPassword" title="Mantener presionado para ver">
+                        <i class="ph-bold ph-eye"></i>
+                    </button>
+                </div>
+                <span th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}" class="alert-error-text" style="color: var(--color-error);"></span>
+            </div>
+
             <div style="margin-top: 1.5rem;">
-                <button type="submit" class="btn-primario" style="width: 100%;">Registrar</button>
+                <button type="submit" class="btn-primario" style="width: 100%;">Continuar (Verificar)</button>
             </div>
         </form>
 
@@ -53,5 +68,34 @@
             <a th:href="@{/login}" style="margin-left: 5px;">Inicia sesión aquí</a>
         </div>
     </div>
+
+    <script>
+        document.querySelectorAll('.toggle-password-btn').forEach(btn => {
+            const targetId = btn.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            const icon = btn.querySelector('i');
+
+            // Mostrar al presionar (mouse o touch)
+            const showPassword = () => {
+                input.type = 'text';
+                icon.classList.replace('ph-eye', 'ph-eye-slash');
+            };
+
+            // Ocultar al soltar
+            const hidePassword = () => {
+                input.type = 'password';
+                icon.classList.replace('ph-eye-slash', 'ph-eye');
+            };
+
+            // Eventos Mouse (PC)
+            btn.addEventListener('mousedown', showPassword);
+            btn.addEventListener('mouseup', hidePassword);
+            btn.addEventListener('mouseleave', hidePassword);
+
+            // Eventos Touch (Móvil)
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); showPassword(); });
+            btn.addEventListener('touchend', hidePassword);
+        });
+    </script>
 </body>
 </html>

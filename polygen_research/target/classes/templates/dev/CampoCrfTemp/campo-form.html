@@ -27,7 +27,7 @@
                         <option value="FECHA">FECHA</option>
                         <option value="SI/NO">SI/NO</option>
                         <option value="SELECCION_UNICA">SELECCION UNICA (Radio)</option>
-                    </select>
+                        </select>
                 </div>
 
                 <div class="form-group">
@@ -43,9 +43,9 @@
                     
                     <div id="opcionesLista">
                         <div th:each="opcion, stat : *{opciones}" class="opcion-item" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
-                            <input type="hidden" th:name="|opciones[${stat.index}].idOpcion|" th:value="${opcion.idOpcion}" />
-                            <input type="text" th:name="|opciones[${stat.index}].etiqueta|" th:value="${opcion.etiqueta}" class="form-control" placeholder="Nombre de la opción (Ej. Leve)" required />
-                            <button type="button" class="btn-error btn-sm" onclick="eliminarOpcion(this)">
+                            <input type="hidden" th:field="*{opciones[__${stat.index}__].idOpcion}" />
+                            <input type="text" th:field="*{opciones[__${stat.index}__].etiqueta}" class="form-control" placeholder="Nombre de la opción (Ej. Leve)" required />
+                            <button type="button" class="btn-error btn-sm" onclick="this.closest('.opcion-item').remove()">
                                 <i class="ph-bold ph-trash"></i>
                             </button>
                         </div>
@@ -55,7 +55,6 @@
                         <i class="ph-bold ph-plus"></i> Añadir Opción
                     </button>
                 </div>
-
                 <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
                     <button type="submit" class="btn-primario">Guardar Campo</button>
                     <a th:href="@{/campos/list}" class="btn-secundario">Cancelar</a>
@@ -69,16 +68,17 @@
             document.addEventListener('DOMContentLoaded', () => {
                 const tipoSelect = document.getElementById('tipoCampo');
                 const opcionesContainer = document.getElementById('opcionesContainer');
+                const opcionesLista = document.getElementById('opcionesLista');
                 const btnAddOpcion = document.getElementById('btnAddOpcion');
                 
+                let opcionIndex = /*[[${campo.opciones != null ? campo.opciones.size() : 0}]]*/ 0;
+
+
                 function toggleOpciones(tipo) {
                     if (tipo === 'SELECCION_UNICA') {
                         opcionesContainer.style.display = 'block';
-                        
                         const campoId = document.querySelector('input[name="idCampo"]').value;
-                        const lista = document.getElementById('opcionesLista');
-                        
-                        if (!campoId && lista.children.length === 0) {
+                        if (!campoId && opcionIndex === 0) {
                             addNuevaOpcion('Opción 1');
                             addNuevaOpcion('Opción 2');
                         }
@@ -87,61 +87,31 @@
                     }
                 }
 
-                window.addNuevaOpcion = function(placeholder = '') {
-                    const lista = document.getElementById('opcionesLista');
+                function addNuevaOpcion(placeholder = '') {
+                    const index = opcionIndex++; 
                     
                     const div = document.createElement('div');
                     div.className = 'opcion-item';
                     div.style = 'display: flex; gap: 0.5rem; margin-bottom: 0.5rem;';
                     
-                    const inputId = document.createElement('input');
-                    inputId.type = 'hidden';
-                    inputId.value = ''; 
-                    
-
-                    const inputEtiqueta = document.createElement('input');
-                    inputEtiqueta.type = 'text';
-                    inputEtiqueta.className = 'form-control';
-                    inputEtiqueta.placeholder = placeholder || 'Nombre de la opción';
-                    inputEtiqueta.required = true;
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.name = `opciones[${index}].etiqueta`; 
+                    input.className = 'form-control';
+                    input.placeholder = placeholder || `Nombre de la opción`;
+                    input.required = true;
                     
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.className = 'btn-error btn-sm';
                     button.innerHTML = '<i class="ph-bold ph-trash"></i>';
-                    button.onclick = () => eliminarOpcion(button); 
+                    button.onclick = () => {
+                        div.remove(); 
+                    };
                     
-                    div.appendChild(inputId);
-                    div.appendChild(inputEtiqueta);
+                    div.appendChild(input);
                     div.appendChild(button);
-                    lista.appendChild(div);
-
-                    reindexOpciones();
-                }
-
-                window.eliminarOpcion = function(button) {
-                    button.closest('.opcion-item').remove();
-
-                    reindexOpciones();
-                }
-
-
-                function reindexOpciones() {
-                    const lista = document.getElementById('opcionesLista');
-                    const items = lista.querySelectorAll('.opcion-item');
-                    
-                    items.forEach((item, index) => {
-
-                        const inputId = item.querySelector('input[type="hidden"]');
-                        const inputEtiqueta = item.querySelector('input[type="text"]');
-                        
-                        if (inputId) {
-                            inputId.name = `opciones[${index}].idOpcion`;
-                        }
-                        if (inputEtiqueta) {
-                            inputEtiqueta.name = `opciones[${index}].etiqueta`;
-                        }
-                    });
+                    opcionesLista.appendChild(div);
                 }
 
                 tipoSelect.addEventListener('change', () => {
@@ -152,7 +122,6 @@
                     addNuevaOpcion();
                 });
                 toggleOpciones(tipoSelect.value);
-                reindexOpciones(); 
             });
         </script>
     </th:block>
