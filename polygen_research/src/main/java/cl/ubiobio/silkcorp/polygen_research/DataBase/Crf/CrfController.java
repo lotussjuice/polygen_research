@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfDetalleDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfForm;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.export.PdfService;
@@ -107,12 +108,11 @@ public class CrfController {
 
     @GetMapping("/list")
     public String listarTodosLosCrfs(Model model,
-            @RequestParam(name = "codigoPaciente", required = false) String codigoBusqueda) {
+                                     @RequestParam(name = "codigoPaciente", required = false) String codigoBusqueda) {
+                                        
+        CrfResumenViewDTO data = crfService.getCrfResumenView(codigoBusqueda, false);
 
-
-        CrfResumenViewDTO data = crfService.getCrfResumenView(codigoBusqueda);
-
-        model.addAttribute("camposColumnas", data.getCamposConStats());
+        model.addAttribute("camposColumnas", data.getCamposConStats()); // O getCamposActivos() según tu DTO
         model.addAttribute("filasCrf", data.getFilas());
 
         return "dev/CrfTemp/Crf-list"; 
@@ -136,4 +136,14 @@ public class CrfController {
                 .body(new InputStreamResource(pdfStream));
     }
 
+    @GetMapping("/api/detalle/{id}") // Endpoint para AJAX
+    @ResponseBody // Devuelve JSON, no HTML
+    public ResponseEntity<CrfDetalleDTO> obtenerDetalleCrf(@PathVariable Integer id) {
+        try {
+            CrfDetalleDTO detalle = crfService.getDetalleCrf(id);
+            return ResponseEntity.ok(detalle);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

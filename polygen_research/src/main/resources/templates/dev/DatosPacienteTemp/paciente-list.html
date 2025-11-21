@@ -1,54 +1,230 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
-<div th:fragment="contenido">
-    <div class="card">
-        <div class="card-header">
-            <h3><i class="ph-bold ph-users"></i> Lista de Pacientes</h3>
-            <a th:href="@{/crf/nuevo}" class="btn-primario btn-sm">
-                <i class="ph-bold ph-plus"></i> Crear Nuevo CRF
-            </a>
-        </div>
-        <div class="card-body">
 
-            <div th:if="${#lists.isEmpty(pacientes)}" class="alert" style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
-                Aún no hay pacientes registrados. Puedes crear uno nuevo usando el formulario 'Crear Nuevo CRF'.
+<head>
+    </head>
+
+<body>
+    <div th:fragment="contenido">
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="ph-bold ph-users"></i> Lista de Pacientes</h3>
+                
+                <div style="display: flex; align-items: center;">
+                    <form th:action="@{/pacientes/list}" method="get" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="text" name="codigoPaciente" class="form-control" placeholder="Buscar por Cód. Paciente..." th:value="${param.codigoPaciente}" />
+                        <button type="submit" class="btn-primario btn-sm">Buscar</button>
+                        <a th:href="@{/pacientes/list}" class="btn-secundario btn-sm" title="Limpiar">Limpiar</a>
+                    </form>
+                </div>
+
+                <a th:href="@{/crf/nuevo}" class="btn-primario btn-sm">
+                    <i class="ph-bold ph-plus"></i> Crear Nuevo CRF
+                </a>
             </div>
 
-            <div class="table-responsive-wrapper" th:if="${!#lists.isEmpty(pacientes)}">
+            <div class="card-body">
+
+                <div th:if="${#lists.isEmpty(pacientes)}" class="alert"
+                    style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
+                    Aún no hay pacientes registrados que coincidan con la búsqueda.
+                </div>
+
+                <div class="table-responsive-wrapper" th:if="${!#lists.isEmpty(pacientes)}">
+                    
+                    <table class="tabla-bonita">
+                        <thead>
+                            <tr>
+                                <th style="width: 140px; text-align: center;">Acciones</th> <th>Código</th>
+                                <th>Nombre</th>
+                                <th>Apellido</th>
+                                <th>Número</th>
+                                <th>Dirección</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${pacientes}" th:id="'row-paciente-' + ${p.idPaciente}">
+                                
+                                <td class="actions-cell" style="white-space: nowrap;">
+                                    <div style="display: flex; justify-content: center; gap: 8px;">
+                                        
+                                        <button type="button" class="btn-secundario btn-sm"
+                                                th:if="${!#lists.isEmpty(p.crfs)}"
+                                                th:onclick="|verDetalleCrf(${p.crfs[0].idCrf})|" 
+                                                title="Ver CRF Asociado">
+                                            <i class="ph-bold ph-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn-secundario btn-sm" disabled
+                                                th:if="${#lists.isEmpty(p.crfs)}"
+                                                title="Sin CRF registrado">
+                                            <i class="ph-bold ph-eye-slash" style="color: #ccc;"></i>
+                                        </button>
+
+                                        <button type="button" 
+                                                class="btn-sm"
+                                                th:classappend="${p.estado == 'ACTIVO' ? 'btn-exito' : 'btn-error'}"
+                                                th:onclick="|cambiarEstadoPaciente(${p.idPaciente})|"
+                                                th:title="${p.estado == 'ACTIVO' ? 'Desactivar Paciente' : 'Activar Paciente'}">
+                                            <i class="ph-bold" th:classappend="${p.estado == 'ACTIVO' ? 'ph-toggle-right' : 'ph-toggle-left'}"></i>
+                                        </button>
+                                    </div>
+                                </td>
+
+                                <td th:text="${p.codigoPaciente}">...</td>
+                                <td th:text="${p.nombre}">...</td>
+                                <td th:text="${p.apellido}">...</td>
+                                <td th:text="${p.numero ?: '-'}">...</td>
+                                <td th:text="${p.direccion ?: '-'}">...</td>
+                                
+                                <td>
+                                    <span class="badge" 
+                                          th:classappend="${p.estado == 'ACTIVO' ? 'badge-success' : 'badge-danger'}"
+                                          th:text="${p.estado}">ACTIVO</span>
+                                </td>
+
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="modalVerDetalle" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 600px; width: 90%; max-height: 90vh; display: flex; flex-direction: column;">
                 
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Código</th>
-                            <th>Nombre</th>
-                            <th>Apellido</th>
-                            <th>Estado</th>
-                            <th style="text-align: right; width: 150px;">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:each="p : ${pacientes}"
-                            th:classappend="${p.validationMessage != null ? 'fila-incompleta' : ''}"
-                            th:title="${p.validationMessage}">
+                <div class="modal-header" style="flex-shrink: 0;">
+                    <h2><i class="ph-bold ph-file-text"></i> Detalle CRF </h2>
+                    <span id="detalle-id-titulo" style="display: none;"></span>
+                    <span class="close-modal" onclick="cerrarModalDetalle()">&times;</span>
+                </div>
 
-                            <td th:text="${p.idPaciente}">...</td>
-                            <td th:text="${p.codigoPaciente}">...</td>
-                            <td th:text="${p.nombre}">...</td>
-                            <td th:text="${p.apellido}">...</td>
-                            <td th:text="${p.estado}">...</td>
+                <div class="modal-body" style="overflow-y: auto; padding: 1.5rem;">
+                    <div class="detail-section" style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-borde); padding-bottom: 1rem;">
+                        <h4 style="color: var(--color-primario); margin-bottom: 0.5rem;">Paciente</h4>
+                        <p><strong>Código:</strong> <span id="detalle-codigo"></span></p>
+                        <p><strong>Nombre:</strong> <span id="detalle-nombre"></span></p>
+                        <p><strong>Fecha Consulta:</strong> <span id="detalle-fecha"></span></p>
+                        <p><strong>Tipo Estudio:</strong> <span id="detalle-tipo"></span></p>
+                    </div>
 
-                            <td class="actions-cell" style="text-align: right;">
-                                <button th:onclick="|verPaciente(${p.idPaciente})|"
-                                        class="btn-secundario btn-sm"
-                                        title="Ver Detalles">
-                                    <i class="ph-bold ph-eye"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div> </div>
+                    <div class="detail-section" style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-borde); padding-bottom: 1rem;">
+                        <h4 style="color: var(--color-primario); margin-bottom: 0.5rem;">Observaciones</h4>
+                        <p id="detalle-obs" style="white-space: pre-wrap; font-style: italic; color: var(--color-texto-secundario);"></p>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4 style="color: var(--color-primario); margin-bottom: 1rem;">Datos Clínicos</h4>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tbody id="detalle-tabla-cuerpo">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                </div>
+        </div>
+
+        <th:block th:fragment="pageScript">
+            <script th:inline="javascript">
+                
+                // --- LÓGICA CAMBIAR ESTADO ---
+                async function cambiarEstadoPaciente(idPaciente) {
+                    if (!confirm("¿Estás seguro de cambiar el estado de este paciente?")) return;
+
+                    try {
+                        // Obtener token CSRF del meta tag (si existe)
+                        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+                        
+                        const headers = { 'Content-Type': 'application/json' };
+                        if (csrfToken && csrfHeader) {
+                            headers[csrfHeader] = csrfToken;
+                        }
+
+                        const response = await fetch(`/pacientes/${idPaciente}/toggle-estado`, {
+                            method: 'PUT',
+                            headers: headers
+                        });
+
+                        if (response.ok) {
+                            // Recargar para ver cambios
+                            window.location.reload();
+                        } else {
+                            const msg = await response.text();
+                            alert("Error al cambiar el estado: " + msg);
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        alert("Error de conexión.");
+                    }
+                }
+
+                // --- LÓGICA MODAL DETALLE (Misma que en CRF List) ---
+                const modalVerDetalle = document.getElementById('modalVerDetalle');
+
+                async function verDetalleCrf(idCrf) {
+                    if (!modalVerDetalle) return;
+
+                    modalVerDetalle.style.display = 'block';
+                    document.getElementById('detalle-tabla-cuerpo').innerHTML = '<tr><td colspan="2" style="text-align:center;">Cargando datos...</td></tr>';
+
+                    try {
+                        const response = await fetch(`/crf/api/detalle/${idCrf}`);
+                        if (!response.ok) throw new Error("No se pudo cargar el detalle");
+
+                        const data = await response.json();
+
+                        // Llenar datos
+                        document.getElementById('detalle-id-titulo').textContent = data.idCrf;
+                        document.getElementById('detalle-codigo').textContent = data.codigoPaciente || '-';
+                        document.getElementById('detalle-nombre').textContent = data.nombrePaciente || '-';
+                        document.getElementById('detalle-fecha').textContent = data.fechaConsulta || '-';
+                        document.getElementById('detalle-tipo').textContent = data.esCasoEstudio ? 'Caso Estudio' : 'Caso Control';
+                        document.getElementById('detalle-obs').textContent = data.observacion || 'Sin observaciones.';
+
+                        // Llenar tabla
+                        const tbody = document.getElementById('detalle-tabla-cuerpo');
+                        tbody.innerHTML = ''; 
+
+                        data.campos.forEach(campo => {
+                            const tr = document.createElement('tr');
+                            tr.style.borderBottom = '1px solid var(--color-fondo)';
+                            
+                            const tdNombre = document.createElement('td');
+                            tdNombre.textContent = campo.nombreCampo;
+                            tdNombre.style.padding = '0.5rem';
+                            tdNombre.style.fontWeight = '600';
+                            tdNombre.style.width = '60%';
+
+                            const tdValor = document.createElement('td');
+                            tdValor.textContent = campo.valor;
+                            tdValor.style.padding = '0.5rem';
+
+                            tr.appendChild(tdNombre);
+                            tr.appendChild(tdValor);
+                            tbody.appendChild(tr);
+                        });
+
+                    } catch (error) {
+                        console.error(error);
+                        document.getElementById('detalle-tabla-cuerpo').innerHTML = 
+                            `<tr><td colspan="2" style="color:var(--color-error); text-align:center;">Error al cargar: ${error.message}</td></tr>`;
+                    }
+                }
+
+                function cerrarModalDetalle() {
+                    if (modalVerDetalle) modalVerDetalle.style.display = 'none';
+                }
+
+                // Cerrar modal al hacer clic fuera
+                window.onclick = function(event) {
+                    if (event.target == modalVerDetalle) {
+                        cerrarModalDetalle();
+                    }
+                }
+            </script>
+        </th:block>
     </div>
-</div>
+</body>
 </html>

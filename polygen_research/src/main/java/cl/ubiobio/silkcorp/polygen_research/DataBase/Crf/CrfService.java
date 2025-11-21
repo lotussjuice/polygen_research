@@ -20,7 +20,8 @@ import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosCrf.DatosCrf;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPaciente;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPacienteRepository;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.RegistroActividad.RegistroActividadService;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CampoCrfStatsDTO; 
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CampoCrfStatsDTO;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfDetalleDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfForm;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenRowDTO; 
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO; 
@@ -97,18 +98,36 @@ public class CrfService {
     }
 
     @Transactional(readOnly = true)
-    public CrfResumenViewDTO getCrfResumenView(String codigoPaciente) { 
+    // Añadimos el parámetro boolean 'soloActivos'
+    public CrfResumenViewDTO getCrfResumenView(String codigoPaciente, boolean soloActivos) { 
+
         List<CampoCrf> campos = camposCRFRepository.findByActivoTrueOrderByNombre();
         List<Crf> crfs; 
 
         if (codigoPaciente != null && !codigoPaciente.trim().isEmpty()) {
-            Optional<Crf> crfOptional = crfRepository.findByDatosPacienteCodigoPacienteIgnoreCase(codigoPaciente.trim());
-            crfs = crfOptional.map(Collections::singletonList).orElseGet(Collections::emptyList);
+            if (soloActivos) {
+                // Reporte: Buscar por código Y estado ACTIVO
+                crfs = crfRepository.findByEstadoAndDatosPacienteCodigoPacienteContainingIgnoreCase("ACTIVO", codigoPaciente.trim());
+            } else {
+                // Gestión: Buscar por código (cualquier estado)
+                crfs = crfRepository.findByDatosPacienteCodigoPacienteContainingIgnoreCase(codigoPaciente.trim());
+            }
         } else {
-            crfs = crfRepository.findAll();
+            // --- CASO 2: NO HAY BÚSQUEDA (Listar todo) ---
+            if (soloActivos) {
+                // Reporte: Solo ACTIVOS
+                crfs = crfRepository.findByEstado("ACTIVO");
+            } else {
+                crfs = crfRepository.findAll();
+            }
         }
 
         return construirResumenView(campos, crfs);
+    }
+
+    // Sobrecarga para cuando no hay código (facilidad de uso)
+    public CrfResumenViewDTO getCrfResumenView(boolean soloActivos) {
+        return getCrfResumenView(null, soloActivos);
     }
 
     private CrfResumenViewDTO construirResumenView(List<CampoCrf> campos, List<Crf> crfs) {
@@ -289,5 +308,49 @@ public class CrfService {
                 .collect(Collectors.toList());
 
         return missingFieldNames;
+    }
+
+    @Transactional(readOnly = true)
+    public CrfDetalleDTO getDetalleCrf(Integer id) {
+        Crf crf = crfRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("CRF no encontrado"));
+
+        // Forzar carga de datos
+        Hibernate.initialize(crf.getDatosPaciente());
+        Hibernate.initialize(crf.getDatosCrfList());
+
+        CrfDetalleDTO dto = new CrfDetalleDTO();
+        dto.setIdCrf(crf.getIdCrf());
+        dto.setFechaConsulta(crf.getFechaConsulta());
+        dto.setEsCasoEstudio(crf.isCasoEstudio());
+        dto.setObservacion(crf.getObservacion());
+
+        if (crf.getDatosPaciente() != null) {
+            dto.setNombrePaciente(crf.getDatosPaciente().getNombre() + " " + crf.getDatosPaciente().getApellido());
+            dto.setCodigoPaciente(crf.getDatosPaciente().getCodigoPaciente());
+        }
+
+        // Convertir lista de DatosCrf a lista simple de CampoValorDTO
+        List<CrfDetalleDTO.CampoValorDTO> listaCampos = new ArrayList<>();
+        
+        // Obtenemos TODOS los campos activos para mostrar incluso los vacíos
+        List<CampoCrf> camposActivos = camposCRFRepository.findByActivoTrueOrderByNombre();
+        
+        // Mapa para búsqueda rápida de respuestas existentes
+        Map<Integer, String> respuestasMap = new HashMap<>();
+        for (DatosCrf dato : crf.getDatosCrfList()) {
+            if (dato.getCampoCrf() != null) {
+                respuestasMap.put(dato.getCampoCrf().getIdCampo(), dato.getValor());
+            }
+        }
+
+        for (CampoCrf campo : camposActivos) {
+            String valor = respuestasMap.getOrDefault(campo.getIdCampo(), "-"); // Guion si no hay respuesta
+            listaCampos.add(new CrfDetalleDTO.CampoValorDTO(campo.getNombre(), valor));
+        }
+        
+        dto.setCampos(listaCampos);
+        
+        return dto;
     }
 }

@@ -44,13 +44,13 @@ public class DatosCrfController {
 
     @GetMapping("/list")
     public String mostrarReporteDeDatos(Model model,
-            @RequestParam(name = "codigoPaciente", required = false) String codigoBusqueda) {
-        CrfResumenViewDTO data = crfService.getCrfResumenView(codigoBusqueda);
+                                        @RequestParam(name = "codigoPaciente", required = false) String codigoBusqueda) {
 
-        model.addAttribute("camposColumnas", data.getCamposActivos());
+        CrfResumenViewDTO data = crfService.getCrfResumenView(codigoBusqueda, true);
+
+        model.addAttribute("camposColumnas", data.getCamposConStats());
         model.addAttribute("filasCrf", data.getFilas());
 
-        // Return the logical name of the view template
         return "dev/DatosCrfTemp/datos-crf-list"; 
     }
 

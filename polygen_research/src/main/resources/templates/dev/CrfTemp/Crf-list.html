@@ -12,6 +12,7 @@
         <div class="card">
             <div class="card-header">
                 <h3><i class="ph-bold ph-table"></i> Gestión de CRFs</h3>
+                
                 <div style="display: flex; align-items: center;">
                     <form th:action="@{/crf/list}" method="get"
                         style="display: flex; gap: 0.5rem; align-items: center;">
@@ -21,13 +22,14 @@
                         <a th:href="@{/crf/list}" class="btn-secundario" title="Limpiar búsqueda">Limpiar</a>
                     </form>
                 </div>
+
                 <a th:href="@{/crf/nuevo}" class="btn-primario btn-sm">
                     <i class="ph-bold ph-plus"></i> Agregar Nuevo CRF
                 </a>
             </div>
+            
             <div class="card-body">
-
-                <p>Listado completo de todos los CRFs registrados. Cada fila representa un formulario completado.</p>
+                <p>Listado completo de todos los CRFs registrados.</p>
 
                 <div th:if="${#lists.isEmpty(filasCrf)}" class="alert"
                     style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
@@ -38,7 +40,8 @@
                     <table>
                         <thead>
                             <tr>
-                                <th>ID CRF</th>
+                                <th style="width: 140px; text-align: center;">Acciones</th>
+
                                 <th>Fecha Creación</th>
                                 <th>Cód. Paciente</th>
                                 <th>Nombre Paciente</th>
@@ -48,16 +51,47 @@
                                 <th>Estado Paciente</th>
 
                                 <th th:each="campoStat : ${camposColumnas}" th:text="${campoStat.campoCrf.nombre}">...</th>
-                                <th style="text-align: right; min-width: 150px;">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr th:each="fila : ${filasCrf}" th:id="'row-crf-' + ${fila.crf.idCrf}">
 
-                                <td th:text="${fila.crf.idCrf}">...</td>
-                                <td
-                                    th:text="${fila.crf.fechaConsulta != null ? #temporals.format(fila.crf.fechaConsulta, 'dd/MM/yyyy') : 'N/A'}">
-                                    ...</td>
+                                <td class="actions-cell" style="white-space: nowrap;">
+                                    <div style="display: flex; justify-content: center; gap: 8px;">
+                                        
+                                        <button type="button" class="btn-secundario btn-sm"
+                                                th:onclick="|verDetalleCrf(${fila.crf.idCrf})|" 
+                                                title="Ver Detalle Completo">
+                                            <i class="ph-bold ph-eye"></i>
+                                        </button>
+
+                                        <button type="button" class="btn-secundario btn-sm" 
+                                            th:onclick="|verDatosFaltantes(${fila.crf.idCrf})|"
+                                            title="Ver Datos Faltantes">
+                                            <i class="ph-bold ph-list-checks"></i>
+                                        </button>
+
+                                        <a th:href="@{/crf/pdf/{id}(id=${fila.crf.idCrf})}" 
+                                            class="btn btn-sm btn-outline-danger" 
+                                            title="Descargar PDF"
+                                            target="_blank" style="padding: 0.3rem 0.6rem; text-decoration: none; display: inline-flex; align-items: center;"> 
+                                            <i class="ph-bold ph-file-pdf"></i>
+                                        </a>
+                                        
+                                        <a th:href="@{/crf/editar/{id}(id=${fila.crf.idCrf})}" class="btn-secundario btn-sm"
+                                            title="Editar CRF" style="display: inline-flex; align-items: center;">
+                                            <i class="ph-bold ph-pencil-simple"></i>
+                                        </a>
+
+                                        <button type="button" class="btn-error btn-sm"
+                                            th:attr="data-crf-id=${fila.crf.idCrf}" onclick="confirmarEliminarCRF(this)"
+                                            title="Eliminar CRF">
+                                            <i class="ph-bold ph-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+
+                                <td th:text="${fila.crf.fechaConsulta != null ? #temporals.format(fila.crf.fechaConsulta, 'dd/MM/yyyy') : 'N/A'}">...</td>
                                 <td th:text="${fila.crf.datosPaciente?.codigoPaciente ?: '-'}">...</td>
                                 <td th:text="${fila.crf.datosPaciente?.nombre ?: '-'}">...</td>
                                 <td th:text="${fila.crf.datosPaciente?.apellido ?: '-'}">...</td>
@@ -68,40 +102,16 @@
                                 <td th:each="campoStat : ${camposColumnas}">
                                     <span th:text="${fila.valores.get(campoStat.campoCrf.idCampo) ?: '-'}"></span>
                                 </td>
-                                <td class="actions-cell" style="text-align: right;">
-                                    <button type="button" class="btn-secundario btn-sm" 
-                                        th:onclick="|verDatosFaltantes(${fila.crf.idCrf})|"
-                                        title="Ver Datos Faltantes">
-                                        <i class="ph-bold ph-list-checks"></i>
-                                    </button>
-                                    <a th:href="@{/crf/pdf/{id}(id=${fila.crf.idCrf})}" 
-                                        class="btn btn-sm btn-outline-danger" 
-                                        title="Descargar PDF"
-                                        target="_blank" style="padding: 0.3rem 0.6rem; text-decoration: none;"> 
-                                        <i class="ph-bold ph-file-pdf"></i>
-                                    </a>
-                                    
-                                    <a th:href="@{/crf/editar/{id}(id=${fila.crf.idCrf})}" class="btn-secundario btn-sm"
-                                        title="Editar CRF">
-                                        <i class="ph-bold ph-pencil-simple"></i>
-                                    </a>
-                                    <button type="button" class="btn-error btn-sm"
-                                        th:attr="data-crf-id=${fila.crf.idCrf}" onclick="confirmarEliminarCRF(this)"
-                                        title="Eliminar CRF">
-                                        <i class="ph-bold ph-trash"></i>
-                                    </button>
-
-
-                                    
-                                </td>
+                                
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
+
         <div id="modalConfirmacionEliminarCRF" class="modal" style="display: none;">
-            <div class="modal-content" style="max-width: 500px;">
+             <div class="modal-content" style="max-width: 500px;">
                 <div class="modal-header">
                     <h2>Confirmar Eliminación</h2>
                     <span class="close-modal" onclick="cerrarConfirmacionEliminarCRF()">&times;</span>
@@ -122,7 +132,7 @@
         </div>
 
         <div id="modalDatosFaltantes" class="modal" style="display: none;">
-            <div class="modal-content" style="max-width: 500px;">
+             <div class="modal-content" style="max-width: 500px;">
                 <div class="modal-header">
                     <h2 id="modal-faltantes-titulo">Datos Faltantes</h2>
                     <span class="close-modal" onclick="cerrarModalDatosFaltantes()">&times;</span>
@@ -132,11 +142,50 @@
                 </div>
             </div>
         </div>
+
+        <div id="modalVerDetalle" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 600px; width: 90%; max-height: 90vh; display: flex; flex-direction: column;">
+                
+                <div class="modal-header" style="flex-shrink: 0;">
+                    <h2><i class="ph-bold ph-file-text"></i> Detalle CRF</h2>
+                    <span id="detalle-id-titulo" style="display: none;"></span>
+                    <span class="close-modal" onclick="cerrarModalDetalle()">&times;</span>
+                </div>
+
+                <div class="modal-body" style="overflow-y: auto; padding: 1.5rem;">
+                    
+                    <div class="detail-section" style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-borde); padding-bottom: 1rem;">
+                        <h4 style="color: var(--color-primario); margin-bottom: 0.5rem;">Paciente</h4>
+                        <p><strong>Código:</strong> <span id="detalle-codigo"></span></p>
+                        <p><strong>Nombre:</strong> <span id="detalle-nombre"></span></p>
+                        <p><strong>Fecha Consulta:</strong> <span id="detalle-fecha"></span></p>
+                        <p><strong>Tipo Estudio:</strong> <span id="detalle-tipo"></span></p>
+                    </div>
+
+                    <div class="detail-section" style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-borde); padding-bottom: 1rem;">
+                        <h4 style="color: var(--color-primario); margin-bottom: 0.5rem;">Observaciones</h4>
+                        <p id="detalle-obs" style="white-space: pre-wrap; font-style: italic; color: var(--color-texto-secundario);"></p>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4 style="color: var(--color-primario); margin-bottom: 1rem;">Datos Clínicos</h4>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tbody id="detalle-tabla-cuerpo">
+                                </tbody>
+                        </table>
+                    </div>
+
+                </div>
+
+                </div>
+        </div>
+
         <th:block th:fragment="pageScript">
             <script th:inline="javascript">
                 const modalConfirmacionCRF = document.getElementById('modalConfirmacionEliminarCRF');
                 const confirmCrfIdText = document.getElementById('confirm-crf-id-text');
                 const confirmCrfIdInput = document.getElementById('confirm-crf-id');
+                const modalDatosFaltantes = document.getElementById('modalDatosFaltantes');
 
                 function confirmarEliminarCRF(button) {
                     const crfId = button.getAttribute('data-crf-id');
@@ -159,18 +208,9 @@
                     const csrfHeader = document.querySelector('meta[name="_csrf_header"]') ? document.querySelector('meta[name="_csrf_header"]').getAttribute('content') : null;
                     const headers = { 'Accept': 'application/json' };
                     if (csrfToken && csrfHeader) { headers[csrfHeader] = csrfToken; }
+                    
+                    // Logica de eliminar aqui
                 }
-
-                window.onclick = function (event) {
-                    if (event.target == modalConfirmacionCRF) {
-                        cerrarConfirmacionEliminarCRF();
-                    }
-                    if (event.target == modalDatosFaltantes) {
-                        cerrarModalDatosFaltantes();
-                    }
-                }
-
-                const modalDatosFaltantes = document.getElementById('modalDatosFaltantes');
 
                 async function verDatosFaltantes(crfId) {
                     if (!modalDatosFaltantes) return;
@@ -184,10 +224,7 @@
 
                     try {
                         const response = await fetch(`/crf/api/crf/${crfId}/missing-data`);
-                        
-                        if (!response.ok) {
-                            throw new Error('No se pudo cargar la información.');
-                        }
+                        if (!response.ok) throw new Error('No se pudo cargar la información.');
                         
                         const missingFields = await response.json();
                         
@@ -201,16 +238,118 @@
                             html += '</ul>';
                             body.innerHTML = html;
                         }
-
                     } catch (error) {
                         body.innerHTML = `<p style="color: var(--color-error);">${error.message}</p>`;
                     }
                 }
 
                 function cerrarModalDatosFaltantes() {
-                    if (modalDatosFaltantes) {
-                        modalDatosFaltantes.style.display = 'none';
+                    if (modalDatosFaltantes) modalDatosFaltantes.style.display = 'none';
+                }
+
+                // Logica del modal
+                const modalVerDetalle = document.getElementById('modalVerDetalle');
+
+                async function verDetalleCrf(idCrf) {
+                    if (!modalVerDetalle) return;
+
+                    modalVerDetalle.style.display = 'block';
+                    document.getElementById('detalle-tabla-cuerpo').innerHTML = '<tr><td colspan="2" style="text-align:center;">Cargando datos...</td></tr>';
+
+                    try {
+                        const response = await fetch(`/crf/api/detalle/${idCrf}`);
+                        if (!response.ok) throw new Error("No se pudo cargar el detalle");
+
+                        const data = await response.json();
+
+                        document.getElementById('detalle-id-titulo').textContent = data.idCrf;
+                        document.getElementById('detalle-codigo').textContent = data.codigoPaciente || '-';
+                        document.getElementById('detalle-nombre').textContent = data.nombrePaciente || '-';
+                        document.getElementById('detalle-fecha').textContent = data.fechaConsulta || '-';
+                        document.getElementById('detalle-tipo').textContent = data.esCasoEstudio ? 'Caso Estudio' : 'Caso Control';
+                        document.getElementById('detalle-obs').textContent = data.observacion || 'Sin observaciones.';
+
+                        const tbody = document.getElementById('detalle-tabla-cuerpo');
+                        tbody.innerHTML = ''; 
+
+                        data.campos.forEach(campo => {
+                            const tr = document.createElement('tr');
+                            tr.style.borderBottom = '1px solid var(--color-fondo)';
+                            
+                            const tdNombre = document.createElement('td');
+                            tdNombre.textContent = campo.nombreCampo;
+                            tdNombre.style.padding = '0.5rem';
+                            tdNombre.style.fontWeight = '600';
+                            tdNombre.style.width = '60%';
+
+                            const tdValor = document.createElement('td');
+                            tdValor.textContent = campo.valor;
+                            tdValor.style.padding = '0.5rem';
+
+                            tr.appendChild(tdNombre);
+                            tr.appendChild(tdValor);
+                            tbody.appendChild(tr);
+                        });
+
+                    } catch (error) {
+                        console.error(error);
+                        document.getElementById('detalle-tabla-cuerpo').innerHTML = 
+                            `<tr><td colspan="2" style="color:var(--color-error); text-align:center;">Error al cargar: ${error.message}</td></tr>`;
                     }
+                }
+
+                function cerrarModalDetalle() {
+                    if (modalVerDetalle) modalVerDetalle.style.display = 'none';
+                }
+
+                // Manejador global de clics fuera de los modales
+                window.onclick = function (event) {
+                    if (event.target == modalConfirmacionCRF) cerrarConfirmacionEliminarCRF();
+                    if (event.target == modalDatosFaltantes) cerrarModalDatosFaltantes();
+                    if (event.target == modalVerDetalle) cerrarModalDetalle();
+                }
+
+                // Logica script slider
+                const slider = document.querySelector('.table-responsive-wrapper');
+                let isDown = false;
+                let startX;
+                let startY;
+                let scrollLeft;
+                let scrollTop;
+
+                if (slider) {
+                    slider.addEventListener('mousedown', (e) => {
+                        // Ignorar si se hace clic en un botón o enlace dentro de la tabla
+                        if (e.target.closest('button') || e.target.closest('a')) return;
+
+                        isDown = true;
+                        slider.style.cursor = 'grabbing';
+                        startX = e.pageX - slider.offsetLeft;
+                        startY = e.pageY - slider.offsetTop;
+                        scrollLeft = slider.scrollLeft;
+                        scrollTop = slider.scrollTop;
+                    });
+
+                    slider.addEventListener('mouseleave', () => {
+                        isDown = false;
+                        slider.style.cursor = 'grab';
+                    });
+
+                    slider.addEventListener('mouseup', () => {
+                        isDown = false;
+                        slider.style.cursor = 'grab';
+                    });
+
+                    slider.addEventListener('mousemove', (e) => {
+                        if (!isDown) return;
+                        e.preventDefault();
+                        const x = e.pageX - slider.offsetLeft;
+                        const y = e.pageY - slider.offsetTop;
+                        const walkX = (x - startX); 
+                        const walkY = (y - startY); 
+                        slider.scrollLeft = scrollLeft - walkX;
+                        slider.scrollTop = scrollTop - walkY;
+                    });
                 }
             </script>
         </th:block>

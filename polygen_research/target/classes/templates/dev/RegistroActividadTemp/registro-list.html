@@ -1,26 +1,205 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
-<div th:fragment="contenido">
-    <h1>Registro de Actividad (Logs)</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Usuario</th>
-                <th>ID CRF</th>
-                <th>Tipo Actividad</th>
-                <th>Fecha</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="r : ${registros}">
-                <td th:text="${r.idRegistro}">...</td>
-                <td th:text="${r.usuario?.nombreUsuario}">...</td>
-                <td th:text="${r.crf?.idCrf}">...</td>
-                <td th:text="${r.tipoActividad}">...</td>
-                <td th:text="${r.fechaActividad}">...</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
+
+<head>
+</head>
+
+<body>
+    <div th:fragment="contenido">
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="ph-bold ph-archive"></i> Historial de Modificaciones</h3>
+            </div>
+
+            <div class="card-body">
+                <p>Registro de auditoría de todas las acciones realizadas en el sistema.</p>
+
+                <div class="table-responsive-wrapper">
+                    <table class="tabla-bonita">
+                        <thead>
+                            <tr>
+                                <th>ID Log</th>
+                                <th>Usuario</th>
+                                <th>Correo</th>
+                                
+                                <th>Cód. Paciente</th>
+                                
+                                <th>Fecha y Hora</th>
+                                <th>Acción</th>
+                                <th style="text-align: center; width: 80px;">Detalle</th> 
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="r : ${registros}">
+                                <td th:text="${r.idRegistro}">...</td>
+
+                                <td th:text="${r.usuario?.nombreUsuario ?: 'Usuario Eliminado'}">...</td>
+                                <td th:text="${r.usuario?.whitelist?.correo ?: '-'}">...</td>
+                                
+                                <td th:text="${r.crf?.datosPaciente?.codigoPaciente ?: 'N/A'}">...</td>
+                                
+                                <td th:text="${r.fechaActividad != null ? #temporals.format(r.fechaActividad, 'dd/MM/yyyy HH:mm') : ''}">...</td>
+
+                                <td>
+                                    <span th:switch="${r.tipoActividad}" 
+                                          class="badge" 
+                                          th:classappend="${r.tipoActividad == 'CREACION_CRF' ? 'badge-success' : (r.tipoActividad == 'ELIMINACION_CRF' ? 'badge-danger' : 'badge-warning')}">
+                                        
+                                        <span th:case="'CREACION_CRF'">Ficha Creada</span>
+                                        <span th:case="'ACTUALIZACION_CRF'">Ficha Editada</span>
+                                        <span th:case="'ELIMINACION_CRF'">Ficha Eliminada</span>
+                                        <span th:case="'CREACION_USUARIO'">Usuario Creado</span>
+                                        <span th:case="*" th:text="${r.tipoActividad}"></span>
+                                    </span>
+                                </td>
+
+                                <td style="text-align: center;">
+                                    <button th:if="${r.crf != null}" 
+                                            type="button" 
+                                            class="btn-secundario btn-sm"
+                                            th:onclick="|verDetalleCrf(${r.crf.idCrf})|" 
+                                            title="Ver Ficha Asociada">
+                                        <i class="ph-bold ph-eye"></i>
+                                    </button>
+                                    <span th:unless="${r.crf != null}" style="color: var(--color-texto-secundario);">-</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div id="modalVerDetalle" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 600px; width: 90%; max-height: 90vh; display: flex; flex-direction: column;">
+                
+                <div class="modal-header" style="flex-shrink: 0;">
+                    <h2><i class="ph-bold ph-file-text"></i> Detalle CRF </h2>
+                    <span id="detalle-id-titulo" style="display: none;"></span>
+                    <span class="close-modal" onclick="cerrarModalDetalle()">&times;</span>
+                </div>
+
+                <div class="modal-body" style="overflow-y: auto; padding: 1.5rem;">
+                    <div class="detail-section" style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-borde); padding-bottom: 1rem;">
+                        <h4 style="color: var(--color-primario); margin-bottom: 0.5rem;">Paciente</h4>
+                        <p><strong>Código:</strong> <span id="detalle-codigo"></span></p>
+                        <p><strong>Nombre:</strong> <span id="detalle-nombre"></span></p>
+                        <p><strong>Fecha Consulta:</strong> <span id="detalle-fecha"></span></p>
+                        <p><strong>Tipo Estudio:</strong> <span id="detalle-tipo"></span></p>
+                    </div>
+
+                    <div class="detail-section" style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-borde); padding-bottom: 1rem;">
+                        <h4 style="color: var(--color-primario); margin-bottom: 0.5rem;">Observaciones</h4>
+                        <p id="detalle-obs" style="white-space: pre-wrap; font-style: italic; color: var(--color-texto-secundario);"></p>
+                    </div>
+
+                    <div class="detail-section">
+                        <h4 style="color: var(--color-primario); margin-bottom: 1rem;">Datos Clínicos</h4>
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tbody id="detalle-tabla-cuerpo">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <th:block th:fragment="pageScript">
+            <script th:inline="javascript">
+                // --- LÓGICA DEL MODAL ---
+                const modalVerDetalle = document.getElementById('modalVerDetalle');
+
+                async function verDetalleCrf(idCrf) {
+                    if (!modalVerDetalle) return;
+
+                    modalVerDetalle.style.display = 'block';
+                    document.getElementById('detalle-tabla-cuerpo').innerHTML = '<tr><td colspan="2" style="text-align:center;">Cargando datos...</td></tr>';
+
+                    try {
+                        // Usa el mismo endpoint que ya creamos para la lista de CRFs
+                        const response = await fetch(`/crf/api/detalle/${idCrf}`);
+                        
+                        if (!response.ok) throw new Error("No se pudo cargar el detalle (posiblemente eliminado)");
+
+                        const data = await response.json();
+
+                        document.getElementById('detalle-id-titulo').textContent = data.idCrf;
+                        document.getElementById('detalle-codigo').textContent = data.codigoPaciente || '-';
+                        document.getElementById('detalle-nombre').textContent = data.nombrePaciente || '-';
+                        document.getElementById('detalle-fecha').textContent = data.fechaConsulta || '-';
+                        document.getElementById('detalle-tipo').textContent = data.esCasoEstudio ? 'Caso Estudio' : 'Caso Control';
+                        document.getElementById('detalle-obs').textContent = data.observacion || 'Sin observaciones.';
+
+                        const tbody = document.getElementById('detalle-tabla-cuerpo');
+                        tbody.innerHTML = ''; 
+
+                        data.campos.forEach(campo => {
+                            const tr = document.createElement('tr');
+                            tr.style.borderBottom = '1px solid var(--color-fondo)';
+                            
+                            const tdNombre = document.createElement('td');
+                            tdNombre.textContent = campo.nombreCampo;
+                            tdNombre.style.padding = '0.5rem';
+                            tdNombre.style.fontWeight = '600';
+                            tdNombre.style.width = '60%';
+
+                            const tdValor = document.createElement('td');
+                            tdValor.textContent = campo.valor;
+                            tdValor.style.padding = '0.5rem';
+
+                            tr.appendChild(tdNombre);
+                            tr.appendChild(tdValor);
+                            tbody.appendChild(tr);
+                        });
+
+                    } catch (error) {
+                        console.error(error);
+                        document.getElementById('detalle-tabla-cuerpo').innerHTML = 
+                            `<tr><td colspan="2" style="color:var(--color-error); text-align:center;">Error: ${error.message}</td></tr>`;
+                    }
+                }
+
+                function cerrarModalDetalle() {
+                    if (modalVerDetalle) modalVerDetalle.style.display = 'none';
+                }
+
+                window.onclick = function(event) {
+                    if (event.target == modalVerDetalle) {
+                        cerrarModalDetalle();
+                    }
+                }
+
+                // --- DRAG TO SCROLL (Opcional) ---
+                const slider = document.querySelector('.table-responsive-wrapper');
+                let isDown = false;
+                let startX, startY, scrollLeft, scrollTop;
+
+                if (slider) {
+                    slider.addEventListener('mousedown', (e) => {
+                        if (e.target.closest('button') || e.target.closest('a')) return;
+                        isDown = true;
+                        slider.style.cursor = 'grabbing';
+                        startX = e.pageX - slider.offsetLeft;
+                        startY = e.pageY - slider.offsetTop;
+                        scrollLeft = slider.scrollLeft;
+                        scrollTop = slider.scrollTop;
+                    });
+                    slider.addEventListener('mouseleave', () => { isDown = false; slider.style.cursor = 'grab'; });
+                    slider.addEventListener('mouseup', () => { isDown = false; slider.style.cursor = 'grab'; });
+                    slider.addEventListener('mousemove', (e) => {
+                        if (!isDown) return;
+                        e.preventDefault();
+                        const x = e.pageX - slider.offsetLeft;
+                        const y = e.pageY - slider.offsetTop;
+                        const walkX = (x - startX);
+                        const walkY = (y - startY);
+                        slider.scrollLeft = scrollLeft - walkX;
+                        slider.scrollTop = scrollTop - walkY;
+                    });
+                }
+            </script>
+        </th:block>
+    </div>
+</body>
 </html>

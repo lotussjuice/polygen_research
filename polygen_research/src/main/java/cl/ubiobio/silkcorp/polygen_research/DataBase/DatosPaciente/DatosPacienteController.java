@@ -54,4 +54,15 @@ public class DatosPacienteController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @PutMapping("/{id}/toggle-estado")
+    @ResponseBody 
+    public ResponseEntity<String> toggleEstadoPaciente(@PathVariable Integer id) {
+        try {
+            pacienteService.toggleEstado(id);
+            return ResponseEntity.ok("Estado actualizado correctamente.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error al cambiar estado: " + e.getMessage());
+        }
+    }
 }

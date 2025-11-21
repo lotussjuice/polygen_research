@@ -6,6 +6,8 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import cl.ubiobio.silkcorp.polygen_research.DataBase.Crf.Crf;
+
 @Service
 public class DatosPacienteService {
 
@@ -16,7 +18,7 @@ public class DatosPacienteService {
     }
     
     public List<DatosPaciente> getAllPacientes() {
-
+        // Debes crear este método en el repositorio (ver paso 2)
         return pacienteRepository.findAll(); 
     }
 
@@ -47,5 +49,26 @@ public class DatosPacienteService {
 
     public void deletePaciente(Integer id) {
         pacienteRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void toggleEstado(Integer id) {
+        DatosPaciente paciente = pacienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
+        
+        // Determinar nuevo estado (Toggle)
+        String nuevoEstado = "ACTIVO".equals(paciente.getEstado()) ? "INACTIVO" : "ACTIVO";
+        
+        // 1. Cambiar estado del Paciente
+        paciente.setEstado(nuevoEstado);
+        
+        // 2. Propagar cambio a sus CRFs (Requisito crítico)
+        if (paciente.getCrfs() != null) {
+            for (Crf crf : paciente.getCrfs()) {
+                crf.setEstado(nuevoEstado);
+            }
+        }
+        
+        pacienteRepository.save(paciente);
     }
 }

@@ -87,11 +87,8 @@ public class StataExportService {
 
     private StataPreviewDTO prepararDatosStata(String criteriosJson) throws IOException {
 
-        CrfResumenViewDTO data = crfService.getCrfResumenView();
-        
+        CrfResumenViewDTO data = crfService.getCrfResumenView(true);
         List<CampoCrfStatsDTO> columnasDinamicasStats = data.getCamposConStats();
-
-        
         List<CrfResumenRowDTO> filas = data.getFilas();
 
         Map<Integer, List<CriterioDTO>> criteriosMap;

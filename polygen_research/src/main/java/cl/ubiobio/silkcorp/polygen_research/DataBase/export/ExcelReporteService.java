@@ -46,21 +46,17 @@ public class ExcelReporteService {
     public ByteArrayInputStream generarReporteDicotomizado(String criteriosJson) throws IOException {
 
         Map<Integer, List<CriterioDTO>> criteriosMap = parsearCriterios(criteriosJson);
-        CrfResumenViewDTO data = crfService.getCrfResumenView();
         
-   
-        List<CampoCrfStatsDTO> columnasStats = data.getCamposConStats(); 
+        CrfResumenViewDTO data = crfService.getCrfResumenView(true); 
 
-        
+        List<CampoCrfStatsDTO> columnasStats = data.getCamposConStats(); 
         List<CrfResumenRowDTO> filas = data.getFilas();
         Map<String, Double> puntosDeCorte = preCalcularPuntosDeCorte(filas, criteriosMap);
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Reporte Dicotomizado");
-            
 
-            crearEncabezado(sheet.createRow(0), columnasStats, criteriosMap); 
-
+            crearEncabezado(sheet.createRow(0), columnasStats, criteriosMap);
 
             int rowIdx = 1;
             for (CrfResumenRowDTO fila : filas) {
@@ -74,17 +70,18 @@ public class ExcelReporteService {
         }
     }
 
-
     private Map<Integer, List<CriterioDTO>> parsearCriterios(String criteriosJson) throws IOException {
         try {
-            TypeReference<HashMap<Integer, List<CriterioDTO>>> typeRef = new TypeReference<>() {};
+            TypeReference<HashMap<Integer, List<CriterioDTO>>> typeRef = new TypeReference<>() {
+            };
             return objectMapper.readValue(criteriosJson, typeRef);
         } catch (IOException e) {
             throw new IOException("Error parseando JSON de criterios", e);
         }
     }
 
-    public Map<String, Double> preCalcularPuntosDeCorte(List<CrfResumenRowDTO> filas, Map<Integer, List<CriterioDTO>> criteriosMap) {
+    public Map<String, Double> preCalcularPuntosDeCorte(List<CrfResumenRowDTO> filas,
+            Map<Integer, List<CriterioDTO>> criteriosMap) {
         Map<String, Double> puntosDeCorte = new HashMap<>();
 
         for (Map.Entry<Integer, List<CriterioDTO>> entry : criteriosMap.entrySet()) {
@@ -92,7 +89,8 @@ public class ExcelReporteService {
             List<CriterioDTO> criterios = entry.getValue();
 
             boolean necesitaCalculo = criterios.stream()
-                    .anyMatch(c -> c.getTipo().equals("media") || c.getTipo().equals("promedio") || c.getTipo().equals("mediana"));
+                    .anyMatch(c -> c.getTipo().equals("media") || c.getTipo().equals("promedio")
+                            || c.getTipo().equals("mediana"));
 
             if (necesitaCalculo) {
                 List<Double> valoresColumna = getValoresNumericos(filas, campoId);
@@ -122,19 +120,17 @@ public class ExcelReporteService {
         }
     }
 
-    
-    
     public int calcularValorDicotomizado(double valorNum, CriterioDTO criterio, double puntoCorteCalculado) {
 
         double puntoCorte;
 
         return switch (criterio.getTipo()) {
             case "media", "promedio" -> {
-                puntoCorte = puntoCorteCalculado; 
+                puntoCorte = puntoCorteCalculado;
                 yield (valorNum >= puntoCorte) ? 1 : 0;
             }
             case "mediana" -> {
-                puntoCorte = puntoCorteCalculado; 
+                puntoCorte = puntoCorteCalculado;
                 yield (valorNum >= puntoCorte) ? 1 : 0;
             }
             case "personalizado" ->
@@ -144,15 +140,12 @@ public class ExcelReporteService {
         };
     }
 
-    
-
-    private void crearEncabezado(Row headerRow, List<CampoCrfStatsDTO> columnasStats, Map<Integer, List<CriterioDTO>> criteriosMap) {
+    private void crearEncabezado(Row headerRow, List<CampoCrfStatsDTO> columnasStats,
+            Map<Integer, List<CriterioDTO>> criteriosMap) {
 
         int cellIdx = 0;
         headerRow.createCell(cellIdx++).setCellValue("ID CRF");
         headerRow.createCell(cellIdx++).setCellValue("Cód. Paciente");
-        
-
 
         for (CampoCrfStatsDTO stat : columnasStats) {
             CampoCrf campo = stat.getCampoCrf();
@@ -167,23 +160,22 @@ public class ExcelReporteService {
         }
     }
 
-
-    private void llenarFila(Row dataRow, CrfResumenRowDTO fila, List<CampoCrfStatsDTO> columnasStats, Map<Integer, List<CriterioDTO>> criteriosMap, Map<String, Double> puntosDeCorte) {
+    private void llenarFila(Row dataRow, CrfResumenRowDTO fila, List<CampoCrfStatsDTO> columnasStats,
+            Map<Integer, List<CriterioDTO>> criteriosMap, Map<String, Double> puntosDeCorte) {
 
         int cellIdx = 0;
 
         dataRow.createCell(cellIdx++).setCellValue(fila.getCrf().getIdCrf());
-        dataRow.createCell(cellIdx++).setCellValue(fila.getCrf().getDatosPaciente() != null ? fila.getCrf().getDatosPaciente().getCodigoPaciente() : "");
+        dataRow.createCell(cellIdx++).setCellValue(
+                fila.getCrf().getDatosPaciente() != null ? fila.getCrf().getDatosPaciente().getCodigoPaciente() : "");
         for (CampoCrfStatsDTO stat : columnasStats) {
-            CampoCrf campo = stat.getCampoCrf(); 
+            CampoCrf campo = stat.getCampoCrf();
             Integer campoId = campo.getIdCampo();
             String valorCrudo = fila.getValores().get(campoId);
 
-            
             dataRow.createCell(cellIdx++).setCellValue(valorCrudo != null ? valorCrudo : "-");
-            
-            double valorNum = parseDouble(valorCrudo);
 
+            double valorNum = parseDouble(valorCrudo);
 
             if (criteriosMap.containsKey(campoId)) {
                 for (CriterioDTO criterio : criteriosMap.get(campoId)) {
@@ -191,7 +183,8 @@ public class ExcelReporteService {
                         dataRow.createCell(cellIdx++).setCellValue("");
                     } else {
 
-                        double puntoCorteCalculado = puntosDeCorte.getOrDefault(campoId + "_" + criterio.getTipo(), 0.0);
+                        double puntoCorteCalculado = puntosDeCorte.getOrDefault(campoId + "_" + criterio.getTipo(),
+                                0.0);
 
                         int valorDicotomizado = calcularValorDicotomizado(valorNum, criterio, puntoCorteCalculado);
                         dataRow.createCell(cellIdx++).setCellValue(valorDicotomizado);
@@ -201,7 +194,6 @@ public class ExcelReporteService {
         }
     }
 
-    
     public double parseDouble(String valor) {
         if (valor == null || valor.trim().isEmpty() || valor.trim().equals("-")) {
             return Double.NaN;
@@ -213,14 +205,13 @@ public class ExcelReporteService {
         }
     }
 
-    
     private List<Double> getValoresNumericos(List<CrfResumenRowDTO> filas, Integer campoId) {
         List<Double> valores = new ArrayList<>();
         for (CrfResumenRowDTO fila : filas) {
             String valorCrudo = fila.getValores().get(campoId);
-            
-            double valorNum = parseDouble(valorCrudo); 
-            
+
+            double valorNum = parseDouble(valorCrudo);
+
             if (!Double.isNaN(valorNum)) {
                 valores.add(valorNum);
             }
@@ -250,7 +241,7 @@ public class ExcelReporteService {
                 default -> false;
             };
         } catch (NumberFormatException | IllegalStateException e) {
-            return false; 
+            return false;
         }
     }
 }

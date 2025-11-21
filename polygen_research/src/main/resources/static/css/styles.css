@@ -1019,3 +1019,38 @@ tr.fila-incompleta td {
     align-items: center;
     justify-content: center;
 }
+
+
+.table-responsive-wrapper {
+    overflow: auto; /* Asegura que haya scroll */
+    cursor: grab;   /* Manito abierta */
+    cursor: -webkit-grab;
+      /* Evita que se seleccione el texto al arrastrar */
+     user-select: none; 
+    -webkit-user-select: none; 
+}
+
+
+.table-responsive-wrapper.active {
+    cursor: grabbing; /* Manito cerrada */
+    cursor: -webkit-grabbing;
+}
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge-success { background-color: #d4edda; color: #155724; } /* Verde */
+.badge-warning { background-color: #fff3cd; color: #856404; } /* Amarillo */
+.badge-danger { background-color: #f8d7da; color: #721c24; } /* Rojo */
+
+.tabla-bonita th, 
+.tabla-bonita td {
+    text-align: center;      /* Centrado Horizontal */
+    vertical-align: middle;  /* Centrado Vertical */
+    padding: 0.9rem;         /* Espaciado cómodo */
+}
