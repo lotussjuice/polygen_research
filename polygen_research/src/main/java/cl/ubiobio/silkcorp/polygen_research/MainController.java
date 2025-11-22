@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import cl.ubiobio.silkcorp.polygen_research.dashboard.DashboardService;
+import cl.ubiobio.silkcorp.polygen_research.faq.FaqService;
 import cl.ubiobio.silkcorp.polygen_research.notes.Nota;
 import cl.ubiobio.silkcorp.polygen_research.notes.NotaService;
 
@@ -15,11 +16,13 @@ import cl.ubiobio.silkcorp.polygen_research.notes.NotaService;
 public class MainController {
 
     private final DashboardService dashboardService;
-    private final NotaService notaService; 
+    private final NotaService notaService;
+    private final FaqService faqService;
 
-    public MainController(DashboardService dashboardService, NotaService notaService) {
+    public MainController(DashboardService dashboardService, NotaService notaService, FaqService faqService) {
         this.dashboardService = dashboardService;
         this.notaService = notaService;
+        this.faqService = faqService;
     }
 
     @GetMapping("/inicio") 
@@ -45,6 +48,15 @@ public class MainController {
         notaService.eliminar(id);
         return "redirect:/inicio";
     }
+
+
+    @GetMapping("/faq")
+    public String mostrarFaq(Model model) {
+        model.addAttribute("listaFaqs", faqService.obtenerPreguntas());
+        return "faq/faq";
+    }
+
+
 
     // Por defecto redirigir a login
     @GetMapping("/")

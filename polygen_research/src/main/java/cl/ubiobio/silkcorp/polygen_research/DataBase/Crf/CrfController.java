@@ -19,11 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-// --- IMPORTACIÓN AÑADIDA (Faltaba esta) ---
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfDetalleDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfForm;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.StataPreviewDTO; // Si usas esto en otros lados
 import cl.ubiobio.silkcorp.polygen_research.DataBase.export.PdfService;
 
 @Controller
@@ -89,7 +87,6 @@ public class CrfController {
 
     @GetMapping("/reporte")
     public String mostrarReporteCrf(Model model) {
-        // CORRECCIÓN AQUÍ: Pasamos 'false' explícitamente para evitar el error de argumentos
         CrfResumenViewDTO data = crfService.getCrfResumenView(false);
 
         model.addAttribute("camposColumnas", data.getCamposConStats()); 

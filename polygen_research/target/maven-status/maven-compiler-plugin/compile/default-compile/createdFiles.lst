@@ -37,10 +37,12 @@ cl\ubiobio\silkcorp\polygen_research\DataBase\Crf\CrfService.class
 cl\ubiobio\silkcorp\polygen_research\notes\NotaRepository.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\DatosPaciente\DatosPaciente.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\OpcionCampoCrf\OpcionCampoCrf.class
+cl\ubiobio\silkcorp\polygen_research\faq\FaqItem.class
 cl\ubiobio\silkcorp\polygen_research\security\EmailService.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\dto\CriterioDTO.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\DatosPaciente\DatosPacienteRepository.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\dto\CrfForm.class
+cl\ubiobio\silkcorp\polygen_research\faq\FaqService.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\Usuario\UsuarioService.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\DatosPaciente\DatosPacienteService.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\Usuario\Usuario.class

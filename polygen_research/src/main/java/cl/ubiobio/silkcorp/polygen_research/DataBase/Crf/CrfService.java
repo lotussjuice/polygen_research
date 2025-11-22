@@ -131,7 +131,6 @@ public class CrfService {
             }
             rowDTO.setValores(valoresMap);
 
-            // LÓGICA AÑADIDA: Calcular Datos Faltantes para el círculo amarillo
             int contadorFaltantes = 0;
             for (CampoCrf campo : campos) {
                 String valor = valoresMap.get(campo.getIdCampo());
@@ -140,7 +139,6 @@ public class CrfService {
                 }
             }
             rowDTO.setDatosFaltantes(contadorFaltantes);
-            // -----------------------------------------------------------
 
             filasDTO.add(rowDTO);
         }
@@ -220,7 +218,6 @@ public class CrfService {
         Crf crf = crfRepository.findById(crfId)
                 .orElseThrow(() -> new RuntimeException("CRF no encontrado con ID: " + crfId));
                 
-        // 1. Actualizar datos del paciente y cabecera
         DatosPaciente paciente = crf.getDatosPaciente();
         DatosPaciente formPaciente = form.getDatosPaciente();
         
@@ -233,8 +230,6 @@ public class CrfService {
         crf.setCasoEstudio(form.isEsCasoEstudio());
         crf.setObservacion(form.getObservacion());
         
-        // 2. Actualización Inteligente de Datos (Smart Merge)
-        // En lugar de borrar todo, mapeamos lo existente para actualizarlo
         Map<Integer, DatosCrf> datosExistentesMap = crf.getDatosCrfList().stream()
                 .collect(Collectors.toMap(
                     d -> d.getCampoCrf().getIdCampo(), 
@@ -281,7 +276,6 @@ public class CrfService {
         registroService.logCrfActivity("ACTUALIZACION_CRF", crf);
     }
 
-    // Este método se mantiene solo para la creación inicial
     private void procesarYAdjuntarRespuestas(List<DatosCrf> respuestasDelForm, Crf crf) {
         if (respuestasDelForm == null) return;
         
