@@ -1,7 +1,6 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.Crf; 
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +43,6 @@ public class CrfService {
         this.camposCRFRepository = camposCRFRepository;
     }
 
-
     public CrfForm prepararNuevoCrfForm() {
         CrfForm form = new CrfForm();
         form.getDatosPaciente().setEstado("ACTIVO");
@@ -71,7 +69,7 @@ public class CrfService {
         crf.setEstado("ACTIVO");
         
         if (pacienteGuardado.getCrfs() == null) {
-            pacienteGuardado.setCrfs(new java.util.ArrayList<>());
+            pacienteGuardado.setCrfs(new ArrayList<>());
         }
         pacienteGuardado.getCrfs().add(crf);
 
@@ -91,41 +89,25 @@ public class CrfService {
     }
 
     @Transactional(readOnly = true)
-    public CrfResumenViewDTO getCrfResumenView() {
-        List<CampoCrf> campos = camposCRFRepository.findByActivoTrueOrderByNombre();
-        List<Crf> crfs = crfRepository.findAll();
-        return construirResumenView(campos, crfs);
-    }
-
-    @Transactional(readOnly = true)
-    // Añadimos el parámetro boolean 'soloActivos'
     public CrfResumenViewDTO getCrfResumenView(String codigoPaciente, boolean soloActivos) { 
-
         List<CampoCrf> campos = camposCRFRepository.findByActivoTrueOrderByNombre();
         List<Crf> crfs; 
 
         if (codigoPaciente != null && !codigoPaciente.trim().isEmpty()) {
-            if (soloActivos) {
-                // Reporte: Buscar por código Y estado ACTIVO
-                crfs = crfRepository.findByEstadoAndDatosPacienteCodigoPacienteContainingIgnoreCase("ACTIVO", codigoPaciente.trim());
-            } else {
-                // Gestión: Buscar por código (cualquier estado)
-                crfs = crfRepository.findByDatosPacienteCodigoPacienteContainingIgnoreCase(codigoPaciente.trim());
-            }
+            crfs = crfRepository.findByDatosPacienteCodigoPacienteContainingIgnoreCase(codigoPaciente.trim());
         } else {
-            // --- CASO 2: NO HAY BÚSQUEDA (Listar todo) ---
-            if (soloActivos) {
-                // Reporte: Solo ACTIVOS
-                crfs = crfRepository.findByEstado("ACTIVO");
-            } else {
-                crfs = crfRepository.findAll();
-            }
+            crfs = crfRepository.findAll();
+        }
+
+        if (soloActivos) {
+            crfs = crfs.stream()
+                    .filter(c -> c.getDatosPaciente() != null && "ACTIVO".equalsIgnoreCase(c.getDatosPaciente().getEstado()))
+                    .collect(Collectors.toList());
         }
 
         return construirResumenView(campos, crfs);
     }
 
-    // Sobrecarga para cuando no hay código (facilidad de uso)
     public CrfResumenViewDTO getCrfResumenView(boolean soloActivos) {
         return getCrfResumenView(null, soloActivos);
     }
@@ -148,6 +130,18 @@ public class CrfService {
                 }
             }
             rowDTO.setValores(valoresMap);
+
+            // LÓGICA AÑADIDA: Calcular Datos Faltantes para el círculo amarillo
+            int contadorFaltantes = 0;
+            for (CampoCrf campo : campos) {
+                String valor = valoresMap.get(campo.getIdCampo());
+                if (valor == null || valor.trim().isEmpty()) {
+                    contadorFaltantes++;
+                }
+            }
+            rowDTO.setDatosFaltantes(contadorFaltantes);
+            // -----------------------------------------------------------
+
             filasDTO.add(rowDTO);
         }
         
@@ -226,10 +220,10 @@ public class CrfService {
         Crf crf = crfRepository.findById(crfId)
                 .orElseThrow(() -> new RuntimeException("CRF no encontrado con ID: " + crfId));
                 
+        // 1. Actualizar datos del paciente y cabecera
         DatosPaciente paciente = crf.getDatosPaciente();
-        
-
         DatosPaciente formPaciente = form.getDatosPaciente();
+        
         paciente.setCodigoPaciente(formPaciente.getCodigoPaciente());
         paciente.setNombre(formPaciente.getNombre());
         paciente.setApellido(formPaciente.getApellido());
@@ -239,16 +233,55 @@ public class CrfService {
         crf.setCasoEstudio(form.isEsCasoEstudio());
         crf.setObservacion(form.getObservacion());
         
+        // 2. Actualización Inteligente de Datos (Smart Merge)
+        // En lugar de borrar todo, mapeamos lo existente para actualizarlo
+        Map<Integer, DatosCrf> datosExistentesMap = crf.getDatosCrfList().stream()
+                .collect(Collectors.toMap(
+                    d -> d.getCampoCrf().getIdCampo(), 
+                    d -> d
+                ));
 
-        crf.getDatosCrfList().clear();
-        procesarYAdjuntarRespuestas(form.getDatosCrfList(), crf);
+        if (form.getDatosCrfList() != null) {
+            for (DatosCrf datoForm : form.getDatosCrfList()) {
+                
+                if (datoForm.getCampoCrf() == null || datoForm.getCampoCrf().getIdCampo() == null) {
+                    continue;
+                }
 
+                int idCampo = datoForm.getCampoCrf().getIdCampo();
+                String valorForm = datoForm.getValor();
+                
+                // Limpieza del valor (trimming, null checks)
+                String valorFinal = null;
+                if (valorForm != null && !valorForm.trim().isEmpty()) {
+                    valorFinal = valorForm.trim();
+                }
+
+                // VERIFICACIÓN: ¿Ya existe este dato en la BD?
+                if (datosExistentesMap.containsKey(idCampo)) {
+                    // SI EXISTE: Lo actualizamos (incluso si ahora es null/vacío)
+                    DatosCrf datoExistente = datosExistentesMap.get(idCampo);
+                    datoExistente.setValor(valorFinal);
+                } else {
+                    // NO EXISTE: Lo creamos SOLO si hay un valor real
+                    if (valorFinal != null) {
+                        CampoCrf campoReal = camposCRFRepository.findById(idCampo).orElse(null);
+                        if (campoReal != null) {
+                            DatosCrf nuevoDato = new DatosCrf();
+                            nuevoDato.setCampoCrf(campoReal);
+                            nuevoDato.setValor(valorFinal);
+                            crf.addDato(nuevoDato); // Método helper que vincula la relación
+                        }
+                    }
+                }
+            }
+        }
 
         crfRepository.save(crf);
-        
         registroService.logCrfActivity("ACTUALIZACION_CRF", crf);
     }
 
+    // Este método se mantiene solo para la creación inicial
     private void procesarYAdjuntarRespuestas(List<DatosCrf> respuestasDelForm, Crf crf) {
         if (respuestasDelForm == null) return;
         
@@ -330,13 +363,9 @@ public class CrfService {
             dto.setCodigoPaciente(crf.getDatosPaciente().getCodigoPaciente());
         }
 
-        // Convertir lista de DatosCrf a lista simple de CampoValorDTO
         List<CrfDetalleDTO.CampoValorDTO> listaCampos = new ArrayList<>();
-        
-        // Obtenemos TODOS los campos activos para mostrar incluso los vacíos
         List<CampoCrf> camposActivos = camposCRFRepository.findByActivoTrueOrderByNombre();
         
-        // Mapa para búsqueda rápida de respuestas existentes
         Map<Integer, String> respuestasMap = new HashMap<>();
         for (DatosCrf dato : crf.getDatosCrfList()) {
             if (dato.getCampoCrf() != null) {
@@ -345,12 +374,11 @@ public class CrfService {
         }
 
         for (CampoCrf campo : camposActivos) {
-            String valor = respuestasMap.getOrDefault(campo.getIdCampo(), "-"); // Guion si no hay respuesta
+            String valor = respuestasMap.getOrDefault(campo.getIdCampo(), "-"); 
             listaCampos.add(new CrfDetalleDTO.CampoValorDTO(campo.getNombre(), valor));
         }
         
         dto.setCampos(listaCampos);
-        
         return dto;
     }
 }

@@ -1,4 +1,4 @@
-package cl.ubiobio.silkcorp.polygen_research.DataBase.export; // O tu paquete
+package cl.ubiobio.silkcorp.polygen_research.DataBase.export;
 
 import java.awt.Color;
 import java.io.ByteArrayInputStream;
@@ -26,6 +26,9 @@ import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosCrf.DatosCrf;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPaciente;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfForm;
 
+// --- CORRECCIÓN: Importación exacta de tu clase ---
+import cl.ubiobio.silkcorp.polygen_research.DataBase.OpcionCampoCrf.OpcionCampoCrf;
+
 @Service
 public class PdfService {
 
@@ -36,7 +39,6 @@ public class PdfService {
     }
 
     public Map<String, Object> generarPdfCrf(Integer crfId) {
-        
         
         CrfForm form = crfService.prepararCrfFormParaEditar(crfId);
         DatosPaciente paciente = form.getDatosPaciente(); 
@@ -78,7 +80,7 @@ public class PdfService {
             addCeldaTabla(tablaPaciente, paciente.getDireccion(), fontCelda);
             document.add(tablaPaciente);
 
-            //Datos del Estudio
+            // Datos del Estudio
             document.add(Chunk.NEWLINE);
             document.add(new Paragraph("2. Datos del Estudio", fontSubtitulo));
             document.add(Chunk.NEWLINE);
@@ -92,7 +94,7 @@ public class PdfService {
             addCeldaTabla(tablaEstudio, form.getObservacion() != null ? form.getObservacion() : "N/A", fontCelda);
             document.add(tablaEstudio);
             
-            //Campos Dinámicos
+            // Campos Dinámicos
             document.add(Chunk.NEWLINE);
             document.add(new Paragraph("3. Campos del Formulario", fontSubtitulo));
             document.add(Chunk.NEWLINE);
@@ -109,26 +111,46 @@ public class PdfService {
             headerRespuesta.setBackgroundColor(Color.DARK_GRAY);
             tablaDatos.addCell(headerRespuesta);
 
-            // Filas de datos
+            // Filas de datos con TRADUCCIÓN
             for (DatosCrf dato : form.getDatosCrfList()) {
                 addCeldaTabla(tablaDatos, dato.getCampoCrf().getNombre(), fontCeldaBold);
 
                 String valor = dato.getValor();
-                if ("SI/NO".equals(dato.getCampoCrf().getTipo())) {
-                    valor = "1".equals(valor) ? "Sí" : "No";
+                String tipo = dato.getCampoCrf().getTipo();
+                String valorMostrar = valor;
+
+                // Lógica de Traducción
+                if (valor != null && !valor.trim().isEmpty()) {
+                    if ("SI/NO".equals(tipo)) {
+                        // Traducir 1/0 a Sí/No
+                        if ("1".equals(valor)) valorMostrar = "Sí";
+                        else if ("0".equals(valor)) valorMostrar = "No";
+                    } 
+                    else if ("SELECCION_UNICA".equals(tipo)) {
+                        // Traducir ID de opción a Etiqueta (Texto)
+                        if (dato.getCampoCrf().getOpciones() != null) {
+                            // CORRECCIÓN: Usamos el tipo correcto OpcionCampoCrf
+                            for (OpcionCampoCrf op : dato.getCampoCrf().getOpciones()) {
+                                // Comparamos el valor guardado (String) con el orden de la opción (Integer)
+                                if (String.valueOf(op.getOrden()).equals(valor)) {
+                                    valorMostrar = op.getEtiqueta();
+                                    break; // Encontrado, salimos del bucle
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    valorMostrar = "-";
                 }
-                if (valor == null || valor.trim().isEmpty()) {
-                    valor = "-";
-                }
-                addCeldaTabla(tablaDatos, valor, fontCelda);
+
+                addCeldaTabla(tablaDatos, valorMostrar, fontCelda);
             }
             document.add(tablaDatos);
 
             document.close();
 
-            //Nombre del archivo
+            // Nombre del archivo
             String codigoLimpio = paciente.getCodigoPaciente();
-            
             if (codigoLimpio != null && (codigoLimpio.startsWith("C") || codigoLimpio.startsWith("E"))) {
                 codigoLimpio = codigoLimpio.substring(1);
             }
@@ -148,7 +170,6 @@ public class PdfService {
         return resultado; 
     }
 
-    
     private void addCeldaTabla(PdfPTable table, String texto, Font font) {
         PdfPCell cell = new PdfPCell(new Phrase(texto, font));
         cell.setPadding(5);

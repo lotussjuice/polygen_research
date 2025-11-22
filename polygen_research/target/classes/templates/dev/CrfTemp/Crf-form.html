@@ -3,7 +3,7 @@
 
 <div th:fragment="contenido">
 
-    <form th:action="@{/crf/guardar}" th:object="${crfForm}" method="post">
+    <form th:action="@{/crf/guardar}" th:object="${crfForm}" method="post" id="crfFormulario">
 
         <input type="hidden" th:field="*{idCrf}" />
 
@@ -12,8 +12,6 @@
                 <h3><i class="ph-bold ph-user-plus"></i> 1. Datos del Paciente</h3>
             </div>
             <div class="card-body">
-
-                <input type="hidden" th:field="*{datosPaciente.idPaciente}" />
 
                 <div class="grid-2">
                     <div class="form-group">
@@ -29,8 +27,7 @@
                     </div>
                     <div class="form-group">
                         <label for="apellido">Apellido</label>
-                        <input type="text" class="form-control" id="apellido" th:field="*{datosPaciente.apellido}"
-                            required>
+                        <input type="text" class="form-control" id="apellido" th:field="*{datosPaciente.apellido}" required>
                     </div>
                 </div>
                 <div class="form-group">
@@ -114,7 +111,7 @@
                                 <span th:text="${opcion.etiqueta}"></span>
                             </label>
                         </div>
-                       
+                        
                         <input th:case="*" 
                                type="text" 
                                maxlength="30"
@@ -138,6 +135,25 @@
         </div>
 
     </form>
-</div>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const requiredInputs = document.querySelectorAll('input[required], select[required], textarea[required]');
+
+            requiredInputs.forEach(input => {
+                input.addEventListener('invalid', function(e) {
+                    this.classList.remove('input-error-anim');
+                    void this.offsetWidth; 
+                    
+                    this.classList.add('input-error-anim');
+
+                    setTimeout(() => {
+                        this.classList.remove('input-error-anim');
+                    }, 4000);
+                });
+            });
+        });
+    </script>
+
+</div>
 </html>

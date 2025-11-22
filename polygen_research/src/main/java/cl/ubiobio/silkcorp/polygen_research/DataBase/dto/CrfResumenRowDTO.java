@@ -1,17 +1,15 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.dto;
 
 import java.util.Map;
-
 import cl.ubiobio.silkcorp.polygen_research.DataBase.Crf.Crf;
-
-
 
 public class CrfResumenRowDTO {
     // Los datos fijos:
     private Crf crf; 
     // Los datos dinámicos:
     private Map<Integer, String> valores;
-
+    
+    private int datosFaltantes = 0; 
 
     public Crf getCrf() {
         return crf;
@@ -27,5 +25,13 @@ public class CrfResumenRowDTO {
 
     public void setValores(Map<Integer, String> valores) {
         this.valores = valores;
+    }
+
+    public int getDatosFaltantes() {
+        return datosFaltantes;
+    }
+
+    public void setDatosFaltantes(int datosFaltantes) {
+        this.datosFaltantes = datosFaltantes;
     }
 }

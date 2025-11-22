@@ -19,9 +19,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+// --- IMPORTACIÓN AÑADIDA (Faltaba esta) ---
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfDetalleDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfForm;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.StataPreviewDTO; // Si usas esto en otros lados
 import cl.ubiobio.silkcorp.polygen_research.DataBase.export.PdfService;
 
 @Controller
@@ -36,43 +38,33 @@ public class CrfController {
         this.pdfService = pdfService;
     }
 
-
     @GetMapping("/nuevo")
     public String mostrarNuevoCrfForm(Model model) {
         CrfForm form = crfService.prepararNuevoCrfForm();
-
         model.addAttribute("crfForm", form);
         return "dev/CrfTemp/crf-form";
     }
 
     @GetMapping("/editar/{id}")
     public String mostrarFormularioEditarCrf(@PathVariable("id") Integer crfId, Model model) {
-
         CrfForm form = crfService.prepararCrfFormParaEditar(crfId);
-
         model.addAttribute("crfForm", form);
-
-
-        return "dev/CrfTemp/Crf-form";
+        return "dev/CrfTemp/crf-form";
     }
 
     @PostMapping("/guardar")
     public String guardarNuevoCrf(@ModelAttribute CrfForm crfForm, Model model) {
-
         try {
             if (crfForm.getIdCrf() == null) {
-
                 crfService.guardarCrfCompleto(crfForm);
             } else {
                 crfService.actualizarCrfCompleto(crfForm);
             }
-
         } catch (Exception e) {
             model.addAttribute("errorMessage", "Error al guardar el CRF: " + e.getMessage());
             model.addAttribute("crfForm", crfForm);
-            return "dev/CrfTemp/Crf-form";
+            return "dev/CrfTemp/crf-form";
         }
-
         return "redirect:/crf/list";
     }
 
@@ -97,8 +89,8 @@ public class CrfController {
 
     @GetMapping("/reporte")
     public String mostrarReporteCrf(Model model) {
-
-        CrfResumenViewDTO data = crfService.getCrfResumenView();
+        // CORRECCIÓN AQUÍ: Pasamos 'false' explícitamente para evitar el error de argumentos
+        CrfResumenViewDTO data = crfService.getCrfResumenView(false);
 
         model.addAttribute("camposColumnas", data.getCamposConStats()); 
         model.addAttribute("filasCrf", data.getFilas());  
@@ -106,21 +98,25 @@ public class CrfController {
         return "crf-reporte";
     }
 
-    @GetMapping("/list")
+  @GetMapping("/list")
     public String listarTodosLosCrfs(Model model,
-                                     @RequestParam(name = "codigoPaciente", required = false) String codigoBusqueda) {
-                                        
-        CrfResumenViewDTO data = crfService.getCrfResumenView(codigoBusqueda, false);
+                                     @RequestParam(name = "codigoPaciente", required = false) String codigoBusqueda,
+                                     @RequestParam(name = "ocultarInactivos", required = false, defaultValue = "false") boolean ocultarInactivos) {
+        
+        boolean soloActivos = ocultarInactivos;
+        
+        CrfResumenViewDTO data = crfService.getCrfResumenView(codigoBusqueda, soloActivos);
 
-        model.addAttribute("camposColumnas", data.getCamposConStats()); // O getCamposActivos() según tu DTO
+        model.addAttribute("camposColumnas", data.getCamposConStats()); 
         model.addAttribute("filasCrf", data.getFilas());
+        
+        model.addAttribute("ocultarInactivos", ocultarInactivos);
 
         return "dev/CrfTemp/Crf-list"; 
     }
 
     @GetMapping("/pdf/{id}")
     public ResponseEntity<InputStreamResource> descargarCrfPdf(@PathVariable("id") Integer crfId) throws IOException {
-
         Map<String, Object> pdfData = pdfService.generarPdfCrf(crfId);
 
         ByteArrayInputStream pdfStream = (ByteArrayInputStream) pdfData.get("pdfStream");
@@ -136,8 +132,8 @@ public class CrfController {
                 .body(new InputStreamResource(pdfStream));
     }
 
-    @GetMapping("/api/detalle/{id}") // Endpoint para AJAX
-    @ResponseBody // Devuelve JSON, no HTML
+    @GetMapping("/api/detalle/{id}") 
+    @ResponseBody 
     public ResponseEntity<CrfDetalleDTO> obtenerDetalleCrf(@PathVariable Integer id) {
         try {
             CrfDetalleDTO detalle = crfService.getDetalleCrf(id);
