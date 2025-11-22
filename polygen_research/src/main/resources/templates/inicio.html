@@ -5,29 +5,72 @@
 
 <div th:fragment="contenido">
     
+    <style>
+        .mural-section { margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee; }
+        .mural-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-add-note { background: #005a9c; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+        .btn-add-note:hover { background: #004a80; }
+        
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .note-card {
+            background-color: #feff9c;
+            padding: 15px;
+            border-radius: 2px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            position: relative;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .note-card:hover { transform: scale(1.02); box-shadow: 3px 3px 10px rgba(0,0,0,0.15); }
+        .note-title { font-weight: bold; margin-bottom: 10px; font-size: 1.1em; border-bottom: 1px dashed rgba(0,0,0,0.1); padding-bottom: 5px;}
+        .note-content { font-size: 0.9em; color: #333; flex-grow: 1; white-space: pre-wrap; }
+        
+        .note-actions {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .note-card:hover .note-actions { opacity: 1; }
+        .action-btn { cursor: pointer; font-size: 12px; margin-left: 5px; color: #555; text-decoration: none;}
+        .action-btn:hover { color: #000; font-weight: bold; }
+
+    
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-group input, .form-group textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; }
+    </style>
+
     <div class="dashboard-header">
         <h1 th:text="'¡Bienvenido, ' + ${#authentication.principal.nombreUsuario} + '!'">¡Bienvenido!</h1>
     </div>
 
     <div class="dashboard-grid-2col">
-
         <div class="dashboard-stats-grid-2x2">
-
             <div class="mini-stat-card">
                 <span class="stat-title">Cantidad CRF's totales</span>
                 <span class="stat-value" th:text="${totalCrfs}">0</span>
             </div>
-
             <div class="mini-stat-card">
                 <span class="stat-title">Casos (Estudio)</span>
                 <span class="stat-value" th:text="${casosEstudio}">0</span>
             </div>
-
             <div class="mini-stat-card">
                 <span class="stat-title">Controles (Consulta)</span>
                 <span class="stat-value" th:text="${casosConsulta}">0</span>
             </div>
-
             <div class="mini-stat-card">
                 <span class="stat-title">Fecha del último cambio</span>
                 <span class="stat-value-small" th:text="${fechaUltimoCambio}">N/A</span>
@@ -40,7 +83,6 @@
                 <canvas id="tipoPacienteChart"></canvas>
             </div>
         </div>
-
     </div>
     
     <div class="dashboard-user-role" 
@@ -49,6 +91,78 @@
          Rol de Ejemplo
     </div>
 
+    <div class="mural-section">
+        <div class="mural-header">
+            <h2>Mural de Notas</h2>
+            <button class="btn-add-note" onclick="abrirModalNota()">+ Nueva Nota</button>
+        </div>
+
+        <div class="notes-grid">
+            <div th:if="${listaNotas == null or listaNotas.empty}" style="grid-column: 1/-1; text-align: center; color: #888;">
+                <p>No hay notas en el mural. ¡Crea la primera!</p>
+            </div>
+
+            <div class="note-card" th:each="nota : ${listaNotas}" 
+                th:onclick="verNotaDetalle(this, event)"
+                th:data-titulo="${nota.titulo}"
+                th:data-contenido="${nota.contenido}"
+                style="cursor: pointer;"> <div class="note-actions">
+                    <span class="action-btn" 
+                        th:data-id="${nota.id}"
+                        th:data-titulo="${nota.titulo}"
+                        th:data-contenido="${nota.contenido}"
+                        onclick="editarNota(this); event.stopPropagation();">✏️</span> 
+              <a class="action-btn" 
+                th:href="@{/notas/eliminar/{id}(id=${nota.id})}"
+                onclick="return confirm('¿Estás seguro?'); event.stopPropagation();">🗑️</a>
+                </div>
+    
+                <div class="note-title" th:text="${nota.titulo}">Título</div>
+                <div class="note-content" th:text="${nota.contenido}">Contenido...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalNota" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modalTitle">Nueva Nota</h3>
+            <form th:action="@{/notas/guardar}" method="post">
+                <input type="hidden" id="notaId" name="id" />
+                
+                <div class="form-group">
+                    <label for="titulo">Título</label>
+                    <input type="text" id="titulo" name="titulo" required maxlength="50" placeholder="Ej: Revisar caso #404">
+                </div>
+                
+                <div class="form-group">
+                    <label for="contenido">Contenido</label>
+                    <textarea id="contenido" name="contenido" rows="4" required placeholder="Detalles de la nota..."></textarea>
+                </div>
+
+                <div class="modal-buttons">
+                    <button type="button" onclick="cerrarModalNota()" style="background: #ddd; border:none; padding: 8px 12px; border-radius: 4px; cursor:pointer;">Cancelar</button>
+                    <button type="submit" style="background: #28a745; color: white; border:none; padding: 8px 12px; border-radius: 4px; cursor:pointer;">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <div id="modalVerNota" class="modal-overlay" onclick="cerrarModalVer()">
+        <div class="modal-content" style="background-color: #feff9c; max-width: 600px; border: 1px solid #ddd;" onclick="event.stopPropagation()">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; border-bottom: 2px dashed rgba(0,0,0,0.1); padding-bottom: 10px;">
+                <h2 id="verTituloDisplay" style="margin: 0; color: #333;"></h2>
+                <span onclick="cerrarModalVer()" style="cursor: pointer; font-size: 24px; color: #555;">&times;</span>
+            </div>
+
+            <div id="verContenidoDisplay" style="font-size: 1.2em; line-height: 1.6; white-space: pre-wrap; color: #222; max-height: 60vh; overflow-y: auto;">
+            </div>
+
+            <div style="margin-top: 20px; text-align: right;">
+                <button onclick="cerrarModalVer()" style="background: rgba(0,0,0,0.1); border: none; padding: 8px 16px; cursor: pointer; border-radius: 4px;">Cerrar</button>
+            </div>
+        </div>
+    </div>
 
     <script th:inline="javascript">
         /*<![CDATA[*/
@@ -73,9 +187,7 @@
             options: {
                 responsive: true,
                 plugins: {
-                    legend: {
-                        position: 'top',
-                    },
+                    legend: { position: 'top' },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
@@ -90,6 +202,74 @@
                 }
             }
         });
+
+        // MURAL DE NOTAS
+        
+        function abrirModalNota() {
+            document.getElementById('modalTitle').innerText = 'Nueva Nota';
+            document.getElementById('notaId').value = ''; 
+            document.getElementById('titulo').value = '';
+            document.getElementById('contenido').value = '';
+            
+            document.getElementById('modalNota').style.display = 'flex';
+        }
+
+        function editarNota(element) {
+            
+            const id = element.getAttribute('data-id');
+            const titulo = element.getAttribute('data-titulo');
+            const contenido = element.getAttribute('data-contenido');
+
+            document.getElementById('modalTitle').innerText = 'Editar Nota';
+            document.getElementById('notaId').value = id;
+            document.getElementById('titulo').value = titulo;
+            document.getElementById('contenido').value = contenido;
+
+            document.getElementById('modalNota').style.display = 'flex';
+        }
+
+        function cerrarModalNota() {
+            document.getElementById('modalNota').style.display = 'none';
+        }
+
+        
+        window.onclick = function(event) {
+            const modal = document.getElementById('modalNota');
+            if (event.target == modal) {
+                cerrarModalNota();
+            }
+        }
+
+        function verNotaDetalle(element, event) {
+            if (event.target.closest('.note-actions')) return;
+
+            const titulo = element.getAttribute('data-titulo');
+            const contenido = element.getAttribute('data-contenido');
+
+            document.getElementById('verTituloDisplay').innerText = titulo;
+            document.getElementById('verContenidoDisplay').innerText = contenido;
+            document.getElementById('modalVerNota').style.display = 'flex';
+
+        }
+
+        function cerrarModalVer() {
+            document.getElementById('modalVerNota').style.display = 'none';
+        }
+        
+        window.onclick = function(event) {
+            const modalForm = document.getElementById('modalNota');
+            const modalVer = document.getElementById('modalVerNota');
+            
+            if (event.target == modalForm) {
+                cerrarModalNota();
+            }
+            if (event.target == modalVer) {
+                cerrarModalVer();
+            }
+        }
+
+        
+
         
         /*]]>*/
     </script>

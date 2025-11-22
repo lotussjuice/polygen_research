@@ -1,17 +1,25 @@
 package cl.ubiobio.silkcorp.polygen_research;
 
-import cl.ubiobio.silkcorp.polygen_research.dashboard.DashboardService; 
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model; 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+
+import cl.ubiobio.silkcorp.polygen_research.dashboard.DashboardService;
+import cl.ubiobio.silkcorp.polygen_research.notes.Nota;
+import cl.ubiobio.silkcorp.polygen_research.notes.NotaService;
 
 @Controller
 public class MainController {
 
-    private final DashboardService dashboardService; 
+    private final DashboardService dashboardService;
+    private final NotaService notaService; 
 
-    public MainController(DashboardService dashboardService) {
+    public MainController(DashboardService dashboardService, NotaService notaService) {
         this.dashboardService = dashboardService;
+        this.notaService = notaService;
     }
 
     @GetMapping("/inicio") 
@@ -19,8 +27,23 @@ public class MainController {
         
         // Carga del dashboard
         model.addAllAttributes(dashboardService.getDashboardStats());
+
+        //Carga de notas
+        model.addAttribute("listaNotas", notaService.listarTodas());
         
         return "inicio"; 
+    }
+
+    @PostMapping("/notas/guardar")
+    public String guardarNota(@ModelAttribute Nota nota) {
+        notaService.guardar(nota);
+        return "redirect:/inicio";
+    }
+
+    @GetMapping("/notas/eliminar/{id}")
+    public String eliminarNota(@PathVariable Long id) {
+        notaService.eliminar(id);
+        return "redirect:/inicio";
     }
 
     // Por defecto redirigir a login
@@ -28,4 +51,5 @@ public class MainController {
     public String redirectToLogin() {
         return "redirect:/login";
     }
+
 }

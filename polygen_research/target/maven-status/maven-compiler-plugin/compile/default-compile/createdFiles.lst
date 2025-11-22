@@ -5,6 +5,7 @@ cl\ubiobio\silkcorp\polygen_research\auth\RegisterDto.class
 cl\ubiobio\silkcorp\polygen_research\config\SecurityConfig.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuarioService.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\util\StataFormateador.class
+cl\ubiobio\silkcorp\polygen_research\notes\Nota.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\RegistroActividad\RegistroActividad.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuario.class
 cl\ubiobio\silkcorp\polygen_research\PolygenResearchApplication.class
@@ -33,6 +34,7 @@ cl\ubiobio\silkcorp\polygen_research\DataBase\Crf\CrfRepository.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\dto\CrfDetalleDTO$CampoValorDTO.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\dto\CrfResumenViewDTO.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\Crf\CrfService.class
+cl\ubiobio\silkcorp\polygen_research\notes\NotaRepository.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\DatosPaciente\DatosPaciente.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\OpcionCampoCrf\OpcionCampoCrf.class
 cl\ubiobio\silkcorp\polygen_research\security\EmailService.class
@@ -45,6 +47,7 @@ cl\ubiobio\silkcorp\polygen_research\DataBase\Usuario\Usuario.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuarioRepository.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\Whitelist\Whitelist.class
 cl\ubiobio\silkcorp\polygen_research\security\CustomUserDetails.class
+cl\ubiobio\silkcorp\polygen_research\notes\NotaService.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\RegistroActividad\RegistroActividadRepository.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\CampoCrf\CampoCrfRepository.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\Usuario\UsuarioController.class
