@@ -78,25 +78,26 @@
                                 <td class="actions-cell" style="white-space: nowrap;">
                                     <div style="display: flex; justify-content: center; gap: 8px; align-items: center;">
                                         
+                                        
+                                            <button type="button" class="btn-secundario btn-sm"
+                                                    th:onclick="|verDetalleCrf(${fila.crf.idCrf})|" 
+                                                    title="Ver Detalle Completo">
+                                                <i class="ph-bold ph-eye"></i>
+                                            </button>
+                                       
+
                                         <div style="position: relative;">
                                             
                                             <span th:if="${fila.datosFaltantes > 0 and fila.crf.datosPaciente?.estado == 'ACTIVO'}" 
                                                   class="warning-dot-floating"
                                                   title="CRF Incompleto"></span>
 
-                                            <button type="button" class="btn-secundario btn-sm"
-                                                    th:onclick="|verDetalleCrf(${fila.crf.idCrf})|" 
-                                                    title="Ver Detalle Completo">
-                                                <i class="ph-bold ph-eye"></i>
-                                            </button>
-                                        </div>
-
                                         <button type="button" class="btn-secundario btn-sm" 
                                             th:onclick="|verDatosFaltantes(${fila.crf.idCrf})|"
                                             title="Ver Datos Faltantes">
                                             <i class="ph-bold ph-list-checks"></i>
                                         </button>
-
+                                         </div>
                                         <a th:href="@{/crf/pdf/{id}(id=${fila.crf.idCrf})}" 
                                             class="btn btn-sm btn-outline-danger" 
                                             title="Descargar PDF"

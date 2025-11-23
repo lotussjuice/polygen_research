@@ -130,7 +130,6 @@
                 
                 // --- LÓGICA CAMBIAR ESTADO ---
                 async function cambiarEstadoPaciente(idPaciente) {
-                    if (!confirm("¿Estás seguro de cambiar el estado de este paciente?")) return;
 
                     try {
                         // Obtener token CSRF del meta tag (si existe)
