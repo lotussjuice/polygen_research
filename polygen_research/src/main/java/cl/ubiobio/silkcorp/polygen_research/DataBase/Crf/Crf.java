@@ -36,7 +36,7 @@ public class Crf {
     @Column(name = "Estado", length = 20)
     private String estado;
 
-    @Column(name = "Observacion", length = 200)
+    @Column(name = "Observacion", length = 250)
     private String observacion;
 
     @ManyToOne(fetch = FetchType.LAZY)

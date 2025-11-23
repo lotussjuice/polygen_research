@@ -57,10 +57,20 @@
                 </label>
 
                 <div class="form-group" style="margin-top: 1rem;">
-                    <label for="observacion">Observaciones</label>
-                    <textarea class="form-control" id="observacion" th:field="*{observacion}" rows="4"
-                        placeholder="Añadir notas clínicas, antecedentes relevantes u otras observaciones..."></textarea>
+    <label for="observacion">Observaciones</label>
+    
+            <div class="textarea-wrapper">
+                <textarea class="form-control" 
+                            id="observacion" 
+                            th:field="*{observacion}" 
+                            rows="4"
+                            maxlength="250"
+                            placeholder="Añadir notas clínicas, antecedentes relevantes u otras observaciones..."
+                            oninput="actualizarContador(this)"></textarea>
+                    
+                    <span id="contador-obs" class="char-counter">0/250</span>
                 </div>
+            </div>
 
                 <hr style="margin: 2rem 0;">
                 <div th:each="dato, stat : *{datosCrfList}" class="form-group">
@@ -154,6 +164,29 @@
             });
         });
     </script>
+
+    <script>
+    function actualizarContador(textarea) {
+        const maxLength = textarea.getAttribute("maxlength");
+        const currentLength = textarea.value.length;
+        const contador = document.getElementById("contador-obs");
+        
+        contador.textContent = `${currentLength}/${maxLength}`;
+        
+        if (currentLength >= maxLength) {
+            contador.style.color = "var(--color-error)";
+        } else {
+            contador.style.color = "var(--color-texto-secundario)";
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const obsTextarea = document.getElementById("observacion");
+        if (obsTextarea) {
+            actualizarContador(obsTextarea);
+        }
+    });
+</script>
 
 </div>
 </html>

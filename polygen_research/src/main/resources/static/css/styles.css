@@ -1369,3 +1369,52 @@ input:checked+.slider-clean {
     flex-wrap: wrap;
     margin-bottom: 1.5rem;
 }
+/*ESTILOS TEXTAREA REDIMENSIONABLE CON CONTADOR DE CARACTERES */
+.textarea-wrapper {
+    position: relative;
+    display: block; 
+
+    width: 400px;       
+    height: 120px;    
+    
+    max-width: 100%;  
+    min-width: 200px; 
+    min-height: 100px;
+    max-height: 600px;
+
+    resize: both;
+    overflow: hidden;
+    
+    border: 1px solid transparent; 
+}
+
+#observacion {
+    width: 100% !important;
+    height: 100% !important;
+    
+    resize: none !important; 
+    
+    box-sizing: border-box;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.char-counter {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    
+    font-size: 0.75rem;
+    color: var(--color-texto-secundario);
+    background-color: rgba(255, 255, 255, 0.85);
+    padding: 2px 6px;
+    border-radius: 4px;
+    
+    z-index: 10;       
+    pointer-events: none; 
+}
+
+.dark-mode .char-counter {
+    background-color: rgba(30, 30, 30, 0.85);
+}
