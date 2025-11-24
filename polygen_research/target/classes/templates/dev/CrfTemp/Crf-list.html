@@ -1,386 +1,536 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security6"
-    th:replace="~{layout/main-layout :: ~{}}">
-
-<head>
-</head>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
 
 <body>
-
     <div th:fragment="contenido">
 
-        <div class="card">
-           <div class="card-header">
-                <h3><i class="ph-bold ph-table"></i> Gestión de CRFs</h3>
-                
-                <div style="display: flex; align-items: center; gap: 1rem;">
-                    
-                    <form th:action="@{/crf/list}" method="get"
-                        style="display: flex; gap: 0.5rem; align-items: center;">
-                        
-                        <input type="text" name="codigoPaciente" class="form-control"
-                            placeholder="Buscar por Cód. Paciente..." th:value="${param.codigoPaciente}" />
-                        
-                        <button type="submit" class="btn-primario">Buscar</button>
-                        
-                         <div style="display: flex; align-items: center; margin-left: 1rem; background: var(--color-fondo); padding: 0.4rem 0.8rem; border-radius: 8px; border: 1px solid var(--color-borde);">
-                            
-                            <label class="switch" style="margin-right: 0.5rem; margin-bottom: 0;">
-                                <input type="checkbox" name="ocultarInactivos" 
-                                    th:checked="${ocultarInactivos}" 
-                                    onchange="this.form.submit()">
-                                
-                                <span class="slider slider-clean"></span>
-                            </label>
-                            
-                            <span style="font-size: 0.9rem; color: var(--color-texto);">Ocultar Inactivos</span>
-                        </div>
-                        
-                        <a th:href="@{/crf/list}" class="btn-secundario" title="Limpiar búsqueda y filtros">Limpiar</a>
-                    </form>
-                </div>
+        <style>
+            .table-responsive-wrapper {
+                overflow-x: auto;
+                margin-top: 20px;
+            }
 
-                <a th:href="@{/crf/nuevo}" class="btn-primario btn-sm">
-                    <i class="ph-bold ph-plus"></i> Agregar Nuevo CRF
-                </a>
-            </div>
+            /* Estilo base BOTONES EXPORTAR */
+            .btn-export-custom {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                padding: 6px 16px;
+                border-radius: 50px;
+                font-weight: 600;
+                font-size: 0.9rem;
+                text-decoration: none;
+                transition: all 0.2s ease;
+                border: 1px solid;
+                /* CAMBIO: Usar variable para el fondo en lugar de #fff fijo */
+                background-color: var(--color-tarjeta); 
+                cursor: pointer;
+            }
+
+            /* EXCEL (Modo Claro) */
+            .btn-excel-custom {
+                color: #217346;
+                border-color: #217346;
+            }
+            .btn-excel-custom:hover {
+                background-color: #217346;
+                color: #fff;
+            }
             
+            /* EXCEL (Modo Oscuro - Sobrescritura para contraste) */
+            .dark-mode .btn-excel-custom {
+                color: #4caf50; /* Verde más brillante */
+                border-color: #4caf50;
+            }
+            .dark-mode .btn-excel-custom:hover {
+                background-color: #4caf50;
+                color: #121212;
+            }
+
+            /* STATA (Modo Claro) */
+            .btn-stata-custom {
+                color: #005a9c;
+                border-color: #005a9c;
+            }
+            .btn-stata-custom:hover {
+                background-color: #005a9c;
+                color: #fff;
+            }
+
+            /* STATA (Modo Oscuro - Sobrescritura para contraste) */
+            .dark-mode .btn-stata-custom {
+                color: #64b5f6; /* Azul más brillante */
+                border-color: #64b5f6;
+            }
+            .dark-mode .btn-stata-custom:hover {
+                background-color: #64b5f6;
+                color: #121212;
+            }
+
+            /* Botón (+) */
+            .btn-add-criterion {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                /* CAMBIO: Fondo adaptable */
+                background-color: var(--color-tarjeta);
+                border: 1px solid var(--color-primario);
+                color: var(--color-primario);
+                font-weight: bold;
+                cursor: pointer;
+                transition: all 0.2s;
+                padding: 0;
+                line-height: 0;
+            }
+
+            .btn-add-criterion:hover {
+                background-color: var(--color-primario);
+                color: #fff; /* Esto debería ser blanco en ambos modos al hacer hover */
+                transform: scale(1.1);
+            }
+            
+            /* Ajuste texto hover en dark mode para el botón + */
+             .dark-mode .btn-add-criterion:hover {
+                color: #121212; /* Texto oscuro sobre fondo verde brillante */
+            }
+        </style>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="ph-bold ph-chart-line"></i> Reporte de Datos (Valores CRF)</h3>
+
+                <form th:action="@{/datos-crf/list}" method="get"
+                    style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" name="codigoPaciente" class="form-control"
+                        placeholder="Buscar por Cód. Paciente..." th:value="${param.codigoPaciente}" />
+                    <button type="submit" class="btn-primario btn-sm">Buscar</button> <a th:href="@{/datos-crf/list}"
+                        class="btn-secundario btn-sm" title="Limpiar búsqueda">Limpiar</a>
+                </form>
+            </div>
             <div class="card-body">
-                <p>Listado completo de todos los CRFs registrados.</p>
+
+                <p>Cada fila representa un CRF completo. Use (+) en las columnas numéricas para añadir criterios de
+                    dicotomización antes de exportar.</p>
+
+                <div
+                    style="margin-bottom: 1rem; display: flex; justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: 1rem;">
+
+                    <div>
+                        <form id="exportForm" th:action="@{/datos-crf/list/exportar}" method="post"
+                            style="display: inline-block; margin: 0;">
+                            <input type="hidden" id="criteriosExport" name="criteriosJson" />
+                            <button type="submit" class="btn-export-custom btn-excel-custom">
+                                <i class="ph-bold ph-file-xls" style="font-size: 1.1rem;"></i> Exportar a Excel
+                            </button>
+                        </form>
+
+                        <button type="button" id="btn-stata-preview" class="btn-export-custom btn-stata-custom"
+                            style="margin-left: 0.5rem;">
+                            <i class="ph-bold ph-file-code" style="font-size: 1.1rem;"></i> Exportar para STATA
+                        </button>
+
+                        <form id="stataExportForm" th:action="@{/datos-crf/list/exportar-stata}" method="post"
+                            style="display: none;">
+                            <input type="hidden" id="stataCriteriosExport" name="criteriosJson" />
+                        </form>
+                    </div>
+                </div>
 
                 <div th:if="${#lists.isEmpty(filasCrf)}" class="alert"
                     style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
-                    No se han encontrado CRFs para mostrar.
+                    No se han encontrado CRFs para mostrar en el reporte.
                 </div>
 
                 <div class="table-responsive-wrapper" th:if="${!#lists.isEmpty(filasCrf)}">
-                    <table>
+                    <table class="tabla-bonita">
                         <thead>
                             <tr>
-                                <th style="width: 140px; text-align: center;">Acciones</th>
-
-                                <th>Fecha Creación</th>
                                 <th>Cód. Paciente</th>
-                                <th>Nombre Paciente</th>
-                                <th>Apellido Paciente</th>
-                                <th>Número</th>
-                                <th>Dirección</th>
-                                <th>Estado Paciente</th>
 
-                                <th th:each="campoStat : ${camposColumnas}" th:text="${campoStat.campoCrf.nombre}">...</th>
+                                <th th:each="campoStat : ${camposColumnas}">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: space-between;">
+                                        <span th:text="${campoStat.campoCrf.nombre}">...</span>
+                                        <button th:if="${campoStat.campoCrf.tipo == 'NUMERO'}" type="button"
+                                            class="btn-add-criterion" th:data-campo-id="${campoStat.campoCrf.idCampo}"
+                                            th:data-campo-nombre="${campoStat.campoCrf.nombre}" title="Añadir criterio">
+                                            <i class="ph-bold ph-plus" style="font-size: 0.8rem;"></i>
+                                        </button>
+                                    </div>
+                                    <div class="criteria-tags"
+                                        th:id="'tags-campo-' + ${campoStat.campoCrf.idCampo}"></div>
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="fila : ${filasCrf}" 
-                                th:id="'row-crf-' + ${fila.crf.idCrf}"
-                                th:classappend="${fila.crf.datosPaciente?.estado != 'ACTIVO'} ? 'row-inactive' : ''">
-
-                                <td class="actions-cell" style="white-space: nowrap;">
-                                    <div style="display: flex; justify-content: center; gap: 8px; align-items: center;">
-                                        
-                                        <div style="position: relative;">
-                                            
-                                            <span th:if="${fila.datosFaltantes > 0 and fila.crf.datosPaciente?.estado == 'ACTIVO'}" 
-                                                  class="warning-dot-floating"
-                                                  title="CRF Incompleto"></span>
-
-                                            <button type="button" class="btn-secundario btn-sm"
-                                                    th:onclick="|verDetalleCrf(${fila.crf.idCrf})|" 
-                                                    title="Ver Detalle Completo">
-                                                <i class="ph-bold ph-eye"></i>
-                                            </button>
-                                        </div>
-
-                                        <button type="button" class="btn-secundario btn-sm" 
-                                            th:onclick="|verDatosFaltantes(${fila.crf.idCrf})|"
-                                            title="Ver Datos Faltantes">
-                                            <i class="ph-bold ph-list-checks"></i>
-                                        </button>
-
-                                        <a th:href="@{/crf/pdf/{id}(id=${fila.crf.idCrf})}" 
-                                            class="btn btn-sm btn-outline-danger" 
-                                            title="Descargar PDF"
-                                            target="_blank" style="padding: 0.3rem 0.6rem; text-decoration: none; display: inline-flex; align-items: center;"> 
-                                            <i class="ph-bold ph-file-pdf"></i>
-                                        </a>
-                                        
-                                        <a th:href="@{/crf/editar/{id}(id=${fila.crf.idCrf})}" class="btn-secundario btn-sm"
-                                            title="Editar CRF" style="display: inline-flex; align-items: center;">
-                                            <i class="ph-bold ph-pencil-simple"></i>
-                                        </a>
-
-                                        <button type="button" class="btn-error btn-sm"
-                                            th:attr="data-crf-id=${fila.crf.idCrf}" onclick="confirmarEliminarCRF(this)"
-                                            title="Eliminar CRF">
-                                            <i class="ph-bold ph-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-
-                                <td th:text="${fila.crf.fechaConsulta != null ? #temporals.format(fila.crf.fechaConsulta, 'dd/MM/yyyy') : 'N/A'}">...</td>
-                                <td th:text="${fila.crf.datosPaciente?.codigoPaciente ?: '-'}">...</td>
-                                <td th:text="${fila.crf.datosPaciente?.nombre ?: '-'}">...</td>
-                                <td th:text="${fila.crf.datosPaciente?.apellido ?: '-'}">...</td>
-                                <td th:text="${fila.crf.datosPaciente?.numero ?: '-'}">...</td>
-                                <td th:text="${fila.crf.datosPaciente?.direccion ?: '-'}">...</td>
-                                
-                                <td th:text="${fila.crf.datosPaciente?.estado ?: '-'}">...</td>
+                            <tr th:each="fila : ${filasCrf}">
+                                <td th:text="${fila.crf.datosPaciente?.codigoPaciente}">...</td>
 
                                 <td th:each="campoStat : ${camposColumnas}">
-                                    <span th:text="${fila.valores.get(campoStat.campoCrf.idCampo) ?: '-'}"></span>
+                                    <span
+                                        th:text="${fila.valores.get(campoStat.campoCrf.idCampo) ?: '-'}"></span>
                                 </td>
-                                
                             </tr>
                         </tbody>
+                        <tfoot style="background-color: var(--color-fondo); font-weight: 600;">
+                            <tr>
+                                <td colspan="1" style="text-align: right; padding-right: 1rem;">Total Vacíos:
+                                </td>
+                                <td th:each="stat : ${camposColumnas}" th:text="${stat.countVacios}"
+                                    style="text-align: center;">...</td>
+                            </tr>
+                            <tr>
+                                <td colspan="1" style="text-align: right; padding-right: 1rem;">Total Ceros (0):
+                                </td>
+                                <td th:each="stat : ${camposColumnas}" th:text="${stat.countCeros}"
+                                    style="text-align: center;">...</td>
+                            </tr>
+                            <tr>
+                                <td colspan="1" style="text-align: right; padding-right: 1rem;">Total Unos (1):
+                                </td>
+                                <td th:each="stat : ${camposColumnas}" th:text="${stat.countUnos}"
+                                    style="text-align: center;">...</td>
+                            </tr>
+                        </tfoot>
                     </table>
                 </div>
-            </div>
-        </div>
 
-        <div id="modalConfirmacionEliminarCRF" class="modal" style="display: none;">
-             <div class="modal-content" style="max-width: 500px;">
-                <div class="modal-header">
-                    <h2>Confirmar Eliminación</h2>
-                    <span class="close-modal" onclick="cerrarConfirmacionEliminarCRF()">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <p>¿Estás seguro de que deseas eliminar permanentemente el CRF con ID <strong
-                            id="confirm-crf-id-text"></strong>?</p>
-                    <p style="color: var(--color-error); font-weight: bold;">Esta acción no se puede deshacer y
-                        eliminará todos los datos asociados.</p>
-                    <input type="hidden" id="confirm-crf-id" value="" />
-                </div>
-                <div class="modal-footer" style="justify-content: space-between;">
-                    <button type="button" class="btn-secundario"
-                        onclick="cerrarConfirmacionEliminarCRF()">Cancelar</button>
-                    <button type="button" class="btn-error" onclick="ejecutarEliminacionCRF()">Sí, Eliminar CRF</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="modalDatosFaltantes" class="modal" style="display: none;">
-             <div class="modal-content" style="max-width: 500px;">
-                <div class="modal-header">
-                    <h2 id="modal-faltantes-titulo">Datos Faltantes</h2>
-                    <span class="close-modal" onclick="cerrarModalDatosFaltantes()">&times;</span>
-                </div>
-                <div class="modal-body" id="modal-faltantes-body" style="padding-top: 1rem; max-height: 400px; overflow-y: auto;">
-                    <p>Cargando...</p>
-                </div>
-            </div>
-        </div>
-
-        <div id="modalVerDetalle" class="modal" style="display: none;">
-            <div class="modal-content" style="max-width: 600px; width: 90%; max-height: 90vh; display: flex; flex-direction: column;">
-                
-                <div class="modal-header" style="flex-shrink: 0;">
-                    <h2><i class="ph-bold ph-file-text"></i> Detalle CRF</h2>
-                    <span id="detalle-id-titulo" style="display: none;"></span>
-                    <span class="close-modal" onclick="cerrarModalDetalle()">&times;</span>
-                </div>
-
-                <div class="modal-body" style="overflow-y: auto; padding: 1.5rem;">
-                    
-                    <div class="detail-section" style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-borde); padding-bottom: 1rem;">
-                        <h4 style="color: var(--color-primario); margin-bottom: 0.5rem;">Paciente</h4>
-                        <p><strong>Código:</strong> <span id="detalle-codigo"></span></p>
-                        <p><strong>Nombre:</strong> <span id="detalle-nombre"></span></p>
-                        <p><strong>Fecha Consulta:</strong> <span id="detalle-fecha"></span></p>
-                        <p><strong>Tipo Estudio:</strong> <span id="detalle-tipo"></span></p>
+                <div class="modal fade" id="modalCriterio" tabindex="-1" aria-labelledby="modalCriterioLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content"
+                            style="background-color: var(--color-tarjeta); color: var(--color-texto); border-color: var(--color-borde);">
+                            <div class="modal-header" style="border-bottom-color: var(--color-borde);">
+                                <h5 class="modal-title" id="modalCriterioLabel">Agregar Criterio para: <span
+                                        id="modalCampoNombre"></span></h5>
+                                <button type="button" class="close-modal" data-bs-dismiss="modal"
+                                    aria-label="Cerrar">&times;</button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="hidden" id="modalCampoId" />
+                                <div class="form-group">
+                                    <label for="selectTipoCriterio">Tipo de Criterio</label>
+                                    <select class="form-control" id="selectTipoCriterio">
+                                        <option value="media">Media</option>
+                                        <option value="mediana">Mediana</option>
+                                        <option value="promedio">Promedio</option>
+                                        <option value="personalizado">Personalizado</option>
+                                    </select>
+                                </div>
+                                <div id="divPersonalizado" style="display: none;">
+                                    <div class="form-group">
+                                        <label for="inputNombreCriterio">Nombre para la Columna Excel</label>
+                                        <input type="text" class="form-control" id="inputNombreCriterio"
+                                            placeholder="Ej: Edad_Joven"> <small
+                                            style="color: var(--color-texto-secundario);">Se usará como
+                                            cabecera en
+                                            Excel (Ej: Edad_Joven)</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="inputPuntoCorte">Punto de Corte (Valor numérico)</label>
+                                        <input type="number" class="form-control" id="inputPuntoCorte"
+                                            placeholder="Ej: 30">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="selectOperador">Operador</label>
+                                        <select class="form-control" id="selectOperador">
+                                            <option value="<">&lt; (Menor que)</option>
+                                            <option value="<=">&lt;= (Menor o igual que)</option>
+                                            <option value=">">&gt; (Mayor que)</option>
+                                            <option value=">=">&gt;= (Mayor o igual que)</option>
+                                            <option value="==">== (Igual a)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer" style="border-top-color: var(--color-borde);">
+                                <button type="button" class="btn-secundario"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn-primario" id="btnGuardarCriterio">Guardar
+                                    Criterio</button>
+                            </div>
+                        </div>
                     </div>
-
-                    <div class="detail-section" style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-borde); padding-bottom: 1rem;">
-                        <h4 style="color: var(--color-primario); margin-bottom: 0.5rem;">Observaciones</h4>
-                        <p id="detalle-obs" style="white-space: pre-wrap; font-style: italic; color: var(--color-texto-secundario);"></p>
-                    </div>
-
-                    <div class="detail-section">
-                        <h4 style="color: var(--color-primario); margin-bottom: 1rem;">Datos Clínicos</h4>
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <tbody id="detalle-tabla-cuerpo">
-                                </tbody>
-                        </table>
-                    </div>
-
                 </div>
 
+                <div class="modal fade" id="modalStataPreview" tabindex="-1" aria-labelledby="modalStataLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-xl">
+                        <div class="modal-content"
+                            style="background-color: var(--color-tarjeta); color: var(--color-texto); border-color: var(--color-borde);">
+                            <div class="modal-header" style="border-bottom-color: var(--color-borde);">
+                                <h5 class="modal-title" id="modalStataLabel">Previsualización de Formato STATA
+                                </h5>
+                                <button type="button" class="close-modal" data-bs-dismiss="modal"
+                                    aria-label="Cerrar">&times;</button>
+                            </div>
+                            <div class="modal-body" id="stata-preview-body">
+                                <p>Generando previsualización...</p>
+                            </div>
+                            <div class="modal-footer" style="border-top-color: var(--color-borde);">
+                                <button type="button" class="btn-secundario"
+                                    data-bs-dismiss="modal">Cancelar</button>
+                                <button type="button" class="btn-primario" id="btn-confirmar-descarga-stata">
+                                    Confirmar y Descargar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-        </div>
 
-        <th:block th:fragment="pageScript">
-            <script th:inline="javascript">
-                const modalConfirmacionCRF = document.getElementById('modalConfirmacionEliminarCRF');
-                const confirmCrfIdText = document.getElementById('confirm-crf-id-text');
-                const confirmCrfIdInput = document.getElementById('confirm-crf-id');
-                const modalDatosFaltantes = document.getElementById('modalDatosFaltantes');
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        let criterios = {};
+                        const modalElement = document.getElementById('modalCriterio');
+                        const modalStataElement = document.getElementById('modalStataPreview');
 
-                function confirmarEliminarCRF(button) {
-                    const crfId = button.getAttribute('data-crf-id');
-                    confirmCrfIdText.textContent = crfId;
-                    confirmCrfIdInput.value = crfId;
-                    if (modalConfirmacionCRF) modalConfirmacionCRF.style.display = 'block';
-                }
-
-                function cerrarConfirmacionEliminarCRF() {
-                    if (modalConfirmacionCRF) modalConfirmacionCRF.style.display = 'none';
-                    confirmCrfIdText.textContent = '';
-                    confirmCrfIdInput.value = '';
-                }
-
-                async function ejecutarEliminacionCRF() {
-                    const crfId = confirmCrfIdInput.value;
-                    if (!crfId) return;
-
-                    const csrfToken = document.querySelector('meta[name="_csrf"]') ? document.querySelector('meta[name="_csrf"]').getAttribute('content') : null;
-                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]') ? document.querySelector('meta[name="_csrf_header"]').getAttribute('content') : null;
-                    const headers = { 'Accept': 'application/json' };
-                    if (csrfToken && csrfHeader) { headers[csrfHeader] = csrfToken; }
-                    
-                    // Logica de eliminar aqui
-                }
-
-                async function verDatosFaltantes(crfId) {
-                    if (!modalDatosFaltantes) return;
-                    
-                    const titulo = document.getElementById('modal-faltantes-titulo');
-                    const body = document.getElementById('modal-faltantes-body');
-                    
-                    titulo.innerText = 'Datos Faltantes para CRF: ' + crfId;
-                    body.innerHTML = '<p>Cargando...</p>';
-                    modalDatosFaltantes.style.display = 'block';
-
-                    try {
-                        const response = await fetch(`/crf/api/crf/${crfId}/missing-data`);
-                        if (!response.ok) throw new Error('No se pudo cargar la información.');
-                        
-                        const missingFields = await response.json();
-                        
-                        if (missingFields.length === 0) {
-                            body.innerHTML = '<p style="color: var(--color-exito); font-weight: 600;">Este CRF está completo. No faltan datos.</p>';
-                        } else {
-                            let html = '<p>Los siguientes campos no tienen un valor registrado:</p><ul style="margin-left: 1.5rem; margin-top: 1rem;">';
-                            for (const field of missingFields) {
-                                html += `<li style="margin-bottom: 0.5rem;">${field}</li>`;
+                        if (typeof bootstrap === 'undefined' || typeof bootstrap.Modal === 'undefined') {
+                            console.warn("Bootstrap JS no detectado, intentando cargar...");
+                            if (!document.querySelector('script[src*="bootstrap.bundle.min.js"]')) {
+                                let script = document.createElement('script');
+                                script.src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js";
+                                script.integrity = "sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz";
+                                script.crossOrigin = "anonymous";
+                                script.onload = inicializarModal;
+                                document.body.appendChild(script);
+                            } else {
+                                if (modalElement || modalStataElement) inicializarModal();
                             }
-                            html += '</ul>';
-                            body.innerHTML = html;
+                        } else {
+                            inicializarModal();
                         }
-                    } catch (error) {
-                        body.innerHTML = `<p style="color: var(--color-error);">${error.message}</p>`;
-                    }
-                }
 
-                function cerrarModalDatosFaltantes() {
-                    if (modalDatosFaltantes) modalDatosFaltantes.style.display = 'none';
-                }
+                        let modalCriterio;
+                        let modalStata;
+                        const modalCampoId = document.getElementById('modalCampoId');
+                        const modalCampoNombre = document.getElementById('modalCampoNombre');
+                        const selectTipoCriterio = document.getElementById('selectTipoCriterio');
+                        const divPersonalizado = document.getElementById('divPersonalizado');
+                        const inputNombreCriterio = document.getElementById('inputNombreCriterio');
+                        const inputPuntoCorte = document.getElementById('inputPuntoCorte');
+                        const selectOperador = document.getElementById('selectOperador');
+                        const btnGuardarCriterio = document.getElementById('btnGuardarCriterio');
+                        const exportForm = document.getElementById('exportForm');
 
-                // Logica del modal
-                const modalVerDetalle = document.getElementById('modalVerDetalle');
+                        const btnStataPreview = document.getElementById('btn-stata-preview');
+                        const btnConfirmarDescargaStata = document.getElementById('btn-confirmar-descarga-stata');
+                        const stataExportForm = document.getElementById('stataExportForm');
+                        const stataCriteriosInput = document.getElementById('stataCriteriosExport');
+                        const stataPreviewBody = document.getElementById('stata-preview-body');
 
-                async function verDetalleCrf(idCrf) {
-                    if (!modalVerDetalle) return;
+                        function inicializarModal() {
+                            if (typeof bootstrap === 'undefined') {
+                                return;
+                            }
 
-                    modalVerDetalle.style.display = 'block';
-                    document.getElementById('detalle-tabla-cuerpo').innerHTML = '<tr><td colspan="2" style="text-align:center;">Cargando datos...</td></tr>';
+                            if (modalElement && !modalCriterio) {
+                                modalCriterio = new bootstrap.Modal(modalElement);
+                                if (btnGuardarCriterio && !btnGuardarCriterio.dataset.listenerAttached) {
+                                    btnGuardarCriterio.addEventListener('click', guardarCriterioAction);
+                                    btnGuardarCriterio.dataset.listenerAttached = 'true';
+                                }
+                            }
 
-                    try {
-                        const response = await fetch(`/crf/api/detalle/${idCrf}`);
-                        if (!response.ok) throw new Error("No se pudo cargar el detalle");
+                            if (modalStataElement && !modalStata) {
+                                modalStata = new bootstrap.Modal(modalStataElement);
+                            }
+                        }
 
-                        const data = await response.json();
+                        function guardarCriterioAction() {
+                            const campoId = parseInt(modalCampoId.value, 10);
+                            const tipo = selectTipoCriterio.value;
+                            let criterioNuevo = { tipo: tipo };
 
-                        document.getElementById('detalle-id-titulo').textContent = data.idCrf;
-                        document.getElementById('detalle-codigo').textContent = data.codigoPaciente || '-';
-                        document.getElementById('detalle-nombre').textContent = data.nombrePaciente || '-';
-                        document.getElementById('detalle-fecha').textContent = data.fechaConsulta || '-';
-                        document.getElementById('detalle-tipo').textContent = data.esCasoEstudio ? 'Caso Estudio' : 'Caso Control';
-                        document.getElementById('detalle-obs').textContent = data.observacion || 'Sin observaciones.';
+                            if (tipo === 'personalizado') {
+                                const nombre = inputNombreCriterio.value.trim();
+                                const corte = inputPuntoCorte.value.trim();
+                                const operador = selectOperador.value;
 
-                        const tbody = document.getElementById('detalle-tabla-cuerpo');
-                        tbody.innerHTML = ''; 
+                                if (!nombre || !corte) {
+                                    alert('Para criterio personalizado, debe ingresar un nombre y un punto de corte.');
+                                    return;
+                                }
+                                criterioNuevo.nombre = nombre;
+                                criterioNuevo.puntoCorte = `${operador}${corte}`;
+                            }
 
-                        data.campos.forEach(campo => {
-                            const tr = document.createElement('tr');
-                            tr.style.borderBottom = '1px solid var(--color-fondo)';
-                            
-                            const tdNombre = document.createElement('td');
-                            tdNombre.textContent = campo.nombreCampo;
-                            tdNombre.style.padding = '0.5rem';
-                            tdNombre.style.fontWeight = '600';
-                            tdNombre.style.width = '60%';
+                            if (!criterios[campoId]) {
+                                criterios[campoId] = [];
+                            }
+                            criterios[campoId].push(criterioNuevo);
+                            actualizarTagsUI();
+                            if (modalCriterio) modalCriterio.hide();
+                        }
 
-                            const tdValor = document.createElement('td');
-                            tdValor.textContent = campo.valor;
-                            tdValor.style.padding = '0.5rem';
+                        if (selectTipoCriterio) {
+                            selectTipoCriterio.addEventListener('change', () => {
+                                if (divPersonalizado) {
+                                    divPersonalizado.style.display = (selectTipoCriterio.value === 'personalizado') ? 'block' : 'none';
+                                }
+                            });
+                        }
 
-                            tr.appendChild(tdNombre);
-                            tr.appendChild(tdValor);
-                            tbody.appendChild(tr);
+                        document.querySelectorAll('.btn-add-criterion').forEach(button => {
+                            button.addEventListener('click', (e) => {
+                                if (!modalCriterio) {
+                                    inicializarModal();
+                                    if(!modalCriterio) {
+                                         console.error("El modal no está inicializado.");
+                                         return;
+                                    }
+                                }
+                                const campoId = e.target.closest('.btn-add-criterion').dataset.campoId;
+                                const campoNombre = e.target.closest('.btn-add-criterion').dataset.campoNombre;
+
+                                if (modalCampoId) modalCampoId.value = campoId;
+                                if (modalCampoNombre) modalCampoNombre.textContent = campoNombre;
+                                if (selectTipoCriterio) selectTipoCriterio.value = 'media';
+                                if (divPersonalizado) divPersonalizado.style.display = 'none';
+                                if (inputNombreCriterio) inputNombreCriterio.value = '';
+                                if (inputPuntoCorte) inputPuntoCorte.value = '';
+
+                                modalCriterio.show();
+                            });
                         });
 
-                    } catch (error) {
-                        console.error(error);
-                        document.getElementById('detalle-tabla-cuerpo').innerHTML = 
-                            `<tr><td colspan="2" style="color:var(--color-error); text-align:center;">Error al cargar: ${error.message}</td></tr>`;
-                    }
-                }
+                        function actualizarTagsUI() {
+                            document.querySelectorAll('.criteria-tags').forEach(div => div.innerHTML = '');
 
-                function cerrarModalDetalle() {
-                    if (modalVerDetalle) modalVerDetalle.style.display = 'none';
-                }
+                            for (const campoId in criterios) {
+                                const container = document.getElementById(`tags-campo-${campoId}`);
+                                if (container) {
+                                    criterios[campoId].forEach((crit, index) => {
+                                        let nombreTag = crit.tipo;
+                                        if (crit.tipo === 'personalizado') {
+                                            nombreTag = `${crit.nombre} (${crit.puntoCorte})`;
+                                        }
 
-                // Manejador global de clics fuera de los modales
-                window.onclick = function (event) {
-                    if (event.target == modalConfirmacionCRF) cerrarConfirmacionEliminarCRF();
-                    if (event.target == modalDatosFaltantes) cerrarModalDatosFaltantes();
-                    if (event.target == modalVerDetalle) cerrarModalDetalle();
-                }
+                                        const tag = document.createElement('span');
+                                        tag.className = 'criterion-tag';
+                                        tag.textContent = nombreTag;
 
-                // Logica script slider
-                const slider = document.querySelector('.table-responsive-wrapper');
-                let isDown = false;
-                let startX;
-                let startY;
-                let scrollLeft;
-                let scrollTop;
+                                        const btnRemove = document.createElement('button');
+                                        btnRemove.type = 'button';
+                                        btnRemove.className = 'btn-remove';
+                                        btnRemove.innerHTML = '&times;';
+                                        btnRemove.dataset.campoId = campoId;
+                                        btnRemove.dataset.index = index;
 
-                if (slider) {
-                    slider.addEventListener('mousedown', (e) => {
-                        // Ignorar si se hace clic en un botón o enlace dentro de la tabla
-                        if (e.target.closest('button') || e.target.closest('a')) return;
+                                        tag.appendChild(btnRemove);
+                                        container.appendChild(tag);
+                                    });
+                                }
+                            }
+                        }
 
-                        isDown = true;
-                        slider.style.cursor = 'grabbing';
-                        startX = e.pageX - slider.offsetLeft;
-                        startY = e.pageY - slider.offsetTop;
-                        scrollLeft = slider.scrollLeft;
-                        scrollTop = slider.scrollTop;
+                        if (exportForm) {
+                            exportForm.addEventListener('submit', (e) => {
+                                const jsonCriterios = JSON.stringify(criterios);
+                                const criteriosInput = document.getElementById('criteriosExport');
+                                if (criteriosInput) criteriosInput.value = jsonCriterios;
+                            });
+                        }
+
+                        if (btnStataPreview) {
+                            btnStataPreview.addEventListener('click', async () => {
+                                if (!modalStata) {
+                                    inicializarModal();
+                                    if (!modalStata) {
+                                        alert("Error: El modal no pudo inicializarse.");
+                                        return;
+                                    }
+                                }
+
+                                stataPreviewBody.innerHTML = '<p>Generando previsualización... Por favor espere.</p>';
+                                modalStata.show();
+
+                                const jsonCriterios = JSON.stringify(criterios);
+                                const formData = new FormData();
+                                formData.append('criteriosJson', jsonCriterios);
+
+                                try {
+                                    const response = await fetch('/datos-crf/api/preview-stata', {
+                                        method: 'POST',
+                                        body: formData
+                                    });
+
+                                    if (!response.ok) {
+                                        throw new Error('Error del servidor al generar la previsualización.');
+                                    }
+
+                                    const data = await response.json();
+                                    const tableHtml = buildPreviewTable(data);
+                                    stataPreviewBody.innerHTML = tableHtml;
+
+                                } catch (error) {
+                                    stataPreviewBody.innerHTML = `<p style="color: var(--color-error);">Error: ${error.message}</p>`;
+                                }
+                            });
+                        }
+
+                        if (btnConfirmarDescargaStata) {
+                            btnConfirmarDescargaStata.addEventListener('click', () => {
+                                stataCriteriosInput.value = JSON.stringify(criterios);
+                                stataExportForm.submit();
+                                if (modalStata) modalStata.hide();
+                            });
+                        }
+
+                        function buildPreviewTable(data) {
+                            let html = '<p>Se aplicarán los siguientes cambios de formato a las cabeceras y valores. Verifique antes de descargar.</p>';
+                            html += '<div class="table-responsive-wrapper" style="max-height: 50vh; overflow-y: auto;">';
+                            html += '<table><thead><tr><th style="background-color: var(--color-fondo);">Campo Original</th><th style="background-color: var(--color-fondo);">Formato STATA</th></tr></thead><tbody>';
+
+                            for (let i = 0; i < data.headersOriginal.length; i++) {
+                                const original = data.headersOriginal[i];
+                                const stata = data.headersStata[i];
+                                const esDiferente = original !== stata;
+                                html += `<tr ${esDiferente ? 'style="background-color: rgba(255, 193, 7, 0.1);"' : ''}>
+                                    <td style="word-break: break-all;">${escapeHTML(original)}</td>
+                                    <td style="word-break: break-all;"><strong>${escapeHTML(stata)}</strong></td>
+                                </tr>`;
+                            }
+
+                            html += '<tr><td colspan="2" style="background-color: var(--color-fondo); text-align: center; font-weight: bold;"><i>Ejemplo de 1ra Fila de Datos</i></td></tr>';
+
+                            if (data.filasOriginal && data.filasOriginal.length > 0) {
+                                const primeraFilaOrig = data.filasOriginal[0] || {};
+                                const primeraFilaStata = data.filasStata[0] || {};
+
+                                for (let i = 0; i < data.headersOriginal.length; i++) {
+                                    const hOrig = data.headersOriginal[i];
+                                    const hStata = data.headersStata[i];
+                                    const valOrig = primeraFilaOrig[hOrig] || '';
+                                    const valStata = primeraFilaStata[hStata] || '';
+                                    const esDiferente = valOrig !== valStata;
+
+                                    html += `<tr ${esDiferente ? 'style="background-color: rgba(255, 193, 7, 0.1);"' : ''}>
+                                        <td style="word-break: break-all;">${escapeHTML(valOrig)}</td>
+                                        <td style="word-break: break-all;"><strong>${escapeHTML(valStata)}</strong></td>
+                                    </tr>`;
+                                }
+                            }
+
+                            html += '</tbody></table></div>';
+                            return html;
+                        }
+
+                        function escapeHTML(str) {
+                            if (str === null || str === undefined) return '';
+                            return str.toString()
+                                .replace(/&/g, '&amp;')
+                                .replace(/</g, '&lt;')
+                                .replace(/>/g, '&gt;')
+                                .replace(/"/g, '&quot;')
+                                .replace(/'/g, '&#39;');
+                        }
                     });
+                </script>
 
-                    slider.addEventListener('mouseleave', () => {
-                        isDown = false;
-                        slider.style.cursor = 'grab';
-                    });
-
-                    slider.addEventListener('mouseup', () => {
-                        isDown = false;
-                        slider.style.cursor = 'grab';
-                    });
-
-                    slider.addEventListener('mousemove', (e) => {
-                        if (!isDown) return;
-                        e.preventDefault();
-                        const x = e.pageX - slider.offsetLeft;
-                        const y = e.pageY - slider.offsetTop;
-                        const walkX = (x - startX); 
-                        const walkY = (y - startY); 
-                        slider.scrollLeft = scrollLeft - walkX;
-                        slider.scrollTop = scrollTop - walkY;
-                    });
-                }
-            </script>
-        </th:block>
-
+            </div>
+        </div>
     </div>
 </body>
 
