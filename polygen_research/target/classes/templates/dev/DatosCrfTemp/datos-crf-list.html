@@ -10,6 +10,7 @@
                 margin-top: 20px;
             }
 
+            /* Estilo base BOTONES EXPORTAR */
             .btn-export-custom {
                 display: inline-flex;
                 align-items: center;
@@ -21,30 +22,52 @@
                 text-decoration: none;
                 transition: all 0.2s ease;
                 border: 1px solid;
-                background-color: #fff;
+                /* CAMBIO: Usar variable para el fondo en lugar de #fff fijo */
+                background-color: var(--color-tarjeta); 
                 cursor: pointer;
             }
 
+            /* EXCEL (Modo Claro) */
             .btn-excel-custom {
                 color: #217346;
                 border-color: #217346;
             }
-
             .btn-excel-custom:hover {
                 background-color: #217346;
                 color: #fff;
             }
+            
+            /* EXCEL (Modo Oscuro - Sobrescritura para contraste) */
+            .dark-mode .btn-excel-custom {
+                color: #4caf50; /* Verde más brillante */
+                border-color: #4caf50;
+            }
+            .dark-mode .btn-excel-custom:hover {
+                background-color: #4caf50;
+                color: #121212;
+            }
 
+            /* STATA (Modo Claro) */
             .btn-stata-custom {
                 color: #005a9c;
                 border-color: #005a9c;
             }
-
             .btn-stata-custom:hover {
                 background-color: #005a9c;
                 color: #fff;
             }
 
+            /* STATA (Modo Oscuro - Sobrescritura para contraste) */
+            .dark-mode .btn-stata-custom {
+                color: #64b5f6; /* Azul más brillante */
+                border-color: #64b5f6;
+            }
+            .dark-mode .btn-stata-custom:hover {
+                background-color: #64b5f6;
+                color: #121212;
+            }
+
+            /* Botón (+) */
             .btn-add-criterion {
                 display: flex;
                 align-items: center;
@@ -52,9 +75,10 @@
                 width: 24px;
                 height: 24px;
                 border-radius: 50%;
-                background-color: #fff;
-                border: 1px solid #005a9c;
-                color: #005a9c;
+                /* CAMBIO: Fondo adaptable */
+                background-color: var(--color-tarjeta);
+                border: 1px solid var(--color-primario);
+                color: var(--color-primario);
                 font-weight: bold;
                 cursor: pointer;
                 transition: all 0.2s;
@@ -63,9 +87,14 @@
             }
 
             .btn-add-criterion:hover {
-                background-color: #005a9c;
-                color: #fff;
+                background-color: var(--color-primario);
+                color: #fff; /* Esto debería ser blanco en ambos modos al hacer hover */
                 transform: scale(1.1);
+            }
+            
+            /* Ajuste texto hover en dark mode para el botón + */
+             .dark-mode .btn-add-criterion:hover {
+                color: #121212; /* Texto oscuro sobre fondo verde brillante */
             }
         </style>
 
@@ -395,20 +424,6 @@
                                 }
                             }
                         }
-
-                        document.body.addEventListener('click', (e) => {
-                            if (e.target.classList.contains('btn-remove')) {
-                                const campoId = e.target.dataset.campoId;
-                                const index = e.target.dataset.index;
-                                if (criterios[campoId]) {
-                                    criterios[campoId].splice(index, 1);
-                                    if (criterios[campoId].length === 0) {
-                                        delete criterios[campoId];
-                                    }
-                                    actualizarTagsUI();
-                                }
-                            }
-                        });
 
                         if (exportForm) {
                             exportForm.addEventListener('submit', (e) => {
