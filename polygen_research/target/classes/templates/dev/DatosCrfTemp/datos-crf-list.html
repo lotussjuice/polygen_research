@@ -22,12 +22,11 @@
                 text-decoration: none;
                 transition: all 0.2s ease;
                 border: 1px solid;
-                /* CAMBIO: Usar variable para el fondo en lugar de #fff fijo */
                 background-color: var(--color-tarjeta); 
                 cursor: pointer;
             }
 
-            /* EXCEL (Modo Claro) */
+            /* EXCEL */
             .btn-excel-custom {
                 color: #217346;
                 border-color: #217346;
@@ -36,10 +35,8 @@
                 background-color: #217346;
                 color: #fff;
             }
-            
-            /* EXCEL (Modo Oscuro - Sobrescritura para contraste) */
             .dark-mode .btn-excel-custom {
-                color: #4caf50; /* Verde más brillante */
+                color: #4caf50;
                 border-color: #4caf50;
             }
             .dark-mode .btn-excel-custom:hover {
@@ -47,7 +44,7 @@
                 color: #121212;
             }
 
-            /* STATA (Modo Claro) */
+            /* STATA */
             .btn-stata-custom {
                 color: #005a9c;
                 border-color: #005a9c;
@@ -56,10 +53,8 @@
                 background-color: #005a9c;
                 color: #fff;
             }
-
-            /* STATA (Modo Oscuro - Sobrescritura para contraste) */
             .dark-mode .btn-stata-custom {
-                color: #64b5f6; /* Azul más brillante */
+                color: #64b5f6;
                 border-color: #64b5f6;
             }
             .dark-mode .btn-stata-custom:hover {
@@ -75,7 +70,6 @@
                 width: 24px;
                 height: 24px;
                 border-radius: 50%;
-                /* CAMBIO: Fondo adaptable */
                 background-color: var(--color-tarjeta);
                 border: 1px solid var(--color-primario);
                 color: var(--color-primario);
@@ -85,16 +79,47 @@
                 padding: 0;
                 line-height: 0;
             }
-
             .btn-add-criterion:hover {
                 background-color: var(--color-primario);
-                color: #fff; /* Esto debería ser blanco en ambos modos al hacer hover */
+                color: #fff;
                 transform: scale(1.1);
             }
-            
-            /* Ajuste texto hover en dark mode para el botón + */
-             .dark-mode .btn-add-criterion:hover {
-                color: #121212; /* Texto oscuro sobre fondo verde brillante */
+            .dark-mode .btn-add-criterion:hover {
+                color: #121212;
+            }
+
+            /* Tags de criterios (chips) */
+            .criterion-tag {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                background-color: var(--color-fondo);
+                border: 1px solid var(--color-borde);
+                border-radius: 12px;
+                padding: 2px 8px;
+                font-size: 0.75rem;
+                color: var(--color-texto);
+                font-weight: 500;
+                margin-right: 4px;
+                margin-bottom: 4px;
+            }
+            .criterion-tag .btn-remove {
+                background: none;
+                border: none;
+                color: var(--color-error);
+                font-size: 1.1rem;
+                line-height: 1;
+                cursor: pointer;
+                padding: 0 2px;
+                display: flex;
+                align-items: center;
+                opacity: 0.7;
+                transition: opacity 0.2s;
+            }
+            .criterion-tag .btn-remove:hover {
+                opacity: 1;
+                background-color: rgba(255, 0, 0, 0.1);
+                border-radius: 50%;
             }
         </style>
 
@@ -160,7 +185,7 @@
                                         </button>
                                     </div>
                                     <div class="criteria-tags"
-                                        th:id="'tags-campo-' + ${campoStat.campoCrf.idCampo}"></div>
+                                        th:id="'tags-campo-' + ${campoStat.campoCrf.idCampo}" style="margin-top: 6px; display: flex; flex-wrap: wrap;"></div>
                                 </th>
                             </tr>
                         </thead>
@@ -179,18 +204,6 @@
                                 <td colspan="1" style="text-align: right; padding-right: 1rem;">Total Vacíos:
                                 </td>
                                 <td th:each="stat : ${camposColumnas}" th:text="${stat.countVacios}"
-                                    style="text-align: center;">...</td>
-                            </tr>
-                            <tr>
-                                <td colspan="1" style="text-align: right; padding-right: 1rem;">Total Ceros (0):
-                                </td>
-                                <td th:each="stat : ${camposColumnas}" th:text="${stat.countCeros}"
-                                    style="text-align: center;">...</td>
-                            </tr>
-                            <tr>
-                                <td colspan="1" style="text-align: right; padding-right: 1rem;">Total Unos (1):
-                                </td>
-                                <td th:each="stat : ${camposColumnas}" th:text="${stat.countUnos}"
                                     style="text-align: center;">...</td>
                             </tr>
                         </tfoot>
@@ -240,7 +253,7 @@
                                             <option value="<=">&lt;= (Menor o igual que)</option>
                                             <option value=">">&gt; (Mayor que)</option>
                                             <option value=">=">&gt;= (Mayor o igual que)</option>
-                                            <option value="==">== (Igual a)</option>
+                                            <option value="==">Igual a (==)</option>
                                         </select>
                                     </div>
                                 </div>
@@ -409,8 +422,7 @@
 
                                         const tag = document.createElement('span');
                                         tag.className = 'criterion-tag';
-                                        tag.textContent = nombreTag;
-
+                                        
                                         const btnRemove = document.createElement('button');
                                         btnRemove.type = 'button';
                                         btnRemove.className = 'btn-remove';
@@ -418,12 +430,30 @@
                                         btnRemove.dataset.campoId = campoId;
                                         btnRemove.dataset.index = index;
 
+                                        tag.textContent = nombreTag + ' ';
                                         tag.appendChild(btnRemove);
+                                        
                                         container.appendChild(tag);
                                     });
                                 }
                             }
                         }
+
+                        document.body.addEventListener('click', (e) => {
+                            const btnRemove = e.target.closest('.btn-remove');
+                            if (btnRemove) {
+                                const campoId = btnRemove.dataset.campoId;
+                                const index = parseInt(btnRemove.dataset.index, 10);
+                                
+                                if (criterios[campoId]) {
+                                    criterios[campoId].splice(index, 1);
+                                    if (criterios[campoId].length === 0) {
+                                        delete criterios[campoId];
+                                    }
+                                    actualizarTagsUI();
+                                }
+                            }
+                        });
 
                         if (exportForm) {
                             exportForm.addEventListener('submit', (e) => {
