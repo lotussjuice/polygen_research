@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import cl.ubiobio.silkcorp.polygen_research.DataBase.RolUsuario.RolUsuario;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.RolUsuario.RolUsuarioRepository; 
+import cl.ubiobio.silkcorp.polygen_research.DataBase.Whitelist.Whitelist;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.Whitelist.WhitelistRepository;
 
 @Service
 public class UsuarioService {
@@ -53,6 +55,14 @@ public class UsuarioService {
         usuarioRepository.deleteById(usuarioId);
     }
 
+    @Transactional
+    public void softDeleteUsuario(Integer idUsuario) {
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        usuario.setEstado("ELIMINADO");
+        usuarioRepository.save(usuario);
+    }
  
     public Optional<Usuario> getUsuarioById(Integer id) {
         return usuarioRepository.findById(id);

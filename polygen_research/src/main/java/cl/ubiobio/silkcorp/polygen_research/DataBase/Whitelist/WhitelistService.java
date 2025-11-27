@@ -26,7 +26,8 @@ public class WhitelistService {
     }
 
     public List<Whitelist> getAllCredenciales() {
-        return whitelistRepository.findAll();
+        // Cambio para buscar solo activos
+        return whitelistRepository.findAllActiveAndInactiveUsers();
     }
 
     public boolean existsByCorreo(String correo) {

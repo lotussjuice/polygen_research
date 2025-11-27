@@ -7,9 +7,13 @@ import cl.ubiobio.silkcorp.polygen_research.DataBase.Usuario.UsuarioService;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.Whitelist.Whitelist;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.Whitelist.WhitelistService;
 import cl.ubiobio.silkcorp.polygen_research.security.EmailService;
-
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.WebAttributes;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -42,7 +46,23 @@ public class AuthController {
     }
 
     @GetMapping("/login")
-    public String showLoginPage() {
+    public String showLoginPage(Model model, 
+                                @RequestParam(value = "error", required = false) String error, 
+                                HttpServletRequest request) {
+        
+        if (error != null) {
+            String mensajeError = "Credenciales incorrectas."; // Mensaje por defecto
+            HttpSession session = request.getSession(false);
+            if (session != null) {
+                Exception ex = (Exception) session.getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
+                
+                if (ex instanceof DisabledException) {
+                    mensajeError = "No se puede acceder: Esta cuenta fue eliminada.";
+                }
+            }
+
+            model.addAttribute("errorMessage", mensajeError);
+        }
         return "startpoint/login";
     }
 
@@ -73,6 +93,23 @@ public class AuthController {
         // 3. Verificar duplicados en BD
         if (whitelistService.existsByCorreo(registerDto.getCorreo())) {
              result.rejectValue("correo", "error.correo", "El correo electrónico ya está registrado.");
+        }
+
+        Optional<Whitelist> credencialExistente = whitelistService.findByCorreo(registerDto.getCorreo());
+
+        if (credencialExistente.isPresent()) {
+            Usuario usuarioAsociado = credencialExistente.get().getUsuario();
+            
+            if (usuarioAsociado != null && "ELIMINADO".equals(usuarioAsociado.getEstado())) {
+                result.rejectValue("correo", "error.deleted", 
+                    "Esta cuenta fue eliminada. Contacte al administrador para reactivarla.");
+                
+                // Opcional: Si quieres un Toast flotante ADEMÁS del error en el input:
+                redirectAttributes.addFlashAttribute("errorMessage", "Cuenta previamente eliminada. Correo sin acceso al sistema.");
+                return "redirect:/register"; 
+            } else {
+                result.rejectValue("correo", "error.correo", "El correo electrónico ya está registrado.");
+            }
         }
 
         if (result.hasErrors()) {
@@ -201,6 +238,13 @@ public class AuthController {
 
         if (credencialOpt.isEmpty()) {
             redirectAttributes.addFlashAttribute("errorMessage", "El correo no se encuentra registrado.");
+            return "redirect:/forgot-password";
+        }
+
+        Usuario usuario = credencialOpt.get().getUsuario();
+        if (usuario != null && "ELIMINADO".equals(usuario.getEstado())) {
+            redirectAttributes.addFlashAttribute("errorMessage", 
+                "No se puede recuperar la contraseña. Esta cuenta ha sido eliminada.");
             return "redirect:/forgot-password";
         }
 

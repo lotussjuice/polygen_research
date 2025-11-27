@@ -69,7 +69,7 @@ public class WhitelistController {
     @ResponseBody
     public ResponseEntity<String> eliminarUsuario(@PathVariable Integer usuarioId) {
         try {
-            usuarioService.deleteUsuario(usuarioId);
+            usuarioService.softDeleteUsuario(usuarioId);
             return ResponseEntity.ok("Usuario eliminado correctamente.");
         } catch (RuntimeException e) {
              // Loggear el error e.getMessage()

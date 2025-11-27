@@ -2,8 +2,10 @@ package cl.ubiobio.silkcorp.polygen_research.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -17,6 +19,25 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    private final UserDetailsService userDetailsService; 
+
+    public SecurityConfig(UserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        
+        // CLAVE: Esto permite que la DisabledException (Cuenta eliminada) 
+        // llegue al AuthController en lugar de convertirse en "Bad Credentials"
+        authProvider.setHideUserNotFoundExceptions(false); 
+        
+        return authProvider;
+    }
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -55,4 +76,6 @@ public class SecurityConfig {
             );            
         return http.build();
     }
+
+    
 }
