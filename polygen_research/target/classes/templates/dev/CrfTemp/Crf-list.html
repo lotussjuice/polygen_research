@@ -78,25 +78,22 @@
                                 <td class="actions-cell" style="white-space: nowrap;">
                                     <div style="display: flex; justify-content: center; gap: 8px; align-items: center;">
 
-
                                         <button type="button" class="btn-secundario btn-sm"
                                             th:onclick="|verDetalleCrf(${fila.crf.idCrf})|"
                                             title="Ver Detalle Completo">
                                             <i class="ph-bold ph-eye"></i>
                                         </button>
 
-                                        <div style="position: relative;">
+                                        <button type="button" class="btn-secundario btn-sm"
+                                            th:onclick="|verDatosFaltantes(${fila.crf.idCrf})|"
+                                            title="Ver Datos Faltantes" style="position: relative;"> <i
+                                                class="ph-bold ph-list-checks"></i>
 
                                             <span
                                                 th:if="${fila.datosFaltantes > 0 and fila.crf.datosPaciente?.estado == 'ACTIVO'}"
-                                                class="warning-dot-floating" title="CRF Incompleto"></span>
-
-                                            <button type="button" class="btn-secundario btn-sm"
-                                                th:onclick="|verDatosFaltantes(${fila.crf.idCrf})|"
-                                                title="Ver Datos Faltantes">
-                                                <i class="ph-bold ph-list-checks"></i>
-                                            </button>
-                                        </div>
+                                                class="warning-dot-floating" title="CRF Incompleto"
+                                                style="top: -3px; right: -3px; left: auto;"> </span>
+                                        </button>
 
                                         <a th:href="@{/crf/pdf/{id}(id=${fila.crf.idCrf})}"
                                             class="btn btn-sm btn-outline-danger" title="Descargar PDF" target="_blank"
@@ -117,7 +114,7 @@
                                         </button>
                                     </div>
                                 </td>
-
+                                
                                 <td
                                     th:text="${fila.crf.fechaConsulta != null ? #temporals.format(fila.crf.fechaConsulta, 'dd/MM/yyyy') : 'N/A'}">
                                     ...</td>
@@ -222,6 +219,8 @@
                 const confirmCrfIdText = document.getElementById('confirm-crf-id-text');
                 const confirmCrfIdInput = document.getElementById('confirm-crf-id');
                 const modalDatosFaltantes = document.getElementById('modalDatosFaltantes');
+                const modalVerDetalle = document.getElementById('modalVerDetalle');
+                const slider = document.querySelector('.table-responsive-wrapper');
 
                 function confirmarEliminarCRF(button) {
                     const crfId = button.getAttribute('data-crf-id');
@@ -240,11 +239,15 @@
                     const crfId = confirmCrfIdInput.value;
                     if (!crfId) return;
 
-                    const csrfToken = document.querySelector('meta[name="_csrf"]') ? document.querySelector('meta[name="_csrf"]').getAttribute('content') : null;
-                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]') ? document.querySelector('meta[name="_csrf_header"]').getAttribute('content') : null;
+                    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
                     const headers = { 'Accept': 'application/json' };
                     if (csrfToken && csrfHeader) { headers[csrfHeader] = csrfToken; }
 
+                    // Aquí iría tu llamada fetch DELETE...
+                    // Por ahora cerramos el modal
+                    cerrarConfirmacionEliminarCRF();
+                    alert("Lógica de eliminación pendiente de implementación completa.");
                 }
 
                 async function verDatosFaltantes(crfId) {
@@ -282,14 +285,12 @@
                     if (modalDatosFaltantes) modalDatosFaltantes.style.display = 'none';
                 }
 
-                // Logica del modal
-                const modalVerDetalle = document.getElementById('modalVerDetalle');
-
                 async function verDetalleCrf(idCrf) {
                     if (!modalVerDetalle) return;
 
                     modalVerDetalle.style.display = 'block';
-                    document.getElementById('detalle-tabla-cuerpo').innerHTML = '<tr><td colspan="2" style="text-align:center;">Cargando datos...</td></tr>';
+                    const tbody = document.getElementById('detalle-tabla-cuerpo');
+                    if (tbody) tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding: 1rem;">Cargando datos...</td></tr>';
 
                     try {
                         const response = await fetch(`/crf/api/detalle/${idCrf}`);
@@ -297,39 +298,46 @@
 
                         const data = await response.json();
 
-                        document.getElementById('detalle-id-titulo').textContent = data.idCrf;
+                        // Llenar datos fijos
+                        const elId = document.getElementById('detalle-id-titulo');
+                        if (elId) elId.textContent = data.idCrf; // (Aunque esté oculto)
+
                         document.getElementById('detalle-codigo').textContent = data.codigoPaciente || '-';
                         document.getElementById('detalle-nombre').textContent = data.nombrePaciente || '-';
                         document.getElementById('detalle-fecha').textContent = data.fechaConsulta || '-';
                         document.getElementById('detalle-tipo').textContent = data.esCasoEstudio ? 'Caso Estudio' : 'Caso Control';
                         document.getElementById('detalle-obs').textContent = data.observacion || 'Sin observaciones.';
 
-                        const tbody = document.getElementById('detalle-tabla-cuerpo');
-                        tbody.innerHTML = '';
+                        // Llenar tabla dinámica
+                        if (tbody) {
+                            tbody.innerHTML = '';
+                            if (data.campos && data.campos.length > 0) {
+                                data.campos.forEach(campo => {
+                                    const tr = document.createElement('tr');
+                                    tr.style.borderBottom = '1px solid var(--color-fondo)';
 
-                        data.campos.forEach(campo => {
-                            const tr = document.createElement('tr');
-                            tr.style.borderBottom = '1px solid var(--color-fondo)';
+                                    const tdNombre = document.createElement('td');
+                                    tdNombre.textContent = campo.nombreCampo;
+                                    tdNombre.style.padding = '0.5rem';
+                                    tdNombre.style.fontWeight = '600';
+                                    tdNombre.style.width = '60%';
 
-                            const tdNombre = document.createElement('td');
-                            tdNombre.textContent = campo.nombreCampo;
-                            tdNombre.style.padding = '0.5rem';
-                            tdNombre.style.fontWeight = '600';
-                            tdNombre.style.width = '60%';
+                                    const tdValor = document.createElement('td');
+                                    tdValor.textContent = campo.valor;
+                                    tdValor.style.padding = '0.5rem';
 
-                            const tdValor = document.createElement('td');
-                            tdValor.textContent = campo.valor;
-                            tdValor.style.padding = '0.5rem';
-
-                            tr.appendChild(tdNombre);
-                            tr.appendChild(tdValor);
-                            tbody.appendChild(tr);
-                        });
-
+                                    tr.appendChild(tdNombre);
+                                    tr.appendChild(tdValor);
+                                    tbody.appendChild(tr);
+                                });
+                            } else {
+                                tbody.innerHTML = '<tr><td colspan="2" style="text-align:center; padding:0.5rem;">No hay datos clínicos registrados.</td></tr>';
+                            }
+                        }
                     } catch (error) {
                         console.error(error);
-                        document.getElementById('detalle-tabla-cuerpo').innerHTML =
-                            `<tr><td colspan="2" style="color:var(--color-error); text-align:center;">Error al cargar: ${error.message}</td></tr>`;
+                        const tbody = document.getElementById('detalle-tabla-cuerpo');
+                        if (tbody) tbody.innerHTML = `<tr><td colspan="2" style="color:var(--color-error); text-align:center; padding: 1rem;">Error: ${error.message}</td></tr>`;
                     }
                 }
 
@@ -337,24 +345,18 @@
                     if (modalVerDetalle) modalVerDetalle.style.display = 'none';
                 }
 
-                // Manejador global de clics fuera de los modales
                 window.onclick = function (event) {
                     if (event.target == modalConfirmacionCRF) cerrarConfirmacionEliminarCRF();
                     if (event.target == modalDatosFaltantes) cerrarModalDatosFaltantes();
                     if (event.target == modalVerDetalle) cerrarModalDetalle();
                 }
 
-                // Logica script slider
-                const slider = document.querySelector('.table-responsive-wrapper');
                 let isDown = false;
-                let startX;
-                let startY;
-                let scrollLeft;
-                let scrollTop;
+                let startX, startY, scrollLeft, scrollTop;
 
                 if (slider) {
                     slider.addEventListener('mousedown', (e) => {
-                        // Ignorar si se hace clic en un botón o enlace dentro de la tabla
+                        // Ignorar si se hace clic en un botón o enlace
                         if (e.target.closest('button') || e.target.closest('a')) return;
 
                         isDown = true;

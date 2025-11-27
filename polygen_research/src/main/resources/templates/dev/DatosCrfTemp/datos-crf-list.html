@@ -16,31 +16,33 @@
                         class="btn-secundario btn-sm" title="Limpiar búsqueda">Limpiar</a>
                 </form>
 
-
-
             </div>
             <div class="card-body">
 
                 <p>Cada fila representa un CRF completo. Use (+) en las columnas numéricas para añadir criterios de
                     dicotomización antes de exportar.</p>
-
+                <br>
 
                 <div
                     style="margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
 
                     <div>
-                        <form id="exportForm" th:action="@{/datos-crf/list/exportar}" method="post"
-                            style="display: inline-block;">
-                            <input type="hidden" id="criteriosExport" name="criteriosJson" />
-                            <button type="submit" class="btn-exito btn-sm" style="margin-bottom: 1rem;">
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="button" id="btn-excel-confirm" class="btn-exito btn-sm"
+                                title="Descargar Excel">
                                 <i class="ph-bold ph-file-xls"></i> Exportar a Excel
                             </button>
-                        </form>
 
-                        <button type="button" id="btn-stata-preview" class="btn-stata btn-sm"
-                            style="margin-bottom: 1rem; margin-left: 0.5rem;">
-                            <i class="ph-bold ph-file"></i> Exportar para STATA
-                        </button>
+                            <button type="button" id="btn-stata-preview" class="btn-stata btn-sm"
+                                style="margin-left: 0.5rem;" title="Exportar para STATA">
+                                <i class="ph-bold ph-file"></i> Exportar para STATA
+                            </button>
+                        </div>
+
+                        <form id="exportForm" th:action="@{/datos-crf/list/exportar}" method="post"
+                            style="display: none;">
+                            <input type="hidden" id="criteriosExport" name="criteriosJson" />
+                        </form>
 
                         <form id="stataExportForm" th:action="@{/datos-crf/list/exportar-stata}" method="post"
                             style="display: none;">
@@ -108,9 +110,9 @@
 
                         <div class="modal fade" id="modalCriterio" tabindex="-1" aria-labelledby="modalCriterioLabel"
                             aria-hidden="true">
-                            <div class="modal-dialog">
+                            <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content"
-                                    style="background-color: var(--color-tarjeta); color: var(--color-texto); border-color: var(--color-borde);">
+                                    style="background-color: var(--color-tarjeta); color: var(--color-texto); border-color: var(--color-borde); max-width: 500px;">
                                     <div class="modal-header" style="border-bottom-color: var(--color-borde);">
                                         <h5 class="modal-title" id="modalCriterioLabel">Agregar Criterio para: <span
                                                 id="modalCampoNombre"></span></h5>
@@ -134,8 +136,7 @@
                                                 <input type="text" class="form-control" id="inputNombreCriterio"
                                                     placeholder="Ej: Edad_Joven">
                                                 <small style="color: var(--color-texto-secundario);">Se usará como
-                                                    cabecera en
-                                                    Excel (Ej: Edad_Joven)</small>
+                                                    cabecera en Excel</small>
                                             </div>
                                             <div class="form-group">
                                                 <label for="inputPuntoCorte">Punto de Corte (Valor numérico)</label>
@@ -155,35 +156,89 @@
                                         </div>
                                     </div>
                                     <div class="modal-footer" style="border-top-color: var(--color-borde);">
-                                        <button type="button" class="btn-secundario"
-                                            data-bs-dismiss="modal">Cancelar</button>
-                                        <button type="button" class="btn-primario" id="btnGuardarCriterio">Guardar
-                                            Criterio</button>
+                                        <div class="btn-group-equal">
+                                            <button type="button" class="btn-secundario"
+                                                data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="button" class="btn-primario" id="btnGuardarCriterio">Guardar</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="modal fade" id="modalStataPreview" tabindex="-1" aria-labelledby="modalStataLabel"
-                            aria-hidden="true">
-                            <div class="modal-dialog modal-xl">
+                        <div class="modal fade" id="modalExcelConfirm" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
                                 <div class="modal-content"
-                                    style="background-color: var(--color-tarjeta); color: var(--color-texto); border-color: var(--color-borde);">
-                                    <div class="modal-header" style="border-bottom-color: var(--color-borde);">
-                                        <h5 class="modal-title" id="modalStataLabel">Previsualización de Formato STATA
-                                        </h5>
-                                        <button type="button" class="close-modal" data-bs-dismiss="modal"
-                                            aria-label="Cerrar">&times;</button>
+                                    style="max-width: 450px; text-align: center; background-color: var(--color-tarjeta); color: var(--color-texto); border-color: var(--color-borde);">
+                                    <div class="modal-header"
+                                        style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                                        <div style="background-color: #f0fff4; padding: 1rem; border-radius: 50%;">
+                                            <i class="ph-bold ph-file-xls"
+                                                style="font-size: 2.5rem; color: var(--color-exito);"></i>
+                                        </div>
                                     </div>
-                                    <div class="modal-body" id="stata-preview-body">
-                                        <p>Generando previsualización...</p>
+                                    <div class="modal-body">
+                                        <h2 style="margin-bottom: 1rem;">¿Exportar a Excel?</h2>
+                                        <p>Se generará un archivo .xlsx con los datos filtrados.</p>
+                                        
+                                        <div style="margin-top: 1rem; text-align: left;">
+                                            <strong style="font-size: 0.9rem;">Dicotomizaciones a incluir:</strong>
+                                            <div id="excel-dicotom-list"
+                                                style="margin-top: 0.5rem; padding: 0.8rem; background-color: var(--color-fondo); border-radius: 6px; max-height: 150px; overflow-y: auto; font-size: 0.85rem;">
+                                                <em style="color: var(--color-texto-secundario);">Calculando...</em>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="modal-footer" style="border-top-color: var(--color-borde);">
-                                        <button type="button" class="btn-secundario"
-                                            data-bs-dismiss="modal">Cancelar</button>
-                                        <button type="button" class="btn-primario" id="btn-confirmar-descarga-stata">
-                                            Confirmar y Descargar
-                                        </button>
+                                    <div class="modal-footer" style="justify-content: center; border-top: none;">
+                                        <div class="btn-group-equal" style="display: flex; gap: 10px; width: 100%;">
+                                            <button type="button" class="btn-secundario" data-bs-dismiss="modal"
+                                                style="flex: 1;">Cancelar</button>
+                                            <button type="button" class="btn-exito" id="btn-execute-excel"
+                                                style="flex: 1;">Descargar</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal fade" id="modalStataPreview" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content"
+                                    style="max-width: 500px; text-align: center; background-color: var(--color-tarjeta); color: var(--color-texto); border-color: var(--color-borde);">
+                                    <div class="modal-header"
+                                        style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                                        <div style="background-color: #eef4fc; padding: 1rem; border-radius: 50%;">
+                                            <i class="ph-bold ph-file-code"
+                                                style="font-size: 2.5rem; color: var(--color-primario);"></i>
+                                        </div>
+                                    </div>
+                                    <div class="modal-body">
+                                        <h2 style="margin-bottom: 1rem;">Formato STATA</h2>
+                                        
+                                        <p style="font-size: 0.9rem; color: var(--color-texto-secundario); margin-bottom: 1rem;">
+                                            El archivo se generará compatible con STATA 14+ (.xlsx optimizado):
+                                        </p>
+                                        <ul style="text-align: left; font-size: 0.85rem; background: var(--color-fondo); padding: 1rem 1rem 1rem 2rem; border-radius: 8px; margin-bottom: 1rem;">
+                                            <li>Variables en formato <code>snake_case</code>.</li>
+                                            <li>Eliminación de tildes y caracteres especiales.</li>
+                                            <li>Valores vacíos convertidos a nulos estándar.</li>
+                                        </ul>
+
+                                        <div style="text-align: left;">
+                                            <strong style="font-size: 0.9rem;">Dicotomizaciones a incluir:</strong>
+                                            <div id="stata-dicotom-list"
+                                                style="margin-top: 0.5rem; padding: 0.8rem; background-color: var(--color-fondo); border-radius: 6px; max-height: 150px; overflow-y: auto; font-size: 0.85rem;">
+                                                <em style="color: var(--color-texto-secundario);">Ninguna.</em>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer" style="justify-content: center; border-top: none;">
+                                        <div class="btn-group-equal" style="display: flex; gap: 10px; width: 100%;">
+                                            <button type="button" class="btn-secundario" data-bs-dismiss="modal"
+                                                style="flex: 1;">Cancelar</button>
+                                            <button type="button" class="btn-stata"
+                                                id="btn-confirmar-descarga-stata" style="flex: 1;">Exportar</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -192,273 +247,194 @@
                         <script>
                             document.addEventListener('DOMContentLoaded', () => {
                                 let criterios = {};
-                                const modalElement = document.getElementById('modalCriterio');
-                                const modalStataElement = document.getElementById('modalStataPreview');
+
+                                const modalCriterioEl = document.getElementById('modalCriterio');
+                                const modalStataEl = document.getElementById('modalStataPreview');
+                                const modalExcelEl = document.getElementById('modalExcelConfirm');
 
                                 if (typeof bootstrap === 'undefined' || typeof bootstrap.Modal === 'undefined') {
-                                    console.warn("Bootstrap JS no detectado, intentando cargar...");
                                     if (!document.querySelector('script[src*="bootstrap.bundle.min.js"]')) {
                                         let script = document.createElement('script');
                                         script.src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js";
                                         script.integrity = "sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz";
                                         script.crossOrigin = "anonymous";
-                                        script.onload = inicializarModal;
+                                        script.onload = inicializarModales;
                                         document.body.appendChild(script);
                                     } else {
-                                        console.error("Bootstrap JS parece estar en el DOM pero no se inicializó correctamente.");
-                                        if (modalElement || modalStataElement) inicializarModal();
+                                        inicializarModales();
                                     }
                                 } else {
-                                    inicializarModal();
+                                    inicializarModales();
                                 }
 
-                                let modalCriterio;
-                                let modalStata;
+                                let bsModalCriterio, bsModalStata, bsModalExcel;
+
                                 const modalCampoId = document.getElementById('modalCampoId');
                                 const modalCampoNombre = document.getElementById('modalCampoNombre');
-                                const selectTipoCriterio = document.getElementById('selectTipoCriterio');
+                                const selectTipo = document.getElementById('selectTipoCriterio');
                                 const divPersonalizado = document.getElementById('divPersonalizado');
-                                const inputNombreCriterio = document.getElementById('inputNombreCriterio');
-                                const inputPuntoCorte = document.getElementById('inputPuntoCorte');
+                                const inputNombre = document.getElementById('inputNombreCriterio');
+                                const inputCorte = document.getElementById('inputPuntoCorte');
                                 const selectOperador = document.getElementById('selectOperador');
                                 const btnGuardarCriterio = document.getElementById('btnGuardarCriterio');
-                                const exportForm = document.getElementById('exportForm');
 
+                                const btnExcelConfirm = document.getElementById('btn-excel-confirm');
+                                const btnExecuteExcel = document.getElementById('btn-execute-excel');
                                 const btnStataPreview = document.getElementById('btn-stata-preview');
-                                const btnConfirmarDescargaStata = document.getElementById('btn-confirmar-descarga-stata');
-                                const stataExportForm = document.getElementById('stataExportForm');
-                                const stataCriteriosInput = document.getElementById('stataCriteriosExport');
-                                const stataPreviewBody = document.getElementById('stata-preview-body');
+                                const btnExecuteStata = document.getElementById('btn-confirmar-descarga-stata');
 
-                                function inicializarModal() {
-                                    if (typeof bootstrap === 'undefined') {
-                                        console.error("Bootstrap JS no está disponible.");
-                                        return;
-                                    }
+                                const excelForm = document.getElementById('exportForm');
+                                const excelInput = document.getElementById('criteriosExport');
+                                const excelListContainer = document.getElementById('excel-dicotom-list');
 
-                                    if (modalElement && !modalCriterio) {
-                                        modalCriterio = new bootstrap.Modal(modalElement);
-                                        console.log("Modal de Criterio inicializado.");
-                                        if (btnGuardarCriterio && !btnGuardarCriterio.dataset.listenerAttached) {
-                                            btnGuardarCriterio.addEventListener('click', guardarCriterioAction);
-                                            btnGuardarCriterio.dataset.listenerAttached = 'true';
-                                        }
-                                    }
+                                const stataForm = document.getElementById('stataExportForm');
+                                const stataInput = document.getElementById('stataCriteriosExport');
+                                const stataListContainer = document.getElementById('stata-dicotom-list');
 
-                                    if (modalStataElement && !modalStata) {
-                                        modalStata = new bootstrap.Modal(modalStataElement);
-                                        console.log("Modal de STATA inicializado.");
-                                    }
+                                function inicializarModales() {
+                                    if (typeof bootstrap === 'undefined') return;
+                                    if (modalCriterioEl) bsModalCriterio = new bootstrap.Modal(modalCriterioEl);
+                                    if (modalStataEl) bsModalStata = new bootstrap.Modal(modalStataEl);
+                                    if (modalExcelEl) bsModalExcel = new bootstrap.Modal(modalExcelEl);
+
+                                    if (btnGuardarCriterio) btnGuardarCriterio.onclick = guardarCriterioAction;
                                 }
 
                                 function guardarCriterioAction() {
-                                    const campoId = parseInt(modalCampoId.value, 10);
-                                    const tipo = selectTipoCriterio.value;
-                                    let criterioNuevo = { tipo: tipo };
+                                    const id = parseInt(modalCampoId.value, 10);
+                                    const nombreCampo = modalCampoNombre.textContent;
+                                    const tipo = selectTipo.value;
+                                    
+                                    let nuevo = { 
+                                        tipo: tipo,
+                                        campoNombre: nombreCampo 
+                                    };
 
                                     if (tipo === 'personalizado') {
-                                        const nombre = inputNombreCriterio.value.trim();
-                                        const corte = inputPuntoCorte.value.trim();
-                                        const operador = selectOperador.value;
-
-                                        if (!nombre || !corte) {
-                                            alert('Para criterio personalizado, debe ingresar un nombre y un punto de corte.');
+                                        const nom = inputNombre.value.trim();
+                                        const val = inputCorte.value.trim();
+                                        const op = selectOperador.value;
+                                        if (!nom || !val) {
+                                            alert('Complete los campos requeridos.');
                                             return;
                                         }
-                                        criterioNuevo.nombre = nombre;
-                                        criterioNuevo.puntoCorte = `${operador}${corte}`;
+                                        nuevo.nombre = nom;
+                                        nuevo.puntoCorte = `${op}${val}`;
                                     }
 
-                                    if (!criterios[campoId]) {
-                                        criterios[campoId] = [];
-                                    }
-                                    criterios[campoId].push(criterioNuevo);
-                                    actualizarTagsUI();
-                                    if (modalCriterio) modalCriterio.hide();
+                                    if (!criterios[id]) criterios[id] = [];
+                                    criterios[id].push(nuevo);
+                                    actualizarTags();
+                                    if (bsModalCriterio) bsModalCriterio.hide();
                                 }
 
-                                if (selectTipoCriterio) {
-                                    selectTipoCriterio.addEventListener('change', () => {
-                                        if (divPersonalizado) {
-                                            divPersonalizado.style.display = (selectTipoCriterio.value === 'personalizado') ? 'block' : 'none';
-                                        }
+                                if (selectTipo) {
+                                    selectTipo.addEventListener('change', () => {
+                                        divPersonalizado.style.display = (selectTipo.value === 'personalizado') ? 'block' : 'none';
                                     });
                                 }
 
-                                document.querySelectorAll('.btn-add-criterion').forEach(button => {
-                                    button.addEventListener('click', (e) => {
-                                        if (!modalCriterio) {
-                                            console.error("El modal no está inicializado.");
-                                            alert("Error: No se pudo abrir el modal. Revise la consola.");
-                                            return;
-                                        }
-                                        const campoId = e.target.dataset.campoId;
-                                        const campoNombre = e.target.dataset.campoNombre;
+                                document.querySelectorAll('.btn-add-criterion').forEach(btn => {
+                                    btn.addEventListener('click', (e) => {
+                                        if (!bsModalCriterio) return;
 
-                                        if (modalCampoId) modalCampoId.value = campoId;
-                                        if (modalCampoNombre) modalCampoNombre.textContent = campoNombre;
-                                        if (selectTipoCriterio) selectTipoCriterio.value = 'media';
-                                        if (divPersonalizado) divPersonalizado.style.display = 'none';
-                                        if (inputNombreCriterio) inputNombreCriterio.value = '';
-                                        if (inputPuntoCorte) inputPuntoCorte.value = '';
+                                        modalCampoId.value = e.target.dataset.campoId;
+                                        modalCampoNombre.textContent = e.target.dataset.campoNombre;
+                                        selectTipo.value = 'media';
+                                        divPersonalizado.style.display = 'none';
+                                        inputNombre.value = '';
+                                        inputCorte.value = '';
 
-                                        modalCriterio.show();
+                                        bsModalCriterio.show();
                                     });
                                 });
 
-                                // Generar tags
-                                function actualizarTagsUI() {
+                                function actualizarTags() {
                                     document.querySelectorAll('.criteria-tags').forEach(div => div.innerHTML = '');
-
-                                    for (const campoId in criterios) {
-                                        const container = document.getElementById(`tags-campo-${campoId}`);
+                                    for (const id in criterios) {
+                                        const container = document.getElementById(`tags-campo-${id}`);
                                         if (container) {
-                                            criterios[campoId].forEach((crit, index) => {
-                                                let nombreTag = crit.tipo;
-                                                if (crit.tipo === 'personalizado') {
-                                                    nombreTag = `${crit.nombre} (${crit.puntoCorte})`;
-                                                }
+                                            criterios[id].forEach((c, idx) => {
+                                                let texto = c.tipo;
+                                                if (c.tipo === 'personalizado') texto = `${c.nombre} (${c.puntoCorte})`;
 
                                                 const tag = document.createElement('span');
                                                 tag.className = 'criterion-tag';
-                                                tag.textContent = nombreTag;
-
-                                                const btnRemove = document.createElement('button');
-                                                btnRemove.type = 'button';
-                                                btnRemove.className = 'btn-remove';
-                                                btnRemove.innerHTML = '&times;';
-                                                btnRemove.dataset.campoId = campoId;
-                                                btnRemove.dataset.index = index;
-
-                                                tag.appendChild(btnRemove);
+                                                tag.innerHTML = `${texto} <button type="button" class="btn-remove" data-id="${id}" data-idx="${idx}">&times;</button>`;
                                                 container.appendChild(tag);
                                             });
                                         }
                                     }
                                 }
 
-                                // Borrar un tag
                                 document.body.addEventListener('click', (e) => {
                                     if (e.target.classList.contains('btn-remove')) {
-                                        const campoId = e.target.dataset.campoId;
-                                        const index = e.target.dataset.index;
-                                        if (criterios[campoId]) {
-                                            criterios[campoId].splice(index, 1);
-                                            if (criterios[campoId].length === 0) {
-                                                delete criterios[campoId];
-                                            }
-                                            actualizarTagsUI();
+                                        const id = e.target.dataset.id;
+                                        const idx = e.target.dataset.idx;
+                                        if (criterios[id]) {
+                                            criterios[id].splice(idx, 1);
+                                            if (criterios[id].length === 0) delete criterios[id];
+                                            actualizarTags();
                                         }
                                     }
                                 });
 
-                                // Interceptar exportación (Excel)
-                                if (exportForm) {
-                                    exportForm.addEventListener('submit', (e) => {
-                                        const jsonCriterios = JSON.stringify(criterios);
-                                        const criteriosInput = document.getElementById('criteriosExport');
-                                        if (criteriosInput) criteriosInput.value = jsonCriterios;
-                                    });
-                                }
+                                function generarListaHtml() {
+                                    let html = '<ul style="padding-left: 1rem; margin: 0;">';
+                                    let hayCriterios = false;
 
-                                // Botón STATA Preview
-                                if (btnStataPreview) {
-                                    btnStataPreview.addEventListener('click', async () => {
-                                        if (!modalStata) {
-                                            console.error("Modal STATA no inicializado. Intentando inicializar ahora.");
-                                            inicializarModal();
-                                            if (!modalStata) {
-                                                alert("Error: El modal no pudo inicializarse.");
-                                                return;
-                                            }
-                                        }
-
-                                        stataPreviewBody.innerHTML = '<p>Generando previsualización... Por favor espere.</p>';
-                                        modalStata.show();
-
-                                        const jsonCriterios = JSON.stringify(criterios);
-                                        const formData = new FormData();
-                                        formData.append('criteriosJson', jsonCriterios);
-
-                                        try {
-                                            const response = await fetch('/datos-crf/api/preview-stata', {
-                                                method: 'POST',
-                                                body: formData
+                                    for (let id in criterios) {
+                                        if (criterios[id].length > 0) {
+                                            hayCriterios = true;
+                                            criterios[id].forEach(c => {
+                                                let desc = '';
+                                                if (c.tipo === 'personalizado') {
+                                                    desc = `<strong>${c.nombre}</strong> (Corte: ${c.puntoCorte})`;
+                                                } else {
+                                                    desc = `<strong>${c.tipo.charAt(0).toUpperCase() + c.tipo.slice(1)}</strong>`;
+                                                }
+                                                html += `<li style="margin-bottom: 4px;">${c.campoNombre}: ${desc}</li>`;
                                             });
-
-                                            if (!response.ok) {
-                                                throw new Error('Error del servidor al generar la previsualización.');
-                                            }
-
-                                            const data = await response.json();
-                                            const tableHtml = buildPreviewTable(data);
-                                            stataPreviewBody.innerHTML = tableHtml;
-
-                                        } catch (error) {
-                                            stataPreviewBody.innerHTML = `<p style="color: var(--color-error);">Error: ${error.message}</p>`;
-                                        }
-                                    });
-                                }
-
-                                // Confirmar y Descargar STATA
-                                if (btnConfirmarDescargaStata) {
-                                    btnConfirmarDescargaStata.addEventListener('click', () => {
-                                        stataCriteriosInput.value = JSON.stringify(criterios);
-                                        stataExportForm.submit();
-                                        if (modalStata) modalStata.hide();
-                                    });
-                                }
-
-                                // Función para construir la tabla de preview
-                                function buildPreviewTable(data) {
-                                    let html = '<p>Se aplicarán los siguientes cambios de formato a las cabeceras y valores. Verifique antes de descargar.</p>';
-                                    html += '<div class="table-responsive-wrapper" style="max-height: 50vh; overflow-y: auto;">';
-                                    html += '<table><thead><tr><th style="background-color: var(--color-fondo);">Campo Original</th><th style="background-color: var(--color-fondo);">Formato STATA</th></tr></thead><tbody>';
-
-                                    // Comparación de Headers
-                                    for (let i = 0; i < data.headersOriginal.length; i++) {
-                                        const original = data.headersOriginal[i];
-                                        const stata = data.headersStata[i];
-                                        const esDiferente = original !== stata;
-                                        html += `<tr ${esDiferente ? 'style="background-color: rgba(255, 193, 7, 0.1);"' : ''}>
-                                    <td style="word-break: break-all;">${escapeHTML(original)}</td>
-                                    <td style="word-break: break-all;"><strong>${escapeHTML(stata)}</strong></td>
-                                </tr>`;
-                                    }
-
-                                    html += '<tr><td colspan="2" style="background-color: var(--color-fondo); text-align: center; font-weight: bold;"><i>Ejemplo de 1ra Fila de Datos</i></td></tr>';
-
-                                    if (data.filasOriginal && data.filasOriginal.length > 0) {
-                                        const primeraFilaOrig = data.filasOriginal[0] || {};
-                                        const primeraFilaStata = data.filasStata[0] || {};
-
-                                        for (let i = 0; i < data.headersOriginal.length; i++) {
-                                            const hOrig = data.headersOriginal[i];
-                                            const hStata = data.headersStata[i];
-                                            const valOrig = primeraFilaOrig[hOrig] || '';
-                                            const valStata = primeraFilaStata[hStata] || '';
-                                            const esDiferente = valOrig !== valStata;
-
-                                            html += `<tr ${esDiferente ? 'style="background-color: rgba(255, 193, 7, 0.1);"' : ''}>
-                                        <td style="word-break: break-all;">${escapeHTML(valOrig)}</td>
-                                        <td style="word-break: break-all;"><strong>${escapeHTML(valStata)}</strong></td>
-                                    </tr>`;
                                         }
                                     }
+                                    html += '</ul>';
 
-                                    html += '</tbody></table></div>';
+                                    if (!hayCriterios) return '<em style="color: var(--color-texto-secundario);">Ninguna. Se exportarán los datos crudos.</em>';
                                     return html;
                                 }
 
-                                // Función para escapar HTML
-                                function escapeHTML(str) {
-                                    if (str === null || str === undefined) return '';
-                                    return str.toString()
-                                        .replace(/&/g, '&amp;')
-                                        .replace(/</g, '&lt;')
-                                        .replace(/>/g, '&gt;')
-                                        .replace(/"/g, '&quot;')
-                                        .replace(/'/g, '&#39;');
+                                if (btnExcelConfirm) {
+                                    btnExcelConfirm.addEventListener('click', () => {
+                                        if (bsModalExcel) {
+                                            excelListContainer.innerHTML = generarListaHtml();
+                                            bsModalExcel.show();
+                                        }
+                                    });
+                                }
+
+                                if (btnExecuteExcel) {
+                                    btnExecuteExcel.addEventListener('click', () => {
+                                        excelInput.value = JSON.stringify(criterios);
+                                        excelForm.submit();
+                                        bsModalExcel.hide();
+                                    });
+                                }
+
+                                if (btnStataPreview) {
+                                    btnStataPreview.addEventListener('click', () => {
+                                        if (bsModalStata) {
+                                            stataListContainer.innerHTML = generarListaHtml();
+                                            bsModalStata.show();
+                                        }
+                                    });
+                                }
+
+                                if (btnExecuteStata) {
+                                    btnExecuteStata.addEventListener('click', () => {
+                                        stataInput.value = JSON.stringify(criterios);
+                                        stataForm.submit();
+                                        bsModalStata.hide();
+                                    });
                                 }
                             });
                         </script>

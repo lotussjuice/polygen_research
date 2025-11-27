@@ -1,26 +1,189 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+<html xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/main-layout :: ~{}}">
 
-<div th:fragment="contenido">
+<head>
+    </head>
 
-    <div class="card">
-        <div class="card-header">
-            <h3><i class="ph-bold ph-identification-badge"></i> Formulario de Rol</h3>
-        </div>
-        
-        <div class="card-body">
-            <form th:action="@{/roles/guardar}" th:object="${rol}" method="POST">
-                <div class="form-group">
-                    <label>Nombre del Rol:</label>
-                    <input type="text" th:field="*{nombreRol}" class="form-control" placeholder="Ej. Investigador, Administrador" />
-                </div>
+<body>
+    <div th:fragment="contenido">
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="ph-bold ph-users"></i> Lista de Pacientes</h3>
                 
-                <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-                    <button type="submit" class="btn-primario">Guardar Rol</button>
-                    <a th:href="@{/roles/list}" class="btn-secundario">Cancelar</a>
+                <div style="display: flex; align-items: center;">
+                    <form th:action="@{/pacientes/list}" method="get" style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="text" name="codigoPaciente" class="form-control" placeholder="Buscar por Cód. Paciente..." th:value="${param.codigoPaciente}" />
+                        <button type="submit" class="btn-primario btn-sm">Buscar</button>
+                        <a th:href="@{/pacientes/list}" class="btn-secundario btn-sm" title="Limpiar">Limpiar</a>
+                    </form>
                 </div>
-            </form>
+
+                <a th:href="@{/crf/nuevo}" class="btn-primario btn-sm">
+                    <i class="ph-bold ph-plus"></i> Crear Nuevo CRF
+                </a>
+            </div>
+
+            <div class="card-body">
+
+                <div th:if="${#lists.isEmpty(pacientes)}" class="alert"
+                    style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
+                    Aún no hay pacientes registrados que coincidan con la búsqueda.
+                </div>
+
+                <div class="table-responsive-wrapper" th:if="${!#lists.isEmpty(pacientes)}">
+                    
+                    <table class="tabla-bonita">
+                        <thead>
+                            <tr>
+                                <th style="width: 140px; text-align: center;">Acciones</th>
+                                <th>Código</th>
+                                <th>Nombre</th>
+                                <th>Apellido</th>
+                                <th>Número</th>
+                                <th>Dirección</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="p : ${pacientes}" 
+                                th:id="'row-paciente-' + ${p.idPaciente}"
+                                th:classappend="${p.estado == 'INACTIVO'} ? 'row-inactive' : ''">
+                                
+                                <td class="actions-cell" style="white-space: nowrap;">
+                                    <div style="display: flex; justify-content: center; gap: 8px;">
+                                        
+                                        <button type="button" class="btn-secundario btn-sm"
+                                                th:if="${!#lists.isEmpty(p.crfs)}"
+                                                th:onclick="|verDetalleCrfGlobal(${p.crfs[0].idCrf})|" 
+                                                title="Ver CRF Asociado">
+                                            <i class="ph-bold ph-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn-secundario btn-sm" disabled
+                                                th:if="${#lists.isEmpty(p.crfs)}"
+                                                title="Sin CRF registrado">
+                                            <i class="ph-bold ph-eye-slash" style="color: #ccc;"></i>
+                                        </button>
+
+                                        <button type="button" 
+                                                class="btn-sm"
+                                                th:classappend="${p.estado == 'ACTIVO' ? 'btn-exito' : 'btn-error'}"
+                                                th:onclick="|abrirModalEstado(${p.idPaciente}, '${p.estado}')|"
+                                                th:title="${p.estado == 'ACTIVO' ? 'Desactivar Paciente' : 'Activar Paciente'}">
+                                            <i class="ph-bold" th:classappend="${p.estado == 'ACTIVO' ? 'ph-toggle-right' : 'ph-toggle-left'}"></i>
+                                        </button>
+                                    </div>
+                                </td>
+
+                                <td th:text="${p.codigoPaciente}">...</td>
+                                <td th:text="${p.nombre}">...</td>
+                                <td th:text="${p.apellido}">...</td>
+                                <td th:text="${p.numero ?: '-'}">...</td>
+                                <td th:text="${p.direccion ?: '-'}">...</td>
+                                
+                                <td>
+                                    <span class="badge" 
+                                        th:classappend="${p.estado == 'ACTIVO' ? 'badge-success' : 'badge-danger'}"
+                                        th:text="${p.estado}">ACTIVO</span>
+                                </td>
+
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
+
+        <div id="modalCambiarEstado" class="modal" style="display: none;">
+            <div class="modal-content" style="max-width: 450px; text-align: center;">
+                <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                    <div style="background-color: #f0f4f8; padding: 1rem; border-radius: 50%;">
+                        <i class="ph-bold ph-arrows-left-right" style="font-size: 2.5rem; color: var(--color-primario);"></i>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <h2 style="margin-bottom: 1rem;">¿Confirmar Cambio de Estado?</h2>
+                    <p>El paciente pasará de <strong id="estado-actual-text" style="color: var(--color-error);"></strong> a <strong id="estado-nuevo-text" style="color: var(--color-exito);"></strong>.</p>
+                    <p style="font-size: 0.9rem; color: var(--color-texto-secundario); margin-top: 0.5rem;">
+                        Esto aplicará el cambio a todos los CRFs asociados.
+                    </p>
+                    <input type="hidden" id="estado-paciente-id" value="" />
+                </div>
+                <div class="modal-footer" style="justify-content: center; gap: 1rem; border-top: none;">
+                    <div class="btn-group-equal">
+                        <button type="button" class="btn-secundario" onclick="cerrarModalEstado()">Cancelar</button>
+                        <button type="button" class="btn-primario" onclick="ejecutarCambioEstadoFinal()">Confirmar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <th:block th:fragment="pageScript">
+            <script th:inline="javascript">
+                
+                // --- VARIABLES DE MODAL ESTADO ---
+                const modalEstado = document.getElementById('modalCambiarEstado');
+                const estadoIdInput = document.getElementById('estado-paciente-id');
+                const textoActual = document.getElementById('estado-actual-text');
+                const textoNuevo = document.getElementById('estado-nuevo-text');
+                
+                // --- 1. ABRIR MODAL DE CONFIRMACIÓN ---
+                function abrirModalEstado(idPaciente, estadoActual) {
+                    const nuevoEstado = estadoActual === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO';
+
+                    estadoIdInput.value = idPaciente;
+                    
+                    textoActual.textContent = estadoActual;
+                    textoActual.style.color = (estadoActual === 'ACTIVO') ? 'var(--color-exito)' : 'var(--color-error)';
+                    
+                    textoNuevo.textContent = nuevoEstado;
+                    textoNuevo.style.color = (nuevoEstado === 'ACTIVO') ? 'var(--color-exito)' : 'var(--color-error)';
+                    
+                    modalEstado.style.display = 'block';
+                }
+
+                function cerrarModalEstado() {
+                    modalEstado.style.display = 'none';
+                }
+
+                // --- 2. EJECUTAR LLAMADA AJAX FINAL ---
+                async function ejecutarCambioEstadoFinal() {
+                    const idPaciente = estadoIdInput.value;
+                    if (!idPaciente) return;
+
+                    cerrarModalEstado(); 
+
+                    try {
+                        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+                        
+                        const headers = { 'Content-Type': 'application/json' };
+                        if (csrfToken && csrfHeader) {
+                            headers[csrfHeader] = csrfToken;
+                        }
+
+                        // Llamada al endpoint PUT /pacientes/{id}/toggle-estado
+                        const response = await fetch(`/pacientes/${idPaciente}/toggle-estado`, {
+                            method: 'PUT',
+                            headers: headers
+                        });
+
+                        if (response.ok) {
+                            // Recargar para ver cambios
+                            window.location.reload();
+                        } else {
+                            const msg = await response.text();
+                            alert("Error al cambiar el estado: " + msg);
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        alert("Error de conexión al servidor.");
+                    }
+                }
+            </script>
+        </th:block>
     </div>
-</div>
+</body>
 </html>

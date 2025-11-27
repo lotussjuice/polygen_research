@@ -11,11 +11,11 @@
         <div class="card-body">
             <form th:action="@{/campos/guardar}" th:object="${campo}" method="POST" id="campoForm">
                 
-                <input type="hidden" th:field="*{idCampo}" />
+                <input type="hidden" th:field="*{idCampo}" id="idCampoInput" />
 
                 <div class="form-group">
-                    <label>Nombre (Variable):</label>
-                    <input type="text" th:field="*{nombre}" class="form-control" placeholder="Ej. Tabaquismo" />
+                    <label for="nombreInput">Nombre (Variable):</label>
+                    <input type="text" id="nombreInput" th:field="*{nombre}" class="form-control" placeholder="Ej. Tabaquismo" required />
                 </div>
                 
                 <div class="form-group">
@@ -27,12 +27,12 @@
                         <option value="FECHA">FECHA</option>
                         <option value="SI/NO">SI/NO</option>
                         <option value="SELECCION_UNICA">SELECCION UNICA (Radio)</option>
-                        </select>
+                    </select>
                 </div>
 
                 <div class="form-group">
-                    <label>Descripción:</label>
-                    <input type="text" th:field="*{descripcion}" class="form-control" placeholder="Ayuda visual para el recolector de datos" />
+                    <label for="descInput">Descripción:</label>
+                    <input type="text" id="descInput" th:field="*{descripcion}" class="form-control" placeholder="Ayuda visual para el recolector de datos" />
                 </div>
 
                 <div id="opcionesContainer" style="display: none; margin-top: 1.5rem; border: 1px solid var(--color-borde); border-radius: 8px; padding: 1rem;">
@@ -55,11 +55,62 @@
                         <i class="ph-bold ph-plus"></i> Añadir Opción
                     </button>
                 </div>
+
                 <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-                    <button type="submit" class="btn-primario">Guardar Campo</button>
+                    <button type="button" class="btn-primario" onclick="intentarGuardar()">Guardar Campo</button>
                     <a th:href="@{/campos/list}" class="btn-secundario">Cancelar</a>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <div id="modalConfirmarCreacion" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 450px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                <div style="background-color: #e6f4ea; padding: 1rem; border-radius: 50%;">
+                    <i class="ph-bold ph-plus-circle" style="font-size: 2.5rem; color: var(--color-exito);"></i>
+                </div>
+            </div>
+            <div class="modal-body">
+                <h2 style="margin-bottom: 1rem;">Confirmar Nuevo Campo</h2>
+                <p style="color: var(--color-texto-secundario); margin-bottom: 1rem;">Se creará el siguiente campo en el formulario CRF:</p>
+                
+                <div style="background-color: var(--color-fondo); padding: 1rem; border-radius: 8px; text-align: left;">
+                    <p><strong>Nombre:</strong> <span id="resumen-nombre"></span></p>
+                    <p><strong>Tipo:</strong> <span id="resumen-tipo"></span></p>
+                    <p><strong>Descripción:</strong> <span id="resumen-desc"></span></p>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: center; gap: 1rem; border-top: none;">
+                <div class="btn-group-equal">
+                    <button type="button" class="btn-secundario" onclick="cerrarModales()">Corregir</button>
+                    <button type="button" class="btn-primario" onclick="enviarFormularioReal()">Crear</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalConfirmarEdicion" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 450px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                <div style="background-color: #fff0f0; padding: 1rem; border-radius: 50%;">
+                    <i class="ph-bold ph-warning" style="font-size: 2.5rem; color: var(--color-error);"></i>
+                </div>
+            </div>
+            <div class="modal-body">
+                <h2 style="margin-bottom: 1rem;">¿Guardar Cambios?</h2>
+                <p>Estás editando un campo existente.</p>
+                
+                <div class="alert alert-error" style="text-align: left; margin-top: 1rem; font-size: 0.9rem;">
+                    <strong>Advertencia:</strong> Si cambias el TIPO de dato o eliminas opciones, los valores registrados previamente en los pacientes podrían <strong>vaciarse o perderse</strong>.
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: center; gap: 1rem; border-top: none;">
+                <div class="btn-group-equal">
+                    <button type="button" class="btn-secundario" onclick="cerrarModales()">Cancelar</button>
+                    <button type="button" class="btn-error" onclick="enviarFormularioReal()">Sí, Guardar</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -70,14 +121,20 @@
                 const opcionesContainer = document.getElementById('opcionesContainer');
                 const opcionesLista = document.getElementById('opcionesLista');
                 const btnAddOpcion = document.getElementById('btnAddOpcion');
+                const form = document.getElementById('campoForm');
+                const idInput = document.getElementById('idCampoInput');
                 
+                // Modales
+                const modalCrear = document.getElementById('modalConfirmarCreacion');
+                const modalEditar = document.getElementById('modalConfirmarEdicion');
+
                 let opcionIndex = /*[[${campo.opciones != null ? campo.opciones.size() : 0}]]*/ 0;
 
-
+                // Lógica de Opciones Dinámicas
                 function toggleOpciones(tipo) {
                     if (tipo === 'SELECCION_UNICA') {
                         opcionesContainer.style.display = 'block';
-                        const campoId = document.querySelector('input[name="idCampo"]').value;
+                        const campoId = idInput.value;
                         if (!campoId && opcionIndex === 0) {
                             addNuevaOpcion('Opción 1');
                             addNuevaOpcion('Opción 2');
@@ -89,7 +146,6 @@
 
                 function addNuevaOpcion(placeholder = '') {
                     const index = opcionIndex++; 
-                    
                     const div = document.createElement('div');
                     div.className = 'opcion-item';
                     div.style = 'display: flex; gap: 0.5rem; margin-bottom: 0.5rem;';
@@ -105,25 +161,59 @@
                     button.type = 'button';
                     button.className = 'btn-error btn-sm';
                     button.innerHTML = '<i class="ph-bold ph-trash"></i>';
-                    button.onclick = () => {
-                        div.remove(); 
-                    };
+                    button.onclick = () => div.remove();
                     
                     div.appendChild(input);
                     div.appendChild(button);
                     opcionesLista.appendChild(div);
                 }
 
-                tipoSelect.addEventListener('change', () => {
-                    toggleOpciones(tipoSelect.value);
-                });
+                tipoSelect.addEventListener('change', () => toggleOpciones(tipoSelect.value));
+                btnAddOpcion.addEventListener('click', () => addNuevaOpcion());
                 
-                btnAddOpcion.addEventListener('click', () => {
-                    addNuevaOpcion();
-                });
                 toggleOpciones(tipoSelect.value);
+
+                // --- LÓGICA DE CONFIRMACIÓN ---
+                
+                window.intentarGuardar = function() {
+                    if (!form.checkValidity()) {
+                        form.reportValidity();
+                        return;
+                    }
+
+                    if (idInput.value) {
+                        // MODO EDICIÓN: Mostrar advertencia
+                        modalEditar.style.display = 'block';
+                    } else {
+                        // MODO CREACIÓN: Mostrar resumen
+                        const nombre = document.getElementById('nombreInput').value;
+                        const tipo = document.getElementById('tipoCampo').value;
+                        const desc = document.getElementById('descInput').value || '-';
+
+                        document.getElementById('resumen-nombre').textContent = nombre;
+                        document.getElementById('resumen-tipo').textContent = tipo;
+                        document.getElementById('resumen-desc').textContent = desc;
+
+                        modalCrear.style.display = 'block';
+                    }
+                };
+
+                window.cerrarModales = function() {
+                    modalCrear.style.display = 'none';
+                    modalEditar.style.display = 'none';
+                };
+
+                window.enviarFormularioReal = function() {
+                    form.submit();
+                };
+
+                window.onclick = function(event) {
+                    if (event.target == modalCrear || event.target == modalEditar) {
+                        cerrarModales();
+                    }
+                };
             });
         </script>
     </th:block>
-    </div>
+</div>
 </html>

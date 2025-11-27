@@ -8,9 +8,6 @@
 
         <div class="card-header">
             <h3><i class="ph-bold ph-shield-check"></i> Administración de Credenciales y Roles</h3>
-            <a th:href="@{/whitelist/nuevo}" class="btn-primario btn-sm">
-                <i class="ph-bold ph-plus"></i> Registrar Nueva Credencial
-            </a>
         </div>
 
         <div class="card-body">
@@ -24,59 +21,63 @@
             </div>
 
             <div class="table-responsive-wrapper" th:if="${!#lists.isEmpty(credenciales)}">
-                <table>
+                <table class="tabla-bonita">
                     <thead>
                         <tr>
                             <th>Correo (Login)</th>
                             <th>Usuario Asociado</th>
                             <th>Rol Actual</th>
-                            <th style="min-width: 250px;">Cambiar Rol</th> 
-                            <th style="text-align: right; width: 100px;">Acciones</th>
+                            
+                            <th style="min-width: 220px; text-align: center;">Cambiar Rol</th>
+                            
+                            <th style="width: 100px; text-align: center;">Acciones</th> 
                         </tr>
                     </thead>
                     <tbody>
                         <tr th:each="w : ${credenciales}" th:id="'row-user-' + ${w.usuario?.idUsuario}">
+                            
                             <td th:text="${w.correo}">...</td>
                             <td th:text="${w.usuario?.nombreUsuario ?: 'N/A - DESVINCULADO'}">...</td>
-                            <!-- Mostrar el rol actual -->
-                            <td th:text="${w.usuario?.rolUsuario?.nombreRol ?: 'N/A'}">...</td>
+                            <td th:text="${w.usuario?.rolUsuario?.nombreRol ?: 'N/A'}" th:id="'rol-actual-text-' + ${w.usuario?.idUsuario}">...</td>
 
-                            <!-- Celda para cambiar rol -->
                             <td>
                                 <div th:if="${w.usuario != null}"
-                                    style="display: flex; gap: 0.5rem; align-items: center;">
+                                    style="display: flex; gap: 0.5rem; align-items: center; justify-content: center;">
+                                    
                                     <select class="form-control form-control-sm"
-                                        th:id="'select-rol-' + ${w.usuario.idUsuario}" style="flex-grow: 1;">
-                                        <!-- Opción por defecto con el rol actual -->
+                                        th:id="'select-rol-' + ${w.usuario.idUsuario}" style="width: auto; min-width: 140px;">
                                         <option th:value="${w.usuario.rolUsuario.idRol}"
                                             th:text="${w.usuario.rolUsuario.nombreRol}" selected>
                                         </option>
-                                        <!-- Iterar sobre roles disponibles -->
                                         <th:block th:each="rol : ${todosLosRoles}">
                                             <option th:if="${rol.idRol != w.usuario.rolUsuario.idRol}"
                                                 th:value="${rol.idRol}" th:text="${rol.nombreRol}">
                                             </option>
                                         </th:block>
                                     </select>
+                                    
                                     <button type="button" class="btn-primario btn-sm"
-                                        th:attr="data-usuario-id=${w.usuario.idUsuario}"
-                                        onclick="guardarNuevoRol(this)">
-                                        Guardar
+                                        th:attr="data-usuario-id=${w.usuario.idUsuario}, data-usuario-nombre=${w.usuario.nombreUsuario}"
+                                        onclick="abrirModalConfirmarRol(this)"
+                                        title="Guardar Rol">
+                                        <i class="ph-bold ph-floppy-disk"></i>
                                     </button>
                                 </div>
                                 <span th:unless="${w.usuario != null}">-</span>
                             </td>
 
-                            <!-- Celda de Acciones -->
-                            <td class="actions-cell" style="text-align: right;">
-                                <button th:if="${w.usuario != null}" type="button" class="btn-error btn-sm"
-                                    title="Eliminar Usuario"
-                                    th:attr="data-usuario-id=${w.usuario.idUsuario}, data-usuario-nombre=${w.usuario.nombreUsuario}"
-                                    onclick="mostrarConfirmacionEliminar(this)">
-                                    <i class="ph-bold ph-trash"></i>
-                                </button>
-                                <span th:unless="${w.usuario != null}">-</span>
+                            <td class="actions-cell">
+                                <div style="display: flex; justify-content: center; align-items: center;">
+                                    <button th:if="${w.usuario != null}" type="button" class="btn-error btn-sm"
+                                        title="Eliminar Usuario"
+                                        th:attr="data-usuario-id=${w.usuario.idUsuario}, data-usuario-nombre=${w.usuario.nombreUsuario}"
+                                        onclick="mostrarConfirmacionEliminar(this)">
+                                        <i class="ph-bold ph-trash"></i>
+                                    </button>
+                                    <span th:unless="${w.usuario != null}" style="color: #999;">-</span>
+                                </div>
                             </td>
+
                         </tr>
                     </tbody>
                 </table>
@@ -84,35 +85,62 @@
         </div> 
     </div> 
 
-    <!-- Modal de confirmacion -->
     <div id="modalConfirmacionEliminar" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 500px;">
-            <div class="modal-header">
-                <h2>Confirmar Eliminación</h2>
-                <span class="close-modal" onclick="cerrarConfirmacionEliminar()">&times;</span>
-            </div>
-            <div class="modal-body">
-                <p>¿Estás seguro de que deseas eliminar permanentemente al usuario <strong
-                        id="confirm-usuario-nombre"></strong>?</p>
-                <p style="color: var(--color-error); font-weight: bold;">Esta acción no se puede deshacer.</p>
-                <input type="hidden" id="confirm-usuario-id" value="" />
-            </div>
-            <div class="modal-footer" style="justify-content: space-between;">
-                <button type="button" class="btn-secundario" onclick="cerrarConfirmacionEliminar()">Cancelar</button>
-                <button type="button" class="btn-error" onclick="ejecutarEliminacion()">Sí, Eliminar Usuario</button>
+        <div class="modal-dialog modal-dialog-centered" style="display: flex; align-items: center; min-height: 100vh; justify-content: center;">
+            <div class="modal-content" style="max-width: 500px; text-align: center; margin: auto;">
+                <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                    <div style="background-color: #fff0f0; padding: 1rem; border-radius: 50%;">
+                        <i class="ph-bold ph-trash" style="font-size: 2.5rem; color: var(--color-error);"></i>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <h2 style="margin-bottom: 1rem;">¿Eliminar Usuario?</h2>
+                    <p>Se eliminará permanentemente al usuario <strong id="confirm-usuario-nombre"></strong>.</p>
+                    <p style="color: var(--color-error); font-weight: bold; font-size: 0.9rem;">Esta acción no se puede deshacer.</p>
+                    <input type="hidden" id="confirm-usuario-id" value="" />
+                </div>
+                <div class="modal-footer" style="justify-content: flex-end; gap: 1rem; border-top: none; display: flex;">
+                    <button type="button" class="btn-secundario" onclick="cerrarConfirmacionEliminar()">Cancelar</button>
+                    <button type="button" class="btn-error" onclick="ejecutarEliminacion()">Sí, Eliminar</button>
+                </div>
             </div>
         </div>
     </div>
 
+    <div id="modalConfirmarRol" class="modal" style="display: none;">
+        <div class="modal-dialog modal-dialog-centered" style="display: flex; align-items: center; min-height: 100vh; justify-content: center;">
+            <div class="modal-content" style="max-width: 500px; text-align: center; margin: auto;">
+                <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                    <div style="background-color: #eef4fc; padding: 1rem; border-radius: 50%;">
+                        <i class="ph-bold ph-user-gear" style="font-size: 2.5rem; color: var(--color-primario);"></i>
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <h2 style="margin-bottom: 1rem;">¿Cambiar Rol?</h2>
+                    <p>El usuario <strong id="rol-usuario-nombre"></strong> cambiará de rol:</p>
+                    
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 1.5rem 0; font-size: 1.1rem;">
+                        <span class="badge" style="background-color: var(--color-fondo); color: var(--color-texto-secundario);" id="rol-antiguo-text">VISITANTE</span>
+                        <i class="ph-bold ph-arrow-right" style="color: var(--color-primario);"></i>
+                        <span class="badge badge-success" id="rol-nuevo-text">ADMINISTRADOR</span>
+                    </div>
 
-    <!-- Script para manejo de AJAX y Modal -->
+                    <input type="hidden" id="rol-usuario-id" />
+                    <input type="hidden" id="rol-nuevo-id" />
+                </div>
+                <div class="modal-footer" style="justify-content: flex-end; gap: 1rem; border-top: none; display: flex;">
+                    <button type="button" class="btn-secundario" onclick="cerrarModalRol()">Cancelar</button>
+                    <button type="button" class="btn-primario" onclick="ejecutarCambioRolFinal()">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script th:inline="javascript">
 
-        // Obtener el token CSRF (necesario para PUT/DELETE con Spring Security)
-        const csrfToken = document.querySelector('meta[name="_csrf"]') ? document.querySelector('meta[name="_csrf"]').getAttribute('content') : null;
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]') ? document.querySelector('meta[name="_csrf_header"]').getAttribute('content') : null;
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
 
-        // --- Funciones para el Modal de Confirmación ---
         const modalConfirmacion = document.getElementById('modalConfirmacionEliminar');
         const confirmUsuarioNombre = document.getElementById('confirm-usuario-nombre');
         const confirmUsuarioIdInput = document.getElementById('confirm-usuario-id');
@@ -128,18 +156,16 @@
 
         function cerrarConfirmacionEliminar() {
             modalConfirmacion.style.display = 'none';
-            confirmUsuarioNombre.textContent = '';
-            confirmUsuarioIdInput.value = '';
         }
 
         async function ejecutarEliminacion() {
             const usuarioId = confirmUsuarioIdInput.value;
             if (!usuarioId) return;
+            
+            cerrarConfirmacionEliminar(); 
 
             const headers = { 'Accept': 'application/json' };
-            if (csrfToken && csrfHeader) {
-                headers[csrfHeader] = csrfToken;
-            }
+            if (csrfToken && csrfHeader) headers[csrfHeader] = csrfToken;
 
             try {
                 const response = await fetch(`/whitelist/usuario/${usuarioId}`, {
@@ -147,60 +173,66 @@
                     headers: headers
                 });
 
-                const message = await response.text();
-
                 if (response.ok) {
-                    // Eliminación exitosa
                     const rowToRemove = document.getElementById(`row-user-${usuarioId}`);
-                    if (rowToRemove) {
-                        rowToRemove.remove();
-                    }
-                    cerrarConfirmacionEliminar();
-                    alert('Usuario eliminado con éxito.'); // Simple alert por ahora
+                    if (rowToRemove) rowToRemove.remove();
+                    alert('Usuario eliminado con éxito.');
                 } else {
-                    // Error en la eliminación
-                    alert(`Error al eliminar: ${message}`);
+                    const msg = await response.text();
+                    alert(`Error al eliminar: ${msg}`);
                 }
             } catch (error) {
-                console.error('Error en la petición DELETE:', error);
-                alert('Error de red al intentar eliminar el usuario.');
-            } finally {
-                // Asegurarse de cerrar el modal incluso si hay error no capturado
-                cerrarConfirmacionEliminar();
+                console.error(error);
+                alert('Error de red al eliminar.');
             }
         }
 
-        // 
-        // Función para Guardar Nuevo Rol 
-        async function guardarNuevoRol(button) {
+        const modalRol = document.getElementById('modalConfirmarRol');
+        const rolUsuarioIdInput = document.getElementById('rol-usuario-id');
+        const rolNuevoIdInput = document.getElementById('rol-nuevo-id');
+        const rolUsuarioNombre = document.getElementById('rol-usuario-nombre');
+        const rolAntiguoText = document.getElementById('rol-antiguo-text');
+        const rolNuevoText = document.getElementById('rol-nuevo-text');
+
+        function abrirModalConfirmarRol(button) {
             const usuarioId = button.getAttribute('data-usuario-id');
-            const selectElement = document.getElementById(`select-rol-${usuarioId}`);
-            const nuevoRolId = selectElement.value;
+            const usuarioNombre = button.getAttribute('data-usuario-nombre');
+            
+            const select = document.getElementById(`select-rol-${usuarioId}`);
+            const nuevoRolId = select.value;
+            const nuevoRolNombre = select.options[select.selectedIndex].text;
+            
+            const rolActualCell = document.getElementById(`rol-actual-text-${usuarioId}`);
+            const rolActualNombre = rolActualCell ? rolActualCell.textContent.trim() : 'Desconocido';
 
-            // Leer el token y el nombre del header desde las meta tags
-            const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
-            const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
-            const csrfToken = csrfTokenMeta ? csrfTokenMeta.getAttribute('content') : null;
-            const csrfHeader = csrfHeaderMeta ? csrfHeaderMeta.getAttribute('content') : null;
+            rolUsuarioIdInput.value = usuarioId;
+            rolNuevoIdInput.value = nuevoRolId;
+            rolUsuarioNombre.textContent = usuarioNombre;
+            rolAntiguoText.textContent = rolActualNombre;
+            rolNuevoText.textContent = nuevoRolNombre;
 
-            // Preparar headers
+            modalRol.style.display = 'block';
+        }
+
+        function cerrarModalRol() {
+            modalRol.style.display = 'none';
+        }
+
+        async function ejecutarCambioRolFinal() {
+            const usuarioId = rolUsuarioIdInput.value;
+            const nuevoRolId = rolNuevoIdInput.value;
+            
+            cerrarModalRol();
+
             const headers = {
                 'Accept': 'application/json',
-                'Content-Type': 'application/x-www-form-urlencoded' // Para que @RequestParam funcione
+                'Content-Type': 'application/x-www-form-urlencoded'
             };
-            // Añadir el header CSRF SI EXISTE
-            if (csrfToken && csrfHeader) {
-                headers[csrfHeader] = csrfToken;
-                console.log("CSRF Token found, adding header:", csrfHeader); // Log para depuración
-            } else {
-                console.warn("CSRF Meta Tags not found or empty. Request might be blocked if CSRF is enabled."); // Advertencia
-            }
+            if (csrfToken && csrfHeader) headers[csrfHeader] = csrfToken;
 
-            // Body para @RequestParam (formato x-www-form-urlencoded)
             const body = `rolId=${encodeURIComponent(nuevoRolId)}`;
 
             try {
-                // Enviar la petición fetch con los headers actualizados
                 const response = await fetch(`/whitelist/usuario/${usuarioId}/rol`, {
                     method: 'PUT',
                     headers: headers, 
@@ -210,19 +242,20 @@
                 const message = await response.text();
 
                 if (response.ok) {
-                    // Actualización exitosa
-                    alert('Rol actualizado con éxito.');
-                    location.reload(); // Recargar la página para ver el cambio
+                    location.reload(); 
                 } else {
-                    // Error en la actualización
-                    // Mostrar el mensaje de error completo que viene del backend
-                    alert(`Error al actualizar rol:\nStatus: ${response.status}\nMensaje: ${message}`);
+                    alert(`Error al actualizar: ${message}`);
                 }
 
             } catch (error) {
-                console.error('Error en la petición PUT:', error);
-                alert('Error de red al intentar actualizar el rol. Verifique la consola.');
+                console.error(error);
+                alert('Error de red al actualizar rol.');
             }
+        }
+        
+        window.onclick = function(event) {
+            if (event.target == modalConfirmacion) cerrarConfirmacionEliminar();
+            if (event.target == modalRol) cerrarModalRol();
         }
     </script>
 </div>

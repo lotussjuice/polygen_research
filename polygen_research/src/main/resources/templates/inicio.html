@@ -45,8 +45,32 @@
         .action-btn:hover { color: #000; font-weight: bold; }
 
     
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .modal-overlay { 
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: rgba(0,0,0,0.5); 
+            z-index: 1000; 
+        }
+        
+        .modal-content { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            width: 90%; 
+            max-width: 400px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+            
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            margin: 0;
+        }
+        
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
         .form-group input, .form-group textarea { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
@@ -112,9 +136,9 @@
                         th:data-titulo="${nota.titulo}"
                         th:data-contenido="${nota.contenido}"
                         onclick="editarNota(this); event.stopPropagation();">✏️</span> 
-              <a class="action-btn" 
-                th:href="@{/notas/eliminar/{id}(id=${nota.id})}"
-                onclick="return confirm('¿Estás seguro?'); event.stopPropagation();">🗑️</a>
+                    <button class="action-btn" style="background:none;border:none;padding:0;"
+                        th:data-url="@{/notas/eliminar/{id}(id=${nota.id})}"
+                        onclick="confirmarEliminarNota(this); event.stopPropagation();">🗑️</button>
                 </div>
     
                 <div class="note-title" th:text="${nota.titulo}">Título</div>
@@ -126,7 +150,7 @@
     <div id="modalNota" class="modal-overlay">
         <div class="modal-content">
             <h3 id="modalTitle">Nueva Nota</h3>
-            <form th:action="@{/notas/guardar}" method="post">
+            <form th:action="@{/notas/guardar}" method="post" onsubmit="return confirmarGuardadoNota(this)">
                 <input type="hidden" id="notaId" name="id" />
                 
                 <div class="form-group">
@@ -148,7 +172,7 @@
     </div>
 
 
-    <div id="modalVerNota" class="modal-overlay" onclick="cerrarModalVer()">
+    <div id="modalVerNota" class="modal-overlay">
         <div class="modal-content" style="background-color: #feff9c; max-width: 600px; border: 1px solid #ddd;" onclick="event.stopPropagation()">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; border-bottom: 2px dashed rgba(0,0,0,0.1); padding-bottom: 10px;">
                 <h2 id="verTituloDisplay" style="margin: 0; color: #333;"></h2>
@@ -164,8 +188,47 @@
         </div>
     </div>
 
+    <div id="modalConfirmarEliminarNota" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 450px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                <div style="background-color: #fff0f0; padding: 1rem; border-radius: 50%;">
+                    <i class="ph-bold ph-trash" style="font-size: 2.5rem; color: var(--color-error);"></i>
+                </div>
+            </div>
+            <div class="modal-body">
+                <h2 style="margin-bottom: 1rem;">¿Eliminar Nota?</h2>
+                <p>Esta acción eliminará la nota permanentemente.</p>
+                <input type="hidden" id="urlEliminarNota" value="" />
+            </div>
+            <div class="modal-footer" style="justify-content: center; gap: 1rem; border-top: none;">
+                <br>
+                <button type="button" class="btn-secundario" onclick="cerrarConfirmacionEliminar()">Cancelar</button>
+                <button type="button" class="btn-error" onclick="ejecutarEliminarNota()">Sí, Eliminar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalConfirmarGuardarNota" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 450px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                <div style="background-color: #f0fff4; padding: 1rem; border-radius: 50%;">
+                    <i class="ph-bold ph-floppy-disk" style="font-size: 2.5rem; color: var(--color-exito);"></i>
+                </div>
+            </div>
+            <div class="modal-body">
+                <h2 style="margin-bottom: 1rem;">¿Guardar Cambios?</h2>
+                <p>Se guardará la información de la nota en el mural.</p>
+            </div>
+            <div class="modal-footer" style="justify-content: center; gap: 1rem; border-top: none;">
+                <br>
+                <button type="button" class="btn-secundario" onclick="cerrarConfirmacionGuardar()">Cancelar</button>
+                <button type="button" class="btn-primario" onclick="ejecutarGuardarNota()">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+
     <script th:inline="javascript">
-        /*<![CDATA[*/
         
         const casosEstudio =  /*[[${casosEstudio}]]*/ 0;
         const casosConsulta = /*[[${casosConsulta}]]*/ 0;
@@ -204,18 +267,18 @@
         });
 
         // MURAL DE NOTAS
-        
+        let formNotaPendiente = null;
+
         function abrirModalNota() {
             document.getElementById('modalTitle').innerText = 'Nueva Nota';
             document.getElementById('notaId').value = ''; 
             document.getElementById('titulo').value = '';
             document.getElementById('contenido').value = '';
             
-            document.getElementById('modalNota').style.display = 'flex';
+            document.getElementById('modalNota').style.display = 'block';
         }
 
         function editarNota(element) {
-            
             const id = element.getAttribute('data-id');
             const titulo = element.getAttribute('data-titulo');
             const contenido = element.getAttribute('data-contenido');
@@ -225,18 +288,47 @@
             document.getElementById('titulo').value = titulo;
             document.getElementById('contenido').value = contenido;
 
-            document.getElementById('modalNota').style.display = 'flex';
+            document.getElementById('modalNota').style.display = 'block';
         }
 
         function cerrarModalNota() {
             document.getElementById('modalNota').style.display = 'none';
         }
 
-        
-        window.onclick = function(event) {
-            const modal = document.getElementById('modalNota');
-            if (event.target == modal) {
-                cerrarModalNota();
+        // Lógica Confirmación Guardar
+        function confirmarGuardadoNota(form) {
+            formNotaPendiente = form;
+            document.getElementById('modalConfirmarGuardarNota').style.display = 'block';
+            return false; // Detiene el envío automático
+        }
+
+        function cerrarConfirmacionGuardar() {
+            document.getElementById('modalConfirmarGuardarNota').style.display = 'none';
+            formNotaPendiente = null;
+        }
+
+        function ejecutarGuardarNota() {
+            if (formNotaPendiente) {
+                formNotaPendiente.submit();
+            }
+        }
+
+        // Lógica Confirmación Eliminar
+        function confirmarEliminarNota(btn) {
+            const url = btn.getAttribute('data-url');
+            document.getElementById('urlEliminarNota').value = url;
+            document.getElementById('modalConfirmarEliminarNota').style.display = 'block';
+        }
+
+        function cerrarConfirmacionEliminar() {
+            document.getElementById('modalConfirmarEliminarNota').style.display = 'none';
+            document.getElementById('urlEliminarNota').value = '';
+        }
+
+        function ejecutarEliminarNota() {
+            const url = document.getElementById('urlEliminarNota').value;
+            if (url) {
+                window.location.href = url;
             }
         }
 
@@ -248,8 +340,7 @@
 
             document.getElementById('verTituloDisplay').innerText = titulo;
             document.getElementById('verContenidoDisplay').innerText = contenido;
-            document.getElementById('modalVerNota').style.display = 'flex';
-
+            document.getElementById('modalVerNota').style.display = 'block';
         }
 
         function cerrarModalVer() {
@@ -259,17 +350,14 @@
         window.onclick = function(event) {
             const modalForm = document.getElementById('modalNota');
             const modalVer = document.getElementById('modalVerNota');
+            const modalConfElim = document.getElementById('modalConfirmarEliminarNota');
+            const modalConfGuardar = document.getElementById('modalConfirmarGuardarNota');
             
-            if (event.target == modalForm) {
-                cerrarModalNota();
-            }
-            if (event.target == modalVer) {
-                cerrarModalVer();
-            }
+            if (event.target == modalForm) cerrarModalNota();
+            if (event.target == modalVer) cerrarModalVer();
+            if (event.target == modalConfElim) cerrarConfirmacionEliminar();
+            if (event.target == modalConfGuardar) cerrarConfirmacionGuardar();
         }
-
-        
-
         
         /*]]>*/
     </script>

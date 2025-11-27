@@ -1,3 +1,5 @@
+/* Algun día organizar la dispocisión de esto 
+
 /* 1 Configuración General y Variables */
 :root {
     --color-primario: #005a9c;
@@ -21,6 +23,80 @@
     --color-texto: #e0e0e0;
     --color-texto-secundario: #a0a0a0;
     --color-borde: #333;
+}
+
+.btn-primario, .btn-secundario, .btn-exito, .btn-error, .btn-stata {
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-decoration: none;
+    display: inline-flex; /* Clave para alineación */
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid transparent;
+    transition: all 0.2s ease;
+    min-height: 38px; /* Altura mínima uniforme */
+}
+
+.btn-primario { background-color: var(--color-primario); color: white; }
+.btn-primario:hover { background-color: #004578; }
+
+.btn-secundario { 
+    background-color: var(--color-fondo); 
+    color: var(--color-texto); 
+    border-color: var(--color-borde); 
+}
+.btn-secundario:hover { background-color: #e9ecef; }
+
+.btn-exito { background-color: var(--color-exito); color: white; }
+.btn-exito:hover { background-color: #218838; }
+
+.btn-error { background-color: var(--color-error); color: white; }
+.btn-error:hover { background-color: #c82333; }
+
+.btn-stata { background-color: #1a60ac; color: white; }
+.btn-stata:hover { background-color: #134a8a; }
+
+
+.btn-sm {
+    padding: 0.4rem;
+    font-size: 1rem; /* Icono más grande relativo al botón */
+    width: 36px;  /* Cuadrado perfecto */
+    height: 36px;
+    line-height: 1;
+}
+
+.btn-sm:not(:empty) {
+    width: auto;
+    padding: 0.4rem 0.8rem;
+}
+
+.btn-group-equal {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+    margin-top: 1.5rem;
+}
+
+.btn-group-equal > button,
+.btn-group-equal > a,
+.btn-group-equal > form {
+    flex: 1; 
+    width: 100%;
+}
+
+.btn-group-equal form button {
+    width: 100%;
+    height: 100%;
+}
+
+.btn-group-equal button, 
+.btn-group-equal a {
+    height: 45px;
+    font-size: 1rem;
 }
 
 * {
@@ -640,30 +716,80 @@ input:checked+.slider:before {
     color: white;
 }
 
-/* 8 Modal (Pop-up) */
+/* =========================================
+   8. MODALES (Centrado y Estructura Unificada)
+   ========================================= */
+
+/* Fondo Oscuro (Overlay) */
 .modal {
-    display: none;
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
+    display: none; 
+    position: fixed; 
+    z-index: 1000; 
+    left: 0; 
+    top: 0; 
+    width: 100%; 
+    height: 100%; 
+    overflow: hidden; /* Oculta scroll del body */
     background-color: rgba(0, 0, 0, 0.5);
+    
+    /* Centrado Flexbox (Eje X e Y) */
+    align-items: center; 
+    justify-content: center;
+    
+    /* Transición suave (opcional) */
+    transition: opacity 0.3s ease;
 }
 
+/* Bootstrap añade .show, aseguramos que sea flex */
+.modal.show {
+    display: flex !important; 
+}
+
+/* Contenedor del Diálogo */
+.modal-dialog {
+    width: auto; /* Dejar que el contenido defina el ancho hasta el max-width */
+    max-width: 100%;
+    margin: 1.75rem auto; /* Margen estándar */
+    pointer-events: none;
+    
+    /* Centrado vertical crítico */
+    display: flex;
+    align-items: center;
+    min-height: calc(100% - 3.5rem);
+}
+
+/* Contenido del Modal (Tarjeta Blanca) */
 .modal-content {
     background-color: var(--color-tarjeta);
-    margin: 10% auto;
+    position: relative;
+    pointer-events: auto;
+    
+    /* Reset de posicionamiento antiguo */
+    top: auto; 
+    left: auto; 
+    transform: none; 
+    
     padding: 2rem;
     border: 1px solid var(--color-borde);
     border-radius: 12px;
-    width: 80%;
-    max-width: 700px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    
+    /* Dimensiones */
+    width: 90vw; /* 90% del ancho de la ventana por defecto */
+    max-width: 600px; /* Pero nunca más de 600px (para los pequeños) */
+    max-height: 85vh; /* Nunca más alto que el 85% de la pantalla */
+    
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
 }
 
+/* Modales Grandes (Clase .modal-xl de Bootstrap o propia) */
+.modal-xl .modal-content {
+    max-width: 1140px; /* Mucho más ancho para tablas */
+    width: 95vw;
+}
+
+/* Partes internas */
 .modal-header {
     display: flex;
     justify-content: space-between;
@@ -671,22 +797,42 @@ input:checked+.slider:before {
     border-bottom: 1px solid var(--color-borde);
     padding-bottom: 1rem;
     margin-bottom: 1.5rem;
+    flex-shrink: 0;
 }
 
-.modal-header h2 {
-    margin: 0;
+.modal-body {
+    overflow-y: auto; /* El scroll ocurre AQUÍ dentro */
+    flex-grow: 1;
+    padding-right: 0.5rem; /* Espacio para la barra de scroll */
 }
 
+.modal-footer {
+    border-top: 1px solid var(--color-borde); /* Opcional, según tu gusto */
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: flex-end; /* Botones a la derecha por defecto */
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+/* Botón Cerrar (X) */
 .close-modal {
     color: var(--color-texto-secundario);
     font-size: 2rem;
     font-weight: bold;
     cursor: pointer;
-    transition: color 0.3s ease;
+    line-height: 1;
+    transition: color 0.2s;
 }
-
 .close-modal:hover {
     color: var(--color-texto);
+}
+
+/* Fix para Modales "Custom" sin Bootstrap (.modal sin .fade) */
+/* Si usas style="display:block" desde JS, esto asegura que se centre */
+.modal[style*="display: block"] {
+    display: flex !important;
 }
 
 .patient-data-grid {
@@ -1369,31 +1515,32 @@ input:checked+.slider-clean {
     flex-wrap: wrap;
     margin-bottom: 1.5rem;
 }
+
 /*ESTILOS TEXTAREA REDIMENSIONABLE CON CONTADOR DE CARACTERES */
 .textarea-wrapper {
     position: relative;
-    display: block; 
+    display: block;
 
-    width: 400px;       
-    height: 120px;    
-    
-    max-width: 100%;  
-    min-width: 200px; 
+    width: 400px;
+    height: 120px;
+
+    max-width: 100%;
+    min-width: 200px;
     min-height: 100px;
     max-height: 600px;
 
     resize: both;
     overflow: hidden;
-    
-    border: 1px solid transparent; 
+
+    border: 1px solid transparent;
 }
 
 #observacion {
     width: 100% !important;
     height: 100% !important;
-    
-    resize: none !important; 
-    
+
+    resize: none !important;
+
     box-sizing: border-box;
     position: absolute;
     top: 0;
@@ -1404,17 +1551,188 @@ input:checked+.slider-clean {
     position: absolute;
     bottom: 8px;
     right: 8px;
-    
+
     font-size: 0.75rem;
     color: var(--color-texto-secundario);
     background-color: rgba(255, 255, 255, 0.85);
     padding: 2px 6px;
     border-radius: 4px;
-    
-    z-index: 10;       
-    pointer-events: none; 
+
+    z-index: 10;
+    pointer-events: none;
 }
 
 .dark-mode .char-counter {
     background-color: rgba(30, 30, 30, 0.85);
+}
+
+/* --- NOTIFICACIONES (TOASTS) --- */
+#toast-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.toast {
+    background-color: var(--color-tarjeta);
+    color: var(--color-texto);
+    border-left: 5px solid var(--color-primario);
+    padding: 1rem;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 300px;
+    animation: slideIn 0.3s ease-out forwards;
+    opacity: 0;
+    /* Start invisible for animation */
+}
+
+.toast.success {
+    border-left-color: var(--color-exito);
+}
+
+.toast.error {
+    border-left-color: var(--color-error);
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+}
+
+/* Funcionamiento campana */
+.notification-wrapper {
+    position: relative;
+}
+
+.notification-dropdown {
+    position: absolute;
+    top: 120%;
+    right: -10px;
+    width: 320px;
+    background-color: var(--color-tarjeta);
+    border: 1px solid var(--color-borde);
+    border-radius: 8px;
+    box-shadow: var(--sombra-tarjeta);
+    display: none;
+    z-index: 1000;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.notification-dropdown.show {
+    display: block;
+}
+
+.notification-item {
+    padding: 10px 15px;
+    border-bottom: 1px solid var(--color-borde);
+    font-size: 0.9rem;
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notification-item:hover {
+    background-color: var(--color-fondo);
+}
+
+.notification-time {
+    font-size: 0.75rem;
+    color: var(--color-texto-secundario);
+    display: block;
+    margin-top: 4px;
+}
+
+.notification-dot {
+    display: none;
+
+}
+
+.notification-dot.active {
+    display: block;
+}
+
+
+.btn-xs {
+    padding: 2px 6px;
+    font-size: 0.75rem;
+    line-height: 1.2;
+    border-radius: 4px;
+    height: auto;
+    min-height: 0;
+}
+
+
+.notification-item .btn-group-xs {
+    display: flex;
+    gap: 4px;
+    margin-left: auto;
+    align-items: center;
+}
+
+
+.mini-notification-popup {
+    position: absolute;
+    top: 50px;
+    right: 0;
+ 
+    width: 250px;
+    background-color: var(--color-texto); 
+    color: var(--color-tarjeta); 
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    z-index: 2000;
+    display: none; 
+    pointer-events: none; 
+    opacity: 0;
+    
+    transform: translateY(-10px); 
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.mini-notification-popup::after {
+    content: '';
+    position: absolute;
+    
+    top: -6px;   
+    bottom: auto; 
+    right: 14px; 
+    
+    width: 0; 
+    height: 0; 
+
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 6px solid var(--color-texto); 
+    border-top: none;
+}
+
+.mini-notification-popup.show {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
 }
