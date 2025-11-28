@@ -84,36 +84,29 @@ navLinks.forEach(link => {
                 sidebar.classList.remove('open');
             }
         }
-        // No se usa e.preventDefault(), se deja que el enlace (th:href) funcione.
     });
 });
-
-/*Lógica para Modales */
 
 const modalPaciente = document.getElementById('modal-ver-paciente');
 const modalCrf = document.getElementById('modal-ver-crf');
 
-// Función asíncrona para mostrar detalles de un Paciente
 async function verPaciente(pacienteId) {
     if (!modalPaciente) {
         console.error("El modal 'modal-ver-paciente' no se encuentra en esta página.");
         return;
     }
 
-    // Referencia al nuevo contenedor de datos CRF
     const crfDataContainer = document.getElementById('modal-pac-crf-data');
 
     document.getElementById('modal-patient-id').innerText = 'Cargando...';
-    // Limpia campos anteriores
     document.getElementById('modal-pac-codigo').innerText = '';
     document.getElementById('modal-pac-nombre').innerText = '';
     document.getElementById('modal-pac-apellido').innerText = '';
     document.getElementById('modal-pac-estado').innerText = '';
-    crfDataContainer.innerHTML = '<p>Cargando datos de estudio...</p>'; // Limpia datos CRF
+    crfDataContainer.innerHTML = '<p>Cargando datos de estudio...</p>';
     modalPaciente.style.display = 'block';
 
     try {
-        // Llama a la API
         const response = await fetch(`/pacientes/api/paciente/${pacienteId}`);
         if (!response.ok) {
             throw new Error(`Paciente no encontrado (ID: ${pacienteId}), Estado: ${response.status}`);
@@ -130,7 +123,6 @@ async function verPaciente(pacienteId) {
         if (paciente.crfs && paciente.crfs.length > 0) {
             let html = '';
 
-            // Itera sobre cada CRF del paciente
             for (const crf of paciente.crfs) {
                 html += `<div class="card" style="margin-top: 1rem; background-color: var(--color-fondo);">
                            <div class="card-header" style="padding: 0.75rem 1rem;">
@@ -139,10 +131,8 @@ async function verPaciente(pacienteId) {
                            </div>
                            <div class="card-body" style="padding: 1rem;">`;
 
-                // Revisa si este CRF tiene datos dinámicos
                 if (crf.datosCrfList && crf.datosCrfList.length > 0) {
 
-                    // tera sobre cada dato
                     for (const dato of crf.datosCrfList) {
                         html += `<div class="patient-data-grid" style="gap: 0.5rem 1rem;">
                                    <strong>${dato.campoCrf ? dato.campoCrf.nombre : 'Campo desconocido'}:</strong>
@@ -154,10 +144,9 @@ async function verPaciente(pacienteId) {
                 }
                 html += '</div></div>';
             }
-            crfDataContainer.innerHTML = html; // Inserta todo el HTML en el div
+            crfDataContainer.innerHTML = html;
 
         } else {
-            // Si el paciente no tiene CRFs
             crfDataContainer.innerHTML = '<p>Este paciente no tiene ningún CRF asociado.</p>';
         }
 
@@ -168,14 +157,12 @@ async function verPaciente(pacienteId) {
     }
 }
 
-// Función para cerrar el modal de Paciente
 function cerrarModal() {
     if (modalPaciente) {
         modalPaciente.style.display = 'none';
     }
 }
 
-// Función asíncrona para mostrar detalles de un CRF
 async function verCrf(crfId) {
     if (!modalCrf) {
         console.error("El modal 'modal-ver-crf' no se encuentra en esta página.");
@@ -191,17 +178,15 @@ async function verCrf(crfId) {
     modalCrf.style.display = 'block';
 
     try {
-        // Realiza petición fetch al endpoint del backend para CRF
         const response = await fetch(`/crfs/api/crf/${crfId}`);
         if (!response.ok) {
             throw new Error(`CRF no encontrado (ID: ${crfId}), Estado: ${response.status}`);
         }
-        const crf = await response.json(); // Convierte la respuesta JSON
+        const crf = await response.json();
 
-        // Rellena el modal con los datos del CRF
         document.getElementById('modal-crf-titulo').innerText = `Detalles del CRF: ${crf.idCrf || 'N/A'}`;
         document.getElementById('modal-crf-id').innerText = crf.idCrf || 'N/A';
-        // Accede a los datos del paciente anidado
+
         document.getElementById('modal-crf-paciente').innerText = crf.datosPaciente ? (crf.datosPaciente.codigoPaciente || 'N/A') : 'N/A';
         document.getElementById('modal-crf-grupo').innerText = crf.grupo || 'N/A';
         document.getElementById('modal-crf-fecha').innerText = crf.fechaConsulta || 'N/A';
@@ -221,7 +206,6 @@ function cerrarModalCrf() {
     }
 }
 
-// Listener global para cerrar los modales si se hace clic fuera de su contenido.
 window.onclick = function (event) {
     if (event.target == modalPaciente) {
         cerrarModal();
@@ -263,3 +247,59 @@ const savedColor = localStorage.getItem('primaryColor');
 if (savedColor) {
     cambiarColorPrimario(savedColor);
 }
+
+/* --- LÓGICA DEL SELECTOR DE TEMAS --- */
+
+const themeDropdown = document.getElementById('theme-dropdown');
+
+function toggleThemeMenu(event) {
+    if (event) event.stopPropagation(); 
+
+    const notifDropdown = document.getElementById('notif-dropdown');
+    if (notifDropdown && notifDropdown.classList.contains('show')) {
+        notifDropdown.classList.remove('show');
+    }
+
+    if (themeDropdown) {
+        themeDropdown.classList.toggle('show');
+        updateActiveThemeUI();
+    }
+}
+
+function selectTheme(themeName) {
+    if (themeName === 'default') {
+        document.documentElement.removeAttribute('data-theme');
+    } else {
+        document.documentElement.setAttribute('data-theme', themeName);
+    }
+    localStorage.setItem('appTheme', themeName);
+    updateActiveThemeUI();
+}
+
+function updateActiveThemeUI() {
+    const currentTheme = localStorage.getItem('appTheme') || 'default';
+    document.querySelectorAll('.theme-option').forEach(el => el.classList.remove('active'));
+    const activeEl = document.getElementById('theme-opt-' + currentTheme);
+    if (activeEl) {
+        activeEl.classList.add('active');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    updateActiveThemeUI();
+});
+
+window.addEventListener('click', function (e) {
+    if (!e.target.closest('.theme-wrapper')) {
+        if (themeDropdown && themeDropdown.classList.contains('show')) {
+            themeDropdown.classList.remove('show');
+        }
+    }
+
+    if (!e.target.closest('.notification-wrapper')) {
+        const notifDropdown = document.getElementById('notif-dropdown');
+        if (notifDropdown && notifDropdown.classList.contains('show')) {
+            notifDropdown.classList.remove('show');
+        }
+    }
+});

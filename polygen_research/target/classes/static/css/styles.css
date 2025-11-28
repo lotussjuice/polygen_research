@@ -1590,7 +1590,6 @@ input:checked+.slider-clean {
     min-width: 300px;
     animation: slideIn 0.3s ease-out forwards;
     opacity: 0;
-    /* Start invisible for animation */
 }
 
 .toast.success {
@@ -1735,4 +1734,211 @@ input:checked+.slider-clean {
     display: block;
     opacity: 1;
     transform: translateY(0);
+}
+
+  /* --- 16. TEMAS Y PERSONALIZACIÓN (NUEVO) --- */
+:root {
+    --chart-color-1: #005a9c;
+    --chart-color-2: #28a745;
+}
+
+html, body, .card, .sidebar, .header {
+    transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+}
+
+
+html[data-theme="cream"] {
+    --color-primario: #8d6e63;
+    --color-secundario: #a1887f;
+    --color-fondo: #fdfbf7; 
+    --color-tarjeta: #ffffff;
+    
+    --chart-color-1: #5D4037;
+    --chart-color-2: #FFCA28;
+}
+html[data-theme="cream"].dark-mode {
+    --color-primario: #d7ccc8;
+    --color-secundario: #efebe9;
+    --color-fondo: #2d2a28; 
+    --color-tarjeta: #3e3b39;
+}
+
+html[data-theme="forest"] {
+    --color-primario: #2e7d32;
+    --color-secundario: #4caf50;
+    
+    --chart-color-1: #1B5E20;
+    --chart-color-2: #76FF03;
+}
+html[data-theme="forest"].dark-mode {
+    --color-primario: #81c784;
+    --color-secundario: #a5d6a7;
+    --color-fondo: #1b261b;
+    --color-tarjeta: #253025;
+}
+
+
+html[data-theme="berry"] {
+    --color-primario: #8e24aa;
+    --color-secundario: #ba68c8;
+    
+
+    --chart-color-1: #4A148C;
+    --chart-color-2: #FF4081;
+}
+html[data-theme="berry"].dark-mode {
+    --color-primario: #ce93d8;
+    --color-secundario: #e1bee7;
+    --color-fondo: #1f1020;
+    --color-tarjeta: #2d1a30;
+}
+
+/* 4. Titanium */
+html[data-theme="titanium"] {
+    --color-primario: #455a64;
+    --color-secundario: #607d8b;
+    --color-fondo: #f0f2f5; 
+    
+    --chart-color-1: #263238;
+    --chart-color-2: #00E5FF; 
+}
+html[data-theme="titanium"].dark-mode {
+    --color-primario: #b0bec5;
+    --color-secundario: #cfd8dc;
+    --color-fondo: #101518;
+    --color-tarjeta: #1c2329;
+}
+
+html[data-theme="sunset"] {
+    --color-primario: #e65100;
+    --color-secundario: #ff9800;
+    
+
+    --chart-color-1: #BF360C; 
+    --chart-color-2: #FFD600;
+}
+html[data-theme="sunset"].dark-mode {
+    --color-primario: #ffcc80;
+    --color-secundario: #ffe0b2;
+    --color-fondo: #211208;
+    --color-tarjeta: #2e1c0e;
+}
+
+.theme-dropdown {
+    position: absolute;
+    top: 120%; 
+    right: -10px;
+    width: 260px;
+    background-color: var(--color-tarjeta);
+    border: 1px solid var(--color-borde);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    padding: 1rem;
+    z-index: 1000;
+    
+    opacity: 0;
+    transform: translateY(-10px);
+    visibility: hidden;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.theme-dropdown.show {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+}
+
+.theme-dropdown::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 14px;
+    width: 12px;
+    height: 12px;
+    background-color: var(--color-tarjeta);
+    border-top: 1px solid var(--color-borde);
+    border-left: 1px solid var(--color-borde);
+    transform: rotate(45deg);
+}
+
+.theme-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.theme-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.theme-option:hover {
+    transform: scale(1.1);
+}
+
+.theme-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-bottom: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border: 2px solid transparent;
+    position: relative;
+}
+
+.theme-option.active .theme-circle {
+    border-color: var(--color-texto);
+    transform: scale(0.95);
+}
+
+.theme-label {
+    font-size: 0.75rem;
+    color: var(--color-texto-secundario);
+    font-weight: 600;
+}
+
+.bg-default { background: linear-gradient(135deg, #005a9c, #00a8e8); }
+.bg-cream { background: linear-gradient(135deg, #8d6e63, #fdfbf7); }
+.bg-forest { background: linear-gradient(135deg, #2e7d32, #4caf50); }
+.bg-berry { background: linear-gradient(135deg, #8e24aa, #ba68c8); }
+.bg-titanium { background: linear-gradient(135deg, #455a64, #607d8b); }
+.bg-sunset { background: linear-gradient(135deg, #e65100, #ff9800); }
+
+/* --- 17. BOTONES SINCRONIZADOS CON GRÁFICO --- */
+.btn-chart-1 {
+    background-color: var(--chart-color-1);
+    color: #ffffff;
+    border: none;
+    transition: all 0.2s ease;
+}
+.btn-chart-1:hover {
+    filter: brightness(1.15); 
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.btn-chart-2 {
+    background-color: var(--chart-color-2);
+    color: #ffffff; 
+    border: none;
+    transition: all 0.2s ease;
+}
+
+html[data-theme="forest"] .btn-chart-2,
+html[data-theme="sunset"] .btn-chart-2,
+html[data-theme="cream"] .btn-chart-2,
+html[data-theme="titanium"] .btn-chart-2 {
+    color: #000000;
+    font-weight: 700;
+}
+
+.btn-chart-2:hover {
+    filter: brightness(1.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }

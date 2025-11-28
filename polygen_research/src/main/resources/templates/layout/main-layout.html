@@ -5,11 +5,18 @@
     <script>
         (function () {
             try {
+                // 1. Cargar Modo Oscuro
                 var theme = localStorage.getItem('theme');
                 if (theme === 'dark') {
                     document.documentElement.classList.add('dark-mode');
                 }
-            } catch (e) { console.error("No se pudo aplicar el tema desde localStorage", e); }
+
+                // 2. Cargar Tema de Color 
+                var appTheme = localStorage.getItem('appTheme');
+                if (appTheme && appTheme !== 'default') {
+                    document.documentElement.setAttribute('data-theme', appTheme);
+                }
+            } catch (e) { console.error("Error cargando preferencias", e); }
         })();
     </script>
 
@@ -41,32 +48,41 @@
 
             <nav>
                 <ul>
-                    <li><a th:href="@{/inicio}" class="nav-link"><i class="ph-bold ph-house"></i><span class="link-text">Inicio</span></a></li>
-                    
+                    <li><a th:href="@{/inicio}" class="nav-link"><i class="ph-bold ph-house"></i><span
+                                class="link-text">Inicio</span></a></li>
+
                     <li sec:authorize="hasAnyRole('DEV', 'ADMINISTRADOR', 'INVESTIGADOR')">
-                        <a th:href="@{/crf/nuevo}" class="nav-link"><i class="ph-bold ph-clipboard-text"></i><span class="link-text">Ingresar CRF</span></a>
+                        <a th:href="@{/crf/nuevo}" class="nav-link"><i class="ph-bold ph-clipboard-text"></i><span
+                                class="link-text">Ingresar CRF</span></a>
                     </li>
                     <li sec:authorize="hasAnyRole('DEV', 'ADMINISTRADOR', 'INVESTIGADOR')">
-                        <a th:href="@{/pacientes/list}" class="nav-link"><i class="ph-bold ph-users"></i><span class="link-text">Gestionar Pacientes</span></a>
+                        <a th:href="@{/pacientes/list}" class="nav-link"><i class="ph-bold ph-users"></i><span
+                                class="link-text">Gestionar Pacientes</span></a>
                     </li>
                     <li sec:authorize="hasAnyRole('DEV', 'ADMINISTRADOR', 'INVESTIGADOR')">
-                        <a th:href="@{/campos/list}" class="nav-link"><i class="ph-bold ph-pencil-simple"></i><span class="link-text">Gestor de Campos</span></a>
+                        <a th:href="@{/campos/list}" class="nav-link"><i class="ph-bold ph-pencil-simple"></i><span
+                                class="link-text">Gestor de Campos</span></a>
                     </li>
                     <li sec:authorize="hasAnyRole('DEV', 'ADMINISTRADOR', 'INVESTIGADOR')">
-                        <a th:href="@{/crf/list}" class="nav-link"><i class="ph-bold ph-table"></i><span class="link-text">Gestionar CRF</span></a>
+                        <a th:href="@{/crf/list}" class="nav-link"><i class="ph-bold ph-table"></i><span
+                                class="link-text">Gestionar CRF</span></a>
                     </li>
                     <li sec:authorize="hasAnyRole('DEV', 'ADMINISTRADOR', 'INVESTIGADOR')">
-                        <a th:href="@{/datos-crf/list}" class="nav-link"><i class="ph-bold ph-chart-line"></i><span class="link-text">Ver Datos (Valores)</span></a>
+                        <a th:href="@{/datos-crf/list}" class="nav-link"><i class="ph-bold ph-chart-line"></i><span
+                                class="link-text">Ver Datos (Valores)</span></a>
                     </li>
                     <li sec:authorize="hasAnyRole('DEV', 'ADMINISTRADOR', 'INVESTIGADOR')">
-                        <a th:href="@{/registros/list}" class="nav-link"><i class="ph-bold ph-archive"></i><span class="link-text">Historial de modificacion</span></a>
+                        <a th:href="@{/registros/list}" class="nav-link"><i class="ph-bold ph-archive"></i><span
+                                class="link-text">Historial de modificacion</span></a>
                     </li>
 
                     <li sec:authorize="hasAnyRole('DEV', 'ADMINISTRADOR')">
-                        <a th:href="@{/whitelist/list}" class="nav-link"><i class="ph-bold ph-shield-check"></i><span class="link-text">Adm. Usuarios</span></a>
+                        <a th:href="@{/whitelist/list}" class="nav-link"><i class="ph-bold ph-shield-check"></i><span
+                                class="link-text">Adm. Usuarios</span></a>
                     </li>
 
-                    <li><a th:href="@{/faq}" class="nav-link"><i class="ph-bold ph-question"></i><span class="link-text">Preguntas Frecuentes</span></a></li>
+                    <li><a th:href="@{/faq}" class="nav-link"><i class="ph-bold ph-question"></i><span
+                                class="link-text">Preguntas Frecuentes</span></a></li>
                 </ul>
             </nav>
 
@@ -87,40 +103,87 @@
                 </div>
 
                 <div class="header-right">
-                    <label class="switch" title="Cambiar Modo" style="margin-right: 1rem;">
+
+                    <label class="switch" title="Cambiar Modo" style="margin-right: 0.5rem;">
                         <input type="checkbox" id="dark-mode-toggle">
                         <span class="slider"></span>
                     </label>
+
+                    <div class="theme-wrapper" style="position: relative;">
+                        <button class="icon-btn" onclick="toggleThemeMenu(event)" title="Cambiar Tema de Color">
+                            <i class="ph-bold ph-palette"></i>
+                        </button>
+
+                        <div id="theme-dropdown" class="theme-dropdown" onclick="event.stopPropagation()">
+                            <div
+                                style="margin-bottom: 10px; border-bottom: 1px solid var(--color-borde); padding-bottom: 5px;">
+                                <strong style="font-size: 0.9rem; color: var(--color-primario);">Apariencia</strong>
+                            </div>
+
+                            <p style="font-size: 0.8rem; color: var(--color-texto-secundario); margin-bottom: 0.5rem;">
+                                Selecciona un tema:</p>
+
+                            <div class="theme-grid">
+                                <div class="theme-option" onclick="selectTheme('default')" id="theme-opt-default">
+                                    <div class="theme-circle bg-default"></div>
+                                    <span class="theme-label">Original</span>
+                                </div>
+                                <div class="theme-option" onclick="selectTheme('cream')" id="theme-opt-cream">
+                                    <div class="theme-circle bg-cream"></div>
+                                    <span class="theme-label">Cream</span>
+                                </div>
+                                <div class="theme-option" onclick="selectTheme('forest')" id="theme-opt-forest">
+                                    <div class="theme-circle bg-forest"></div>
+                                    <span class="theme-label">Forest</span>
+                                </div>
+                                <div class="theme-option" onclick="selectTheme('berry')" id="theme-opt-berry">
+                                    <div class="theme-circle bg-berry"></div>
+                                    <span class="theme-label">Berry</span>
+                                </div>
+                                <div class="theme-option" onclick="selectTheme('titanium')" id="theme-opt-titanium">
+                                    <div class="theme-circle bg-titanium"></div>
+                                    <span class="theme-label">Titan</span>
+                                </div>
+                                <div class="theme-option" onclick="selectTheme('sunset')" id="theme-opt-sunset">
+                                    <div class="theme-circle bg-sunset"></div>
+                                    <span class="theme-label">Sunset</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="notification-wrapper" style="position: relative;">
                         <button class="icon-btn" onclick="toggleNotifications()" title="Notificaciones">
                             <i class="ph-bold ph-bell"></i>
                             <span id="notif-dot" class="notification-dot"></span>
                         </button>
-
                         <div id="mini-popup" class="mini-notification-popup">
                             <strong id="mini-popup-user">Usuario</strong><br>
                             <span id="mini-popup-action">Acción...</span>
                         </div>
-
                         <div id="notif-dropdown" class="notification-dropdown">
-                            <div style="padding: 10px; border-bottom: 1px solid var(--color-borde); font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
+                            <div
+                                style="padding: 10px; border-bottom: 1px solid var(--color-borde); font-weight: bold; display: flex; justify-content: space-between; align-items: center;">
                                 <span>Actividad Reciente</span>
-                                <button onclick="marcarTodoLeido()" style="background:none; border:none; color: var(--color-primario); font-size: 0.7rem; cursor: pointer;">Marcar leído</button>
+                                <button onclick="marcarTodoLeido()"
+                                    style="background:none; border:none; color: var(--color-primario); font-size: 0.7rem; cursor: pointer;">Marcar
+                                    leído</button>
                             </div>
-                            <div id="notif-list">
-                                <div class="notification-item" style="text-align: center;">Cargando...</div>
-                            </div>
+                            <div id="notif-list"></div>
                             <div style="padding: 10px; text-align: center; border-top: 1px solid var(--color-borde);">
-                                <a th:href="@{/registros/list}" style="font-size: 0.8rem;">Ver todo el historial</a>
+                                <a th:href="@{/registros/list}" style="font-size: 0.8rem;">Ver historial</a>
                             </div>
                         </div>
                     </div>
 
-                    <div class="profile-menu">
-                        <span th:text="${#authentication.principal.nombreUsuario}">Usuario</span>
-                        <button onclick="document.getElementById('logoutForm').submit();" class="icon-btn" title="Cerrar Sesión" style="margin-left: 0.5rem; background: none; border: none; cursor: pointer;">
-                            <i class="ph-bold ph-sign-out" style="font-size: 1.2rem; color: var(--color-texto-principal);"></i>
+                    <div class="profile-menu" style="display: flex; align-items: center; gap: 8px;">
+                        <span th:text="${#authentication.principal.nombreUsuario}"
+                            style="font-weight: 600;">Usuario</span>
+
+                        <button onclick="document.getElementById('logoutForm').submit();" class="icon-btn"
+                            title="Cerrar Sesión"
+                            style="margin-left: 0.5rem; background: none; border: none; cursor: pointer;">
+                            <i class="ph-bold ph-sign-out" style="font-size: 1.2rem; color: var(--color-texto);"></i>
                         </button>
                         <form th:action="@{/logout}" method="post" id="logoutForm" style="display: none;">
                             <div th:if="${_csrf != null}">
@@ -141,8 +204,9 @@
     </div>
 
     <div id="modalVerDetalleGlobal" class="modal" style="display: none;">
-        <div class="modal-content" style="max-width: 600px; width: 90%; max-height: 90vh; display: flex; flex-direction: column;">
-            
+        <div class="modal-content"
+            style="max-width: 600px; width: 90%; max-height: 90vh; display: flex; flex-direction: column;">
+
             <div class="modal-header" style="flex-shrink: 0;">
                 <h2><i class="ph-bold ph-file-text"></i> Detalle CRF</h2>
                 <span id="global-detalle-id-titulo" style="display: none;"></span>
@@ -150,7 +214,8 @@
             </div>
 
             <div class="modal-body" style="overflow-y: auto; padding: 1.5rem;">
-                <div class="detail-section" style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-borde); padding-bottom: 1rem;">
+                <div class="detail-section"
+                    style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-borde); padding-bottom: 1rem;">
                     <h4 style="color: var(--color-primario); margin-bottom: 0.5rem;">Paciente</h4>
                     <p><strong>Código:</strong> <span id="global-detalle-codigo"></span></p>
                     <p><strong>Nombre:</strong> <span id="global-detalle-nombre"></span></p>
@@ -158,9 +223,11 @@
                     <p><strong>Tipo Estudio:</strong> <span id="global-detalle-tipo"></span></p>
                 </div>
 
-                <div class="detail-section" style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-borde); padding-bottom: 1rem;">
+                <div class="detail-section"
+                    style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-borde); padding-bottom: 1rem;">
                     <h4 style="color: var(--color-primario); margin-bottom: 0.5rem;">Observaciones</h4>
-                    <p id="global-detalle-obs" style="white-space: pre-wrap; font-style: italic; color: var(--color-texto-secundario);"></p>
+                    <p id="global-detalle-obs"
+                        style="white-space: pre-wrap; font-style: italic; color: var(--color-texto-secundario);"></p>
                 </div>
 
                 <div class="detail-section">
@@ -236,7 +303,7 @@
             const audio = document.getElementById('notification-sound');
             if (audio) {
                 audio.currentTime = 0;
-                audio.play().catch(e => {});
+                audio.play().catch(e => { });
             }
         }
 
@@ -245,9 +312,9 @@
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `toast ${type}`;
-            let icon = type === 'success' ? '<i class="ph-bold ph-check-circle" style="color:var(--color-exito)"></i>' : 
-                       type === 'error' ? '<i class="ph-bold ph-warning-circle" style="color:var(--color-error)"></i>' : 
-                       '<i class="ph-bold ph-info"></i>';
+            let icon = type === 'success' ? '<i class="ph-bold ph-check-circle" style="color:var(--color-exito)"></i>' :
+                type === 'error' ? '<i class="ph-bold ph-warning-circle" style="color:var(--color-error)"></i>' :
+                    '<i class="ph-bold ph-info"></i>';
             toast.innerHTML = `${icon} <span>${message}</span>`;
             container.appendChild(toast);
 
@@ -324,7 +391,7 @@
                 dropdown.classList.add('show');
                 document.getElementById('notif-dot').classList.remove('active');
                 document.getElementById('mini-popup').classList.remove('show');
-                
+
                 if (ultimosRegistrosCache.length > 0) {
                     const fechaMasReciente = new Date(ultimosRegistrosCache[0].fechaActividad).getTime();
                     localStorage.setItem(STORAGE_KEY_LAST_SEEN, fechaMasReciente);
@@ -397,4 +464,5 @@
     <th:block th:replace="${pageScript} ?: ~{}" />
 
 </body>
+
 </html>
