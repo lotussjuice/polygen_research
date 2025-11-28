@@ -21,7 +21,7 @@ public class DatosPacienteController {
         List<DatosPaciente> listaPacientes = pacienteService.getAllPacientes();
         model.addAttribute("pacientes", listaPacientes);
 
-        return "Dev/DatosPacienteTemp/paciente-list";
+        return "dev/DatosPacienteTemp/paciente-list";
     }
 
     @GetMapping("/nuevo")

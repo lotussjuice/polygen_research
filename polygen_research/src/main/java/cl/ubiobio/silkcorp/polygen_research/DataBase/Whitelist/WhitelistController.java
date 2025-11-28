@@ -32,7 +32,7 @@ public class WhitelistController {
         List<RolUsuario> listaRoles = rolUsuarioService.getAllRoles(); 
         model.addAttribute("credenciales", listaCredenciales);
         model.addAttribute("todosLosRoles", listaRoles); 
-        return "Dev/WhitelistTemp/whitelist-list"; 
+        return "dev/WhitelistTemp/whitelist-list"; 
     }
 
     // Para crear nuevo registro, placeholder dev
@@ -40,7 +40,7 @@ public class WhitelistController {
     public String mostrarFormularioDeRegistro(Model model) {
         model.addAttribute("credencial", new Whitelist());
         model.addAttribute("usuarios", usuarioService.getAllUsuarios()); // Usuarios sin credencial? Podría necesitar lógica
-        return "Dev/WhitelistTemp/whitelist-form";
+        return "dev/WhitelistTemp/whitelist-form";
     }
 
     @PostMapping("/guardar")

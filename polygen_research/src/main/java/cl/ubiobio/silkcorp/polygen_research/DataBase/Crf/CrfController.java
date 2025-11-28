@@ -109,7 +109,7 @@ public class CrfController {
         
         model.addAttribute("ocultarInactivos", ocultarInactivos);
 
-        return "dev/CrfTemp/Crf-list"; 
+        return "dev/CrfTemp/crf-list"; 
     }
 
     @GetMapping("/pdf/{id}")

@@ -9,6 +9,7 @@ cl\ubiobio\silkcorp\polygen_research\notes\Nota.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\RegistroActividad\RegistroActividad.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuario.class
 cl\ubiobio\silkcorp\polygen_research\PolygenResearchApplication.class
+cl\ubiobio\silkcorp\polygen_research\DataBase\dto\RegistroActividadDTO.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\RegistroActividad\RegistroActividadService.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\OpcionCampoCrf\OpcionCampoCrfRepository.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuarioController.class

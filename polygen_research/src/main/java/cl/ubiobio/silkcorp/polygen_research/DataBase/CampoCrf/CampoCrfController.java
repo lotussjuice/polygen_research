@@ -24,13 +24,13 @@ public class CampoCrfController {
     public String listarCampos(Model model) {
         List<CampoCrf> listaCampos = campoCrfService.getAllCampos();
         model.addAttribute("campos", listaCampos);
-        return "Dev/CampoCrfTemp/campo-list";
+        return "dev/CampoCrfTemp/campo-list";
     }
 
     @GetMapping("/nuevo")
     public String mostrarFormularioDeNuevoCampo(Model model) {
         model.addAttribute("campo", new CampoCrf());
-        return "Dev/CampoCrfTemp/campo-form";
+        return "dev/CampoCrfTemp/campo-form";
     }
 
     @GetMapping("/editar/{id}")
@@ -38,7 +38,7 @@ public class CampoCrfController {
         CampoCrf campo = campoCrfService.getCampoById(id)
                 .orElseThrow(() -> new IllegalArgumentException("ID de campo inválido:" + id));
         model.addAttribute("campo", campo);
-        return "Dev/CampoCrfTemp/campo-form";
+        return "dev/CampoCrfTemp/campo-form";
     }
 
     @PostMapping("/guardar")

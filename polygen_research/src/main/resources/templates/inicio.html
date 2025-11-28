@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      th:replace="~{/layout/main-layout :: ~{}}">
+      th:replace="~{layout/main-layout :: ~{}}">
 
 <div th:fragment="contenido">
     
@@ -9,104 +9,114 @@
         .mural-section { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--color-borde); }
         .mural-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         
-        .btn-add-note { 
-            background: var(--color-primario); 
-            color: white; 
-            border: none; 
-            padding: 8px 16px; 
-            border-radius: 4px; 
-            cursor: pointer; 
-            font-weight: 600;
-            transition: opacity 0.2s;
+        /* Corrección del botón para que no ocupe todo el ancho */
+        .mural-header .btn-primario {
+            width: auto;
+            display: inline-flex;
+            padding: 0.6rem 1.2rem;
         }
-        .btn-add-note:hover { opacity: 0.9; }
-        
+
         .notes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
             gap: 20px;
         }
         
         .note-card {
-            background-color: var(--color-tarjeta);
-            color: var(--color-texto);
+            background-color: #feff9c;
             padding: 15px;
             border-radius: 6px;
-            border: 1px solid var(--color-borde);
-            border-left: 5px solid var(--color-primario);
-            box-shadow: var(--sombra-tarjeta);
-            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
             position: relative;
-            min-height: 150px;
+            min-height: 160px;
             display: flex;
             flex-direction: column;
+            border: 1px solid transparent;
         }
         
-        .note-card:hover { transform: translateY(-3px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
-        
-        .note-title { 
-            font-weight: bold; 
-            margin-bottom: 10px; 
-            font-size: 1.1em; 
-            border-bottom: 1px dashed var(--color-borde); 
-            padding-bottom: 5px;
-            color: var(--color-primario);
-        }
-        
-        .note-content { font-size: 0.9em; color: var(--color-texto-secundario); flex-grow: 1; white-space: pre-wrap; }
+        .note-card:hover { transform: scale(1.02); box-shadow: 3px 3px 10px rgba(0,0,0,0.15); }
+        .note-title { font-weight: bold; margin-bottom: 10px; font-size: 1.1em; border-bottom: 1px dashed rgba(0,0,0,0.1); padding-bottom: 5px; color: #333; }
+        .note-content { font-size: 0.95em; color: #444; flex-grow: 1; white-space: pre-wrap; }
         
         .note-actions {
             position: absolute;
-            top: 5px;
-            right: 5px;
+            top: 8px;
+            right: 8px;
             opacity: 0;
             transition: opacity 0.2s;
-            background-color: var(--color-tarjeta);
-            padding: 2px;
+            display: flex;
+            gap: 5px;
+            background-color: rgba(255,255,255,0.7);
+            padding: 3px;
             border-radius: 4px;
         }
         .note-card:hover .note-actions { opacity: 1; }
         
-        .action-btn { cursor: pointer; font-size: 14px; margin-left: 5px; color: var(--color-texto-secundario); text-decoration: none;}
-        .action-btn:hover { color: var(--color-primario); font-weight: bold; }
+        .action-btn { 
+            cursor: pointer; 
+            font-size: 16px;
+            color: #555; 
+            text-decoration: none;
+            padding: 4px 6px;
+            border-radius: 4px;
+            background: transparent;
+            border: none;
+            transition: background-color 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .action-btn:hover { 
+            background-color: rgba(0,0,0,0.1); 
+            color: #000; 
+        }
 
-        .modal-overlay { 
-            display: none; 
-            position: fixed; 
-            top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.5); 
-            z-index: 1000; 
-            backdrop-filter: blur(2px);
+        /* NUEVO COLOR MODO OSCURO (Gris Neutro) */
+        .dark-mode .note-card { 
+            background-color: #2c3338; 
+            color: #e0e0e0;
+            border-color: #444;
         }
-        
-        .modal-content-custom { 
-            background: var(--color-tarjeta); 
+        .dark-mode .note-title { color: #fff; border-bottom-color: rgba(255,255,255,0.2); }
+        .dark-mode .note-content { color: #ccc; }
+        .dark-mode .note-actions { background-color: rgba(0,0,0,0.6); }
+        .dark-mode .action-btn { color: #ccc; }
+        .dark-mode .action-btn:hover { background-color: rgba(255,255,255,0.1); color: #fff; }
+
+        #modalNota .modal-content, #modalVerNota .modal-content {
+            background-color: var(--color-tarjeta);
             color: var(--color-texto);
-            padding: 20px; 
-            border-radius: 8px; 
-            width: 90%; 
-            max-width: 400px; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.25); 
             border: 1px solid var(--color-borde);
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            margin: 0;
         }
         
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: var(--color-texto); }
-        
-        .form-group input, .form-group textarea { 
-            width: 100%; 
-            padding: 8px; 
-            border: 1px solid var(--color-borde); 
+        #modalNota input, #modalNota textarea {
             background-color: var(--color-fondo);
             color: var(--color-texto);
-            border-radius: 4px; 
+            border: 1px solid var(--color-borde);
+        }
+
+        .input-wrapper {
+            position: relative;
+            width: 100%;
         }
         
-        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; margin-top: 1rem; }
+        .input-wrapper input, .input-wrapper textarea {
+            width: 100%;
+            padding-right: 70px !important;
+        }
+
+        .char-counter-modal {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.75rem;
+            color: var(--color-texto-secundario);
+            pointer-events: none;
+            background-color: rgba(255,255,255,0.1);
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
     </style>
 
     <div class="dashboard-header">
@@ -135,7 +145,7 @@
         
         <div class="chart-container">
             <h3>Tipos de Paciente</h3>
-            <div class="chart-canvas-wrapper" style="position: relative; height: 300px; width: 100%;">
+            <div class="chart-canvas-wrapper">
                 <canvas id="tipoPacienteChart"></canvas>
             </div>
         </div>
@@ -150,7 +160,7 @@
     <div class="mural-section">
         <div class="mural-header">
             <h2>Mural de Notas</h2>
-            <button class="btn-add-note" onclick="abrirModalNota()">
+            <button class="btn-primario" onclick="abrirModalNota()">
                 <i class="ph-bold ph-plus"></i> Nueva Nota
             </button>
         </div>
@@ -164,17 +174,17 @@
                 th:onclick="verNotaDetalle(this, event)"
                 th:data-titulo="${nota.titulo}"
                 th:data-contenido="${nota.contenido}"
-                style="cursor: pointer;"> 
+                style="cursor: pointer;">
                 
                 <div class="note-actions">
-                    <span class="action-btn" 
+                    <button class="action-btn" title="Editar"
                         th:data-id="${nota.id}"
                         th:data-titulo="${nota.titulo}"
                         th:data-contenido="${nota.contenido}"
                         onclick="editarNota(this); event.stopPropagation();">
                         <i class="ph-bold ph-pencil-simple"></i>
-                    </span> 
-                    <button class="action-btn" style="background:none;border:none;padding:0;"
+                    </button> 
+                    <button class="action-btn" title="Eliminar"
                         th:data-url="@{/notas/eliminar/{id}(id=${nota.id})}"
                         onclick="confirmarEliminarNota(this); event.stopPropagation();">
                         <i class="ph-bold ph-trash"></i>
@@ -187,36 +197,61 @@
         </div>
     </div>
 
-    <div id="modalNota" class="modal-overlay">
-        <div class="modal-content-custom">
-            <h3 id="modalTitle" style="color: var(--color-primario); margin-bottom: 1rem;">Nueva Nota</h3>
+    <div id="modalNota" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 id="modalTitle">Nueva Nota</h2>
+                <span class="close-modal" onclick="cerrarModalNota()">&times;</span>
+            </div>
+            
             <form th:action="@{/notas/guardar}" method="post" onsubmit="return confirmarGuardadoNota(this)">
                 <input type="hidden" id="notaId" name="id" />
-                <div class="form-group">
-                    <label for="titulo">Título</label>
-                    <input type="text" id="titulo" name="titulo" required maxlength="50" placeholder="Ej: Revisar caso #404">
+                
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="titulo">Título</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="titulo" name="titulo" 
+                                   required maxlength="255" 
+                                   placeholder="Ej: Revisar caso #404"
+                                   oninput="actualizarContadorNota(this)">
+                            <span class="char-counter-modal">0/255</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="contenido">Contenido</label>
+                        <div class="input-wrapper">
+                            <textarea id="contenido" name="contenido" rows="6" 
+                                      required maxlength="1000" 
+                                      placeholder="Detalles de la nota..."
+                                      oninput="actualizarContadorNota(this)"></textarea>
+                            <span class="char-counter-modal">0/1000</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="contenido">Contenido</label>
-                    <textarea id="contenido" name="contenido" rows="4" required placeholder="Detalles de la nota..."></textarea>
-                </div>
-                <div class="modal-buttons">
+
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
                     <button type="button" onclick="cerrarModalNota()" class="btn-secundario">Cancelar</button>
-                    <button type="submit" class="btn-primario btn-sm">Guardar</button>
+                    <button type="submit" class="btn-primario" style="width: auto;">Guardar</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="modalVerNota" class="modal-overlay">
-        <div class="modal-content-custom" onclick="event.stopPropagation()">
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px; border-bottom: 1px dashed var(--color-borde); padding-bottom: 10px;">
-                <h2 id="verTituloDisplay" style="margin: 0; color: var(--color-primario);"></h2>
-                <span onclick="cerrarModalVer()" style="cursor: pointer; font-size: 1.5rem; color: var(--color-texto-secundario);">&times;</span>
+    <div id="modalVerNota" class="modal">
+        <div class="modal-content" style="max-width: 600px; background-color: #feff9c; color: #333; border: none;">
+            <div class="modal-header" style="border-bottom: 1px dashed rgba(0,0,0,0.2); padding-bottom: 10px;">
+                <h2 id="verTituloDisplay" style="margin: 0; font-size: 1.4em;"></h2>
+                <span class="close-modal" onclick="cerrarModalVer()" style="color: #555;">&times;</span>
             </div>
-            <div id="verContenidoDisplay" style="font-size: 1rem; line-height: 1.6; white-space: pre-wrap; color: var(--color-texto); max-height: 60vh; overflow-y: auto;"></div>
-            <div style="margin-top: 20px; text-align: right;">
-                <button onclick="cerrarModalVer()" class="btn-secundario">Cerrar</button>
+
+            <div class="modal-body">
+                <div id="verContenidoDisplay" style="font-size: 1.1em; line-height: 1.6; white-space: pre-wrap; color: #222; max-height: 60vh; overflow-y: auto;"></div>
+            </div>
+
+            <div class="modal-footer" style="border: none; padding-top: 10px;">
+                <button onclick="cerrarModalVer()" class="btn-secundario" style="background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1); color: #333; width: 100%;">Cerrar</button>
             </div>
         </div>
     </div>
@@ -233,9 +268,11 @@
                 <p>Esta acción eliminará la nota permanentemente.</p>
                 <input type="hidden" id="urlEliminarNota" value="" />
             </div>
-            <div class="modal-footer" style="justify-content: center; gap: 1rem; border-top: none;">
-                <button type="button" class="btn-secundario" onclick="cerrarConfirmacionEliminar()">Cancelar</button>
-                <button type="button" class="btn-error" onclick="ejecutarEliminarNota()">Sí, Eliminar</button>
+            <div class="modal-footer" style="justify-content: center; border-top: none;">
+                <div class="btn-group-equal">
+                    <button type="button" class="btn-secundario" onclick="cerrarConfirmacionEliminar()">Cancelar</button>
+                    <button type="button" class="btn-error" onclick="ejecutarEliminarNota()">Sí, Eliminar</button>
+                </div>
             </div>
         </div>
     </div>
@@ -251,19 +288,22 @@
                 <h2 style="margin-bottom: 1rem;">¿Guardar Cambios?</h2>
                 <p>Se guardará la información de la nota en el mural.</p>
             </div>
-            <div class="modal-footer" style="justify-content: center; gap: 1rem; border-top: none;">
-                <button type="button" class="btn-secundario" onclick="cerrarConfirmacionGuardar()">Cancelar</button>
-                <button type="button" class="btn-exito" onclick="ejecutarGuardarNota()">Confirmar</button>
+            <div class="modal-footer" style="justify-content: center; border-top: none;">
+                <div class="btn-group-equal">
+                    <button type="button" class="btn-secundario" onclick="cerrarConfirmacionGuardar()">Cancelar</button>
+                    <button type="button" class="btn-exito" onclick="ejecutarGuardarNota()">Confirmar</button>
+                </div>
             </div>
         </div>
     </div>
 
+
     <script th:inline="javascript">
+        /*<![CDATA[*/
         
         const casosEstudio =  /*[[${casosEstudio}]]*/ 0;
         const casosConsulta = /*[[${casosConsulta}]]*/ 0;
 
-        // Función segura para leer variables CSS
         function getThemeColor(variableName) {
             const style = getComputedStyle(document.documentElement);
             const val = style.getPropertyValue(variableName);
@@ -277,11 +317,9 @@
             if (!canvas) return;
             const ctx = canvas.getContext('2d');
             
-            // Colores por defecto (Safety fallback)
             const colorDefault1 = '#005a9c';
             const colorDefault2 = '#28a745';
             
-            // Intentar leer del tema, si no, usar default
             const colorUno = getThemeColor('--chart-color-1') || colorDefault1;
             const colorDos = getThemeColor('--chart-color-2') || colorDefault2;
             const colorTexto = getThemeColor('--color-texto') || '#333';
@@ -301,7 +339,6 @@
                 chartInstance.destroy();
             }
 
-            // Usamos 'doughnut' para que sea el anillo/pastel que tenías
             chartInstance = new Chart(ctx, {
                 type: 'doughnut',
                 data: data,
@@ -329,28 +366,43 @@
             });
         }
 
-        // Inicializar
         document.addEventListener('DOMContentLoaded', initChart);
 
-        // Re-dibujar si cambia el tema
         const observer = new MutationObserver((mutations) => {
             mutations.forEach((mutation) => {
                 if (mutation.type === 'attributes' && (mutation.attributeName === 'data-theme' || mutation.attributeName === 'class')) {
-                    setTimeout(initChart, 200); // Pequeño delay para que el CSS cargue
+                    setTimeout(initChart, 200); 
                 }
             });
         });
         observer.observe(document.documentElement, { attributes: true });
 
 
-        // --- Lógica de Notas (Sin cambios, solo funciona visualmente ahora) ---
         let formNotaPendiente = null;
+
+        function actualizarContadorNota(input) {
+            const max = input.getAttribute("maxlength");
+            const current = input.value.length;
+            const counter = input.parentElement.querySelector('.char-counter-modal');
+            if (counter) {
+                counter.textContent = `${current}/${max}`;
+                counter.style.color = current >= max ? 'var(--color-error)' : 'var(--color-texto-secundario)';
+            }
+        }
 
         function abrirModalNota() {
             document.getElementById('modalTitle').innerText = 'Nueva Nota';
             document.getElementById('notaId').value = ''; 
-            document.getElementById('titulo').value = '';
-            document.getElementById('contenido').value = '';
+            
+            const inputTitulo = document.getElementById('titulo');
+            const inputContenido = document.getElementById('contenido');
+            
+            inputTitulo.value = '';
+            inputContenido.value = '';
+            
+            actualizarContadorNota(inputTitulo);
+            actualizarContadorNota(inputContenido);
+            
             document.getElementById('modalNota').style.display = 'block';
         }
 
@@ -360,8 +412,16 @@
             const contenido = element.getAttribute('data-contenido');
             document.getElementById('modalTitle').innerText = 'Editar Nota';
             document.getElementById('notaId').value = id;
-            document.getElementById('titulo').value = titulo;
-            document.getElementById('contenido').value = contenido;
+            
+            const inputTitulo = document.getElementById('titulo');
+            const inputContenido = document.getElementById('contenido');
+            
+            inputTitulo.value = titulo;
+            inputContenido.value = contenido;
+
+            actualizarContadorNota(inputTitulo);
+            actualizarContadorNota(inputContenido);
+
             document.getElementById('modalNota').style.display = 'block';
         }
 
@@ -424,6 +484,7 @@
             if (event.target == modalConfElim) cerrarConfirmacionEliminar();
             if (event.target == modalConfGuardar) cerrarConfirmacionGuardar();
         }
+        /*]]>*/
     </script>
 </div>
 </html>
