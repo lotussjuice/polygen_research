@@ -1942,3 +1942,251 @@ html[data-theme="titanium"] .btn-chart-2 {
     transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
+
+/* --- ESTILOS PERFIL Y DROPDOWN --- */
+
+.profile-menu-container {
+    position: relative;
+}
+
+.profile-trigger {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 8px 12px; 
+    border-radius: 8px;
+    transition: background-color 0.2s;
+    color: var(--color-texto);
+}
+
+.profile-trigger:hover {
+    background-color: var(--color-fondo); /* Efecto hover suave */
+}
+
+.caret-icon {
+    font-size: 0.8rem;
+    color: var(--color-texto-secundario);
+    margin-top: 2px; /* Pequeño ajuste visual */
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: 120%;
+    right: 0;
+    width: 220px;
+    background-color: var(--color-tarjeta);
+    border: 1px solid var(--color-borde);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    padding: 0;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(-10px);
+    visibility: hidden;
+    transition: all 0.2s ease;
+}
+
+.profile-dropdown.show {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+}
+
+.profile-dropdown::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    right: 20px;
+    width: 12px;
+    height: 12px;
+    background-color: var(--color-tarjeta);
+    border-top: 1px solid var(--color-borde);
+    border-left: 1px solid var(--color-borde);
+    transform: rotate(45deg);
+}
+
+.dropdown-header-info {
+    padding: 15px;
+    border-bottom: 1px solid var(--color-borde);
+    display: flex;
+    flex-direction: column;
+}
+
+.dropdown-options {
+    list-style: none;
+    padding: 5px;
+    margin: 0;
+}
+
+.dropdown-options li a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 15px;
+    color: var(--color-texto);
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background 0.2s;
+    font-size: 0.9rem;
+}
+
+.dropdown-options li a:hover {
+    background-color: var(--color-fondo);
+    color: var(--color-primario);
+}
+
+.logout-link {
+    color: var(--color-error) !important;
+}
+.logout-link:hover {
+    background-color: #fee2e2 !important;
+}
+
+/* --- ESTILOS PAGINA PERFIL --- */
+.profile-layout {
+    display: grid;
+    grid-template-columns: 250px 1fr;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.profile-sidebar {
+    background-color: var(--color-tarjeta);
+    border: 1px solid var(--color-borde);
+    border-radius: 12px;
+    padding: 1rem;
+    height: fit-content;
+}
+
+.profile-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 12px 15px;
+    border: none;
+    background: none;
+    color: var(--color-texto-secundario);
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px;
+    text-align: left;
+    margin-bottom: 5px;
+    transition: all 0.2s;
+}
+
+.profile-nav-btn:hover {
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+}
+
+.profile-nav-btn.active {
+    background-color: var(--color-primario);
+    color: white;
+}
+
+.profile-content-card {
+    background-color: var(--color-tarjeta);
+    border: 1px solid var(--color-borde);
+    border-radius: 12px;
+    padding: 2rem;
+    display: none;
+}
+.profile-content-card.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 768px) {
+    .profile-layout {
+        grid-template-columns: 1fr;
+    }
+    .user-name-text {
+        display: none;
+    }
+}
+
+/* --- ESTILOS DE PERFIL (Mi Cuenta) --- */
+
+.profile-header-card {
+    background: linear-gradient(135deg, var(--color-primario) 0%, var(--color-secundario) 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.profile-avatar-large {
+    width: 80px;
+    height: 80px;
+    background-color: rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    border: 2px solid rgba(255,255,255,0.5);
+}
+
+.profile-info h2 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.profile-role-badge {
+    background-color: rgba(0,0,0,0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-top: 5px;
+    display: inline-block;
+}
+
+/* Campos de Configuración */
+.settings-group {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.2rem 0;
+    border-bottom: 1px solid var(--color-borde);
+}
+
+.settings-group:last-child {
+    border-bottom: none;
+}
+
+.settings-label {
+    font-weight: 600;
+    color: var(--color-texto);
+    width: 30%;
+}
+
+.settings-value {
+    color: var(--color-texto-secundario);
+    flex-grow: 1;
+    font-family: monospace; /* Para que los asteriscos se vean ordenados */
+    font-size: 1rem;
+}
+
+/* Estilo para texto enmascarado */
+.masked-text {
+    letter-spacing: 2px;
+}
+
+.settings-action {
+    width: 100px;
+    text-align: right;
+}

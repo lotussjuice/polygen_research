@@ -303,3 +303,33 @@ window.addEventListener('click', function (e) {
         }
     }
 });
+
+/* --- Menu de Perfil --- */
+
+function toggleProfileMenu(event) {
+    event.stopPropagation();
+    
+    const menu = document.getElementById('profile-dropdown');
+    
+    if (menu) {
+        menu.classList.toggle('show');
+    }
+
+    const notifDropdown = document.getElementById('notif-dropdown');
+    if (notifDropdown && notifDropdown.classList.contains('show')) {
+        notifDropdown.classList.remove('show');
+    }
+}
+
+window.addEventListener('click', function(e) {
+    const menu = document.getElementById('profile-dropdown');
+    const trigger = document.querySelector('.profile-trigger');
+
+    if (menu && menu.classList.contains('show')) {
+        if (!menu.contains(e.target) && !trigger.contains(e.target)) {
+            menu.classList.remove('show');
+        }
+    }
+});
+
+

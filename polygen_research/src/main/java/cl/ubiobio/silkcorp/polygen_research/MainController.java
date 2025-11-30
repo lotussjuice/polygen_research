@@ -12,28 +12,34 @@ import cl.ubiobio.silkcorp.polygen_research.faq.FaqService;
 import cl.ubiobio.silkcorp.polygen_research.notes.Nota;
 import cl.ubiobio.silkcorp.polygen_research.notes.NotaService;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import cl.ubiobio.silkcorp.polygen_research.security.CustomUserDetails;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.Usuario.Usuario;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.Whitelist.Whitelist;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.Whitelist.WhitelistRepository;
+
 @Controller
 public class MainController {
 
     private final DashboardService dashboardService;
     private final NotaService notaService;
     private final FaqService faqService;
+    private final WhitelistRepository whitelistRepository;
 
-    public MainController(DashboardService dashboardService, NotaService notaService, FaqService faqService) {
+    public MainController(DashboardService dashboardService, 
+                          NotaService notaService, 
+                          FaqService faqService,
+                          WhitelistRepository whitelistRepository) { // Agregado al constructor
         this.dashboardService = dashboardService;
         this.notaService = notaService;
         this.faqService = faqService;
+        this.whitelistRepository = whitelistRepository;
     }
 
     @GetMapping("/inicio") 
     public String mostrarInicio(Model model) { 
-        
-        // Carga del dashboard
         model.addAllAttributes(dashboardService.getDashboardStats());
-
-        //Carga de notas
         model.addAttribute("listaNotas", notaService.listarTodas());
-        
         return "inicio"; 
     }
 
@@ -49,19 +55,14 @@ public class MainController {
         return "redirect:/inicio";
     }
 
-
     @GetMapping("/faq")
     public String mostrarFaq(Model model) {
         model.addAttribute("listaFaqs", faqService.obtenerPreguntas());
         return "faq/faq";
     }
 
-
-
-    // Por defecto redirigir a login
     @GetMapping("/")
     public String redirectToLogin() {
         return "redirect:/login";
     }
-
 }
