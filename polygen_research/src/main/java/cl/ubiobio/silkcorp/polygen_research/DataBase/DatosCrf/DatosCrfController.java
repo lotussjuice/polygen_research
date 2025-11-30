@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.CampoCrf.CampoCrfService;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.Crf.CrfService;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.StataPreviewDTO; 
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.StataPreviewDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.export.ExcelReporteService; 
 import cl.ubiobio.silkcorp.polygen_research.DataBase.export.StataExportService;
 
@@ -28,16 +28,12 @@ import cl.ubiobio.silkcorp.polygen_research.DataBase.export.StataExportService;
 @RequestMapping("/datos-crf")
 public class DatosCrfController {
 
-    //private final DatosCrfService datosCrfService;
     private final CrfService crfService;
-    //private final CampoCrfService campoCrfService;
     private final ExcelReporteService excelReporteService;
     private final StataExportService stataExportService;
     
     public DatosCrfController(DatosCrfService datosCrfService, CrfService crfService, CampoCrfService campoCrfService, ExcelReporteService excelReporteService, StataExportService stataExportService) {
-        //this.datosCrfService = datosCrfService;
         this.crfService = crfService;
-        //this.campoCrfService = campoCrfService;
         this.excelReporteService = excelReporteService;
         this.stataExportService = stataExportService;
     }
@@ -53,26 +49,6 @@ public class DatosCrfController {
 
         return "dev/DatosCrfTemp/datos-crf-list"; 
     }
-
-
-    /*
-    @GetMapping("/nuevo")
-    public String mostrarFormularioDeNuevoDato(Model model) {
-        model.addAttribute("dato", new DatosCrf());
-        model.addAttribute("crfs", crfService.getAllCrfs());
-        model.addAttribute("campos", campoCrfService.getAllCampos());
-        return "Dev/DatosCrfTemp/datos-crf-form";
-    }
-
-    
-
-    @PostMapping("/guardar")
-    public String guardarDato(@ModelAttribute DatosCrf dato) {
-        datosCrfService.saveDatoCrf(dato);
-        return "redirect:/datos-crf/list";
-    }
-
-    */
 
    @PostMapping("/list/exportar")
     public ResponseEntity<InputStreamResource> exportarReporte(
@@ -103,7 +79,6 @@ public class DatosCrfController {
         }
     }
     
-    // Nuevo endpoint para descargar STATA
     @PostMapping("/list/exportar-stata")
     public ResponseEntity<InputStreamResource> exportarReporteStata(
             @RequestParam("criteriosJson") String criteriosJson) throws IOException {
@@ -119,5 +94,4 @@ public class DatosCrfController {
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .body(new InputStreamResource(stream));
     }
-
 }

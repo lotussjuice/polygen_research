@@ -33,6 +33,11 @@ public class CampoCrfService {
             }
         } else {
             if (campoCrf.getOpciones() != null) {
+                campoCrf.getOpciones().removeIf(op -> 
+                    op.getEtiqueta() == null || op.getEtiqueta().trim().isEmpty()
+                );
+
+
                 int orden = 0;
                 for (OpcionCampoCrf opcion : campoCrf.getOpciones()) {
                     opcion.setCampoCrf(campoCrf);

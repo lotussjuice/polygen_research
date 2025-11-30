@@ -1,4 +1,3 @@
-
 package cl.ubiobio.silkcorp.polygen_research.DataBase.export;
 
 import java.io.ByteArrayInputStream;
@@ -18,6 +17,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import cl.ubiobio.silkcorp.polygen_research.DataBase.CampoCrf.CampoCrf;
@@ -41,6 +41,7 @@ public class ExcelReporteService {
         this.crfService = crfService;
         this.calculoService = calculoService;
         this.objectMapper = new ObjectMapper();
+        this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     public ByteArrayInputStream generarReporteDicotomizado(String criteriosJson) throws IOException {
@@ -51,7 +52,8 @@ public class ExcelReporteService {
 
         List<CampoCrfStatsDTO> columnasStats = data.getCamposConStats(); 
         List<CrfResumenRowDTO> filas = data.getFilas();
-        Map<String, Double> puntosDeCorte = preCalcularPuntosDeCorte(filas, criteriosMap);
+        
+        Map<String, Double> puntosDeCorte = preCalcularPuntosDeCorte(filas, criteriosMap, columnasStats);
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Reporte Dicotomizado");
@@ -60,9 +62,7 @@ public class ExcelReporteService {
 
             int rowIdx = 1;
             for (CrfResumenRowDTO fila : filas) {
-
                 llenarFila(sheet.createRow(rowIdx++), fila, columnasStats, criteriosMap, puntosDeCorte);
-
             }
 
             workbook.write(out);
@@ -81,7 +81,7 @@ public class ExcelReporteService {
     }
 
     public Map<String, Double> preCalcularPuntosDeCorte(List<CrfResumenRowDTO> filas,
-            Map<Integer, List<CriterioDTO>> criteriosMap) {
+            Map<Integer, List<CriterioDTO>> criteriosMap, List<CampoCrfStatsDTO> stats) {
         Map<String, Double> puntosDeCorte = new HashMap<>();
 
         for (Map.Entry<Integer, List<CriterioDTO>> entry : criteriosMap.entrySet()) {
@@ -93,7 +93,8 @@ public class ExcelReporteService {
                             || c.getTipo().equals("mediana"));
 
             if (necesitaCalculo) {
-                List<Double> valoresColumna = getValoresNumericos(filas, campoId);
+                String colKey = String.valueOf(campoId); 
+                List<Double> valoresColumna = getValoresNumericos(filas, colKey);
 
                 for (CriterioDTO criterio : criterios) {
                     String tipo = criterio.getTipo();
@@ -121,9 +122,7 @@ public class ExcelReporteService {
     }
 
     public int calcularValorDicotomizado(double valorNum, CriterioDTO criterio, double puntoCorteCalculado) {
-
         double puntoCorte;
-
         return switch (criterio.getTipo()) {
             case "media", "promedio" -> {
                 puntoCorte = puntoCorteCalculado;
@@ -134,7 +133,6 @@ public class ExcelReporteService {
                 yield (valorNum >= puntoCorte) ? 1 : 0;
             }
             case "personalizado" ->
-
                 aplicarRegla(valorNum, criterio.getPuntoCorte()) ? 1 : 0;
             default -> 0;
         };
@@ -149,11 +147,14 @@ public class ExcelReporteService {
 
         for (CampoCrfStatsDTO stat : columnasStats) {
             CampoCrf campo = stat.getCampoCrf();
+            
 
-            headerRow.createCell(cellIdx++).setCellValue(campo.getNombre());
-            if (criteriosMap.containsKey(campo.getIdCampo())) {
+            headerRow.createCell(cellIdx++).setCellValue(stat.getNombreColumna());
+            
+
+            if (stat.getOpcion() == null && criteriosMap.containsKey(campo.getIdCampo())) {
                 for (CriterioDTO criterio : criteriosMap.get(campo.getIdCampo())) {
-                    String nombreColumna = getNombreColumnaDicotomizada(campo.getNombre(), criterio);
+                    String nombreColumna = getNombreColumnaDicotomizada(stat.getNombreColumna(), criterio);
                     headerRow.createCell(cellIdx++).setCellValue(nombreColumna);
                 }
             }
@@ -168,24 +169,21 @@ public class ExcelReporteService {
         dataRow.createCell(cellIdx++).setCellValue(fila.getCrf().getIdCrf());
         dataRow.createCell(cellIdx++).setCellValue(
                 fila.getCrf().getDatosPaciente() != null ? fila.getCrf().getDatosPaciente().getCodigoPaciente() : "");
+        
         for (CampoCrfStatsDTO stat : columnasStats) {
             CampoCrf campo = stat.getCampoCrf();
-            Integer campoId = campo.getIdCampo();
-            String valorCrudo = fila.getValores().get(campoId);
+            String colKey = stat.getColumnaKey();
+            String valorCrudo = fila.getValores().get(colKey);
 
             dataRow.createCell(cellIdx++).setCellValue(valorCrudo != null ? valorCrudo : "-");
 
-            double valorNum = parseDouble(valorCrudo);
-
-            if (criteriosMap.containsKey(campoId)) {
-                for (CriterioDTO criterio : criteriosMap.get(campoId)) {
+            if (stat.getOpcion() == null && criteriosMap.containsKey(campo.getIdCampo())) {
+                double valorNum = parseDouble(valorCrudo);
+                for (CriterioDTO criterio : criteriosMap.get(campo.getIdCampo())) {
                     if (Double.isNaN(valorNum)) {
                         dataRow.createCell(cellIdx++).setCellValue("");
                     } else {
-
-                        double puntoCorteCalculado = puntosDeCorte.getOrDefault(campoId + "_" + criterio.getTipo(),
-                                0.0);
-
+                        double puntoCorteCalculado = puntosDeCorte.getOrDefault(campo.getIdCampo() + "_" + criterio.getTipo(), 0.0);
                         int valorDicotomizado = calcularValorDicotomizado(valorNum, criterio, puntoCorteCalculado);
                         dataRow.createCell(cellIdx++).setCellValue(valorDicotomizado);
                     }
@@ -205,13 +203,11 @@ public class ExcelReporteService {
         }
     }
 
-    private List<Double> getValoresNumericos(List<CrfResumenRowDTO> filas, Integer campoId) {
+    private List<Double> getValoresNumericos(List<CrfResumenRowDTO> filas, String colKey) {
         List<Double> valores = new ArrayList<>();
         for (CrfResumenRowDTO fila : filas) {
-            String valorCrudo = fila.getValores().get(campoId);
-
+            String valorCrudo = fila.getValores().get(colKey);
             double valorNum = parseDouble(valorCrudo);
-
             if (!Double.isNaN(valorNum)) {
                 valores.add(valorNum);
             }

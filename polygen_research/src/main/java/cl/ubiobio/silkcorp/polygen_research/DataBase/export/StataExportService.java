@@ -3,7 +3,6 @@ package cl.ubiobio.silkcorp.polygen_research.DataBase.export;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -38,7 +37,8 @@ public class StataExportService {
     private final ExcelReporteService excelReporteService;
     private final ObjectMapper objectMapper;
 
-    public StataExportService(CrfService crfService, CalculoService calculoService, ExcelReporteService excelReporteService) {
+    public StataExportService(CrfService crfService, CalculoService calculoService,
+            ExcelReporteService excelReporteService) {
         this.crfService = crfService;
         this.calculoService = calculoService;
         this.excelReporteService = excelReporteService;
@@ -66,7 +66,7 @@ public class StataExportService {
                 for (int i = 0; i < headers.size(); i++) {
                     String header = headers.get(i);
                     String valor = fila.get(header);
-                    
+
                     try {
                         double valorNum = Double.parseDouble(valor);
                         dataRow.createCell(i).setCellValue(valorNum);
@@ -93,12 +93,15 @@ public class StataExportService {
 
         Map<Integer, List<CriterioDTO>> criteriosMap;
         try {
-            criteriosMap = objectMapper.readValue(criteriosJson, new TypeReference<HashMap<Integer, List<CriterioDTO>>>() {});
+            criteriosMap = objectMapper.readValue(criteriosJson,
+                    new TypeReference<HashMap<Integer, List<CriterioDTO>>>() {
+                    });
         } catch (IOException e) {
             throw new IOException("Error parseando JSON de criterios", e);
         }
 
-        Map<String, Double> puntosDeCorte = excelReporteService.preCalcularPuntosDeCorte(filas, criteriosMap);
+        Map<String, Double> puntosDeCorte = excelReporteService.preCalcularPuntosDeCorte(filas, criteriosMap,
+                columnasDinamicasStats);
 
         List<String> headersOriginal = new ArrayList<>();
         List<String> headersStata = new ArrayList<>();
@@ -108,92 +111,92 @@ public class StataExportService {
         Map<String, String> fixedHeaders = new LinkedHashMap<>();
         fixedHeaders.put("ID_CRF", "id_crf");
         fixedHeaders.put("Codigo_Paciente", "cod_paciente");
-        fixedHeaders.put("Paciente", "paciente");
-        fixedHeaders.put("Fecha_Creacion", "fecha_creacion");
 
         fixedHeaders.forEach((original, stata) -> {
             headersOriginal.add(original);
             headersStata.add(stata);
         });
 
-
         for (CampoCrfStatsDTO stat : columnasDinamicasStats) {
-            CampoCrf campo = stat.getCampoCrf(); 
+            CampoCrf campo = stat.getCampoCrf();
+            String tipo = campo.getTipo();
 
-            
-            headersOriginal.add(campo.getNombre());
-            headersStata.add(StataFormateador.formatarNombreVariable(campo.getNombre()));
+            if (!"NUMERO".equals(tipo) && !"SI/NO".equals(tipo) && !"SELECCION_UNICA".equals(tipo)) {
+                continue;
+            }
 
-            if (criteriosMap.containsKey(campo.getIdCampo())) {
+            String nombreColumnaReal = stat.getNombreColumna();
+
+            headersOriginal.add(nombreColumnaReal);
+            headersStata.add(StataFormateador.formatarNombreVariable(nombreColumnaReal));
+
+            if (stat.getOpcion() == null && criteriosMap.containsKey(campo.getIdCampo())) {
                 for (CriterioDTO criterio : criteriosMap.get(campo.getIdCampo())) {
-                    String nombreColOriginal = excelReporteService.getNombreColumnaDicotomizada(campo.getNombre(), criterio);
+                    String nombreColOriginal = excelReporteService.getNombreColumnaDicotomizada(nombreColumnaReal,
+                            criterio);
                     headersOriginal.add(nombreColOriginal);
                     headersStata.add(StataFormateador.formatarNombreVariable(nombreColOriginal));
                 }
             }
         }
 
-        
-        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
         for (CrfResumenRowDTO fila : filas) {
             Map<String, String> filaOrig = new LinkedHashMap<>();
             Map<String, String> filaStata = new LinkedHashMap<>();
 
             String idCrf = fila.getCrf().getIdCrf().toString();
-            String codPac = fila.getCrf().getDatosPaciente() != null ? fila.getCrf().getDatosPaciente().getCodigoPaciente() : "";
-            String nomPac = (fila.getCrf().getDatosPaciente() != null) ? fila.getCrf().getDatosPaciente().getNombre() + " " + fila.getCrf().getDatosPaciente().getApellido() : "";
-            String fecha = fila.getCrf().getFechaConsulta() != null ? fila.getCrf().getFechaConsulta().format(dateFormatter) : "";
+            String codPac = fila.getCrf().getDatosPaciente() != null
+                    ? fila.getCrf().getDatosPaciente().getCodigoPaciente()
+                    : "";
 
             filaOrig.put("ID_CRF", idCrf);
             filaStata.put("id_crf", StataFormateador.formatarValor(idCrf));
-            
+
             filaOrig.put("Codigo_Paciente", codPac);
             filaStata.put("cod_paciente", StataFormateador.formatarValor(codPac));
-            
-            filaOrig.put("Paciente", nomPac);
-            filaStata.put("paciente", StataFormateador.formatarValor(nomPac));
-            
-            filaOrig.put("Fecha_Creacion", fecha);
-            filaStata.put("fecha_creacion", StataFormateador.formatarValor(fecha));
 
             for (CampoCrfStatsDTO stat : columnasDinamicasStats) {
-                CampoCrf campo = stat.getCampoCrf(); 
+                CampoCrf campo = stat.getCampoCrf();
+                String tipo = campo.getTipo();
 
-            
-                Integer campoId = campo.getIdCampo();
-                String valorCrudo = fila.getValores().get(campoId);
+                if (!"NUMERO".equals(tipo) && !"SI/NO".equals(tipo) && !"SELECCION_UNICA".equals(tipo)) {
+                    continue;
+                }
+
+                String colKey = stat.getColumnaKey();
+                String valorCrudo = fila.getValores().get(colKey);
                 valorCrudo = (valorCrudo != null) ? valorCrudo : "";
-                
-                String headerOrigCrudo = campo.getNombre();
+
+                String headerOrigCrudo = stat.getNombreColumna();
                 String headerStataCrudo = StataFormateador.formatarNombreVariable(headerOrigCrudo);
-                
+
                 filaOrig.put(headerOrigCrudo, valorCrudo);
                 filaStata.put(headerStataCrudo, StataFormateador.formatarValor(valorCrudo));
 
-                if (criteriosMap.containsKey(campoId)) {
+                if (stat.getOpcion() == null && criteriosMap.containsKey(campo.getIdCampo())) {
                     double valorNum = excelReporteService.parseDouble(valorCrudo);
-                    
-                    for (CriterioDTO criterio : criteriosMap.get(campoId)) {
-                        
+
+                    for (CriterioDTO criterio : criteriosMap.get(campo.getIdCampo())) {
+
                         String valorDicoStr;
-                        
+
                         if (Double.isNaN(valorNum)) {
                             valorDicoStr = "";
                         } else {
-                            double puntoCorteCalculado = puntosDeCorte.getOrDefault(campoId + "_" + criterio.getTipo(), 0.0);
-                    
+                            double puntoCorteCalculado = puntosDeCorte
+                                    .getOrDefault(campo.getIdCampo() + "_" + criterio.getTipo(), 0.0);
+
                             int valorDicotomizado = excelReporteService.calcularValorDicotomizado(
-                                valorNum,
-                                criterio, 
-                                puntoCorteCalculado
-                            );
+                                    valorNum,
+                                    criterio,
+                                    puntoCorteCalculado);
                             valorDicoStr = String.valueOf(valorDicotomizado);
                         }
 
-                        String headerOrigDico = excelReporteService.getNombreColumnaDicotomizada(campo.getNombre(), criterio);
+                        String headerOrigDico = excelReporteService.getNombreColumnaDicotomizada(headerOrigCrudo,
+                                criterio);
                         String headerStataDico = StataFormateador.formatarNombreVariable(headerOrigDico);
-                        
+
                         filaOrig.put(headerOrigDico, valorDicoStr);
                         filaStata.put(headerStataDico, valorDicoStr);
                     }

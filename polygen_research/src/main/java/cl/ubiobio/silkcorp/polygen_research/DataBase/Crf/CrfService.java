@@ -18,6 +18,7 @@ import cl.ubiobio.silkcorp.polygen_research.DataBase.CampoCrf.CampoCrfRepository
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosCrf.DatosCrf;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPaciente;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPacienteRepository;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.OpcionCampoCrf.OpcionCampoCrf;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.RegistroActividad.RegistroActividadService;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CampoCrfStatsDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfDetalleDTO;
@@ -114,6 +115,30 @@ public class CrfService {
 
     private CrfResumenViewDTO construirResumenView(List<CampoCrf> campos, List<Crf> crfs) {
         CrfResumenViewDTO viewDTO = new CrfResumenViewDTO();
+        
+        List<CampoCrfStatsDTO> columnasStats = new ArrayList<>();
+        
+        for (CampoCrf campo : campos) {
+            String tipo = campo.getTipo();
+
+            if (!"NUMERO".equals(tipo) && !"SI/NO".equals(tipo) && !"SELECCION_UNICA".equals(tipo)) {
+                continue; 
+            }
+
+
+            if ("SELECCION_UNICA".equals(tipo) && campo.getOpciones() != null && !campo.getOpciones().isEmpty()) {
+
+                for (OpcionCampoCrf opcion : campo.getOpciones()) {
+                    String colKey = campo.getIdCampo() + "_" + opcion.getOrden();
+                    String colName = campo.getNombre() + " [" + opcion.getEtiqueta() + "]";
+                    columnasStats.add(new CampoCrfStatsDTO(campo, opcion, colKey, colName, 0, 0, 0));
+                }
+            } else {
+                String colKey = String.valueOf(campo.getIdCampo());
+                columnasStats.add(new CampoCrfStatsDTO(campo, colKey, campo.getNombre(), 0, 0, 0));
+            }
+        }
+
         List<CrfResumenRowDTO> filasDTO = new ArrayList<>();
 
         for (Crf crf : crfs) {
@@ -123,35 +148,59 @@ public class CrfService {
             CrfResumenRowDTO rowDTO = new CrfResumenRowDTO();
             rowDTO.setCrf(crf); 
 
-            Map<Integer, String> valoresMap = new HashMap<>();
+            Map<Integer, String> respuestasCrudas = new HashMap<>();
             for (DatosCrf dato : crf.getDatosCrfList()) {
                 if (dato.getCampoCrf() != null) {
-                    valoresMap.put(dato.getCampoCrf().getIdCampo(), dato.getValor());
+                    respuestasCrudas.put(dato.getCampoCrf().getIdCampo(), dato.getValor());
                 }
             }
-            rowDTO.setValores(valoresMap);
 
+            Map<String, String> valoresFila = new HashMap<>();
             int contadorFaltantes = 0;
-            for (CampoCrf campo : campos) {
-                String valor = valoresMap.get(campo.getIdCampo());
-                if (valor == null || valor.trim().isEmpty()) {
+
+            for (CampoCrfStatsDTO col : columnasStats) {
+                Integer campoId = col.getCampoCrf().getIdCampo();
+                String valorCrudo = respuestasCrudas.get(campoId);
+                String valorCelda = "-";
+
+                if (col.getOpcion() != null) {
+
+                    if (valorCrudo != null && !valorCrudo.isEmpty()) {
+                        String ordenOp = String.valueOf(col.getOpcion().getOrden());
+                        if (ordenOp.equals(valorCrudo)) {
+                            valorCelda = "1";
+                        } else {
+                            valorCelda = "0";
+                        }
+                    } else {
+                        valorCelda = "-"; 
+                    }
+                } else {
+
+                    valorCelda = (valorCrudo != null) ? valorCrudo : "-";
+                }
+
+                valoresFila.put(col.getColumnaKey(), valorCelda);
+
+                if (col.getOpcion() == null && (valorCrudo == null || valorCrudo.trim().isEmpty())) {
                     contadorFaltantes++;
                 }
             }
+            
             rowDTO.setDatosFaltantes(contadorFaltantes);
-
+            
+            rowDTO.setValores(valoresFila);
             filasDTO.add(rowDTO);
         }
-        
-        List<CampoCrfStatsDTO> camposConStats = new ArrayList<>();
-        for (CampoCrf campo : campos) {
+
+        for (CampoCrfStatsDTO col : columnasStats) {
             long countVacios = 0;
             long countCeros = 0;
             long countUnos = 0;
-            Integer campoId = campo.getIdCampo();
+            String key = col.getColumnaKey();
 
             for (CrfResumenRowDTO fila : filasDTO) {
-                String valor = fila.getValores().get(campoId);
+                String valor = fila.getValores().get(key);
                 
                 if (valor == null || valor.trim().isEmpty() || valor.equals("-")) {
                     countVacios++;
@@ -161,10 +210,12 @@ public class CrfService {
                     countUnos++;
                 }
             }
-            camposConStats.add(new CampoCrfStatsDTO(campo, countVacios, countCeros, countUnos));
+            col.setCountVacios(countVacios);
+            col.setCountCeros(countCeros);
+            col.setCountUnos(countUnos);
         }
 
-        viewDTO.setCamposConStats(camposConStats);
+        viewDTO.setCamposConStats(columnasStats);
         viewDTO.setFilas(filasDTO);
         return viewDTO;
     }
@@ -246,26 +297,24 @@ public class CrfService {
                 int idCampo = datoForm.getCampoCrf().getIdCampo();
                 String valorForm = datoForm.getValor();
                 
-                // Limpieza del valor (trimming, null checks)
                 String valorFinal = null;
                 if (valorForm != null && !valorForm.trim().isEmpty()) {
                     valorFinal = valorForm.trim();
                 }
 
-                // VERIFICACIÓN: ¿Ya existe este dato en la BD?
                 if (datosExistentesMap.containsKey(idCampo)) {
-                    // SI EXISTE: Lo actualizamos (incluso si ahora es null/vacío)
+
                     DatosCrf datoExistente = datosExistentesMap.get(idCampo);
                     datoExistente.setValor(valorFinal);
                 } else {
-                    // NO EXISTE: Lo creamos SOLO si hay un valor real
+
                     if (valorFinal != null) {
                         CampoCrf campoReal = camposCRFRepository.findById(idCampo).orElse(null);
                         if (campoReal != null) {
                             DatosCrf nuevoDato = new DatosCrf();
                             nuevoDato.setCampoCrf(campoReal);
                             nuevoDato.setValor(valorFinal);
-                            crf.addDato(nuevoDato); // Método helper que vincula la relación
+                            crf.addDato(nuevoDato); 
                         }
                     }
                 }

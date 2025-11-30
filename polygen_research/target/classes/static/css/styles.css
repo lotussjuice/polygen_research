@@ -1911,12 +1911,12 @@ html[data-theme="sunset"].dark-mode {
 /* --- 17. BOTONES SINCRONIZADOS CON GRÁFICO --- */
 .btn-chart-1 {
     background-color: var(--chart-color-1);
-    color: #ffffff;
+    color: #ffffff; 
     border: none;
     transition: all 0.2s ease;
 }
 .btn-chart-1:hover {
-    filter: brightness(1.15); 
+    filter: brightness(1.15);
     color: #ffffff;
     transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
@@ -1943,6 +1943,60 @@ html[data-theme="titanium"] .btn-chart-2 {
     box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
+/* --- 18. MEJORAS DE ALINEACIÓN TABLA DATOS --- */
+
+.tabla-bonita {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.tabla-bonita th, 
+.tabla-bonita td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.tabla-bonita th:not(:first-child),
+.tabla-bonita td:not(:first-child) {
+    text-align: center;
+    min-width: 100px;
+}
+
+.tabla-bonita th:first-child,
+.tabla-bonita td:first-child {
+    text-align: left;
+    min-width: 180px; 
+    font-weight: 600;
+    position: sticky;
+    left: 0;
+    z-index: 10; 
+    background-color: var(--color-tarjeta);
+    border-right: 2px solid var(--color-borde); 
+}
+
+
+.tabla-bonita thead th:first-child {
+    background-color: var(--color-fondo);
+    z-index: 11;
+}
+
+
+.tabla-bonita tfoot td {
+    background-color: var(--color-fondo);
+    font-weight: 700;
+    border-top: 2px solid var(--color-primario); 
+}
+
+.tabla-bonita tfoot td:first-child {
+    text-align: right; 
+    color: var(--color-texto-secundario);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+}
+
 /* --- ESTILOS PERFIL Y DROPDOWN --- */
 
 .profile-menu-container {
@@ -1963,13 +2017,13 @@ html[data-theme="titanium"] .btn-chart-2 {
 }
 
 .profile-trigger:hover {
-    background-color: var(--color-fondo); /* Efecto hover suave */
+    background-color: var(--color-fondo); 
 }
 
 .caret-icon {
     font-size: 0.8rem;
     color: var(--color-texto-secundario);
-    margin-top: 2px; /* Pequeño ajuste visual */
+    margin-top: 2px; 
 }
 
 .profile-dropdown {
@@ -2155,7 +2209,7 @@ html[data-theme="titanium"] .btn-chart-2 {
     display: inline-block;
 }
 
-/* Campos de Configuración */
+
 .settings-group {
     display: flex;
     justify-content: space-between;
@@ -2177,11 +2231,11 @@ html[data-theme="titanium"] .btn-chart-2 {
 .settings-value {
     color: var(--color-texto-secundario);
     flex-grow: 1;
-    font-family: monospace; /* Para que los asteriscos se vean ordenados */
+    font-family: monospace; 
     font-size: 1rem;
 }
 
-/* Estilo para texto enmascarado */
+
 .masked-text {
     letter-spacing: 2px;
 }

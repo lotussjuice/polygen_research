@@ -67,7 +67,9 @@
                                 <th>Dirección</th>
                                 <th>Estado Paciente</th>
 
-                                <th th:each="campoStat : ${camposColumnas}" th:text="${campoStat.campoCrf.nombre}">...
+                                <th th:each="campoStat : ${camposColumnas}"
+                                    th:title="${campoStat.opcion != null ? campoStat.campoCrf.nombre : (campoStat.campoCrf.descripcion ?: '')}">
+                                    <span th:text="${campoStat.opcion != null ? campoStat.opcion.etiqueta : campoStat.campoCrf.nombre}">...</span>
                                 </th>
                             </tr>
                         </thead>
@@ -127,7 +129,7 @@
                                 <td th:text="${fila.crf.datosPaciente?.estado ?: '-'}">...</td>
 
                                 <td th:each="campoStat : ${camposColumnas}">
-                                    <span th:text="${fila.valores.get(campoStat.campoCrf.idCampo) ?: '-'}"></span>
+                                    <span th:text="${fila.valores.get(campoStat.columnaKey) ?: '-'}"></span>
                                 </td>
 
                             </tr>
