@@ -82,7 +82,7 @@
                         th:data-id="${dato.campoCrf.idCampo}">
 
                         <label th:for="${'valor-' + stat.index}" 
-                            th:text="${dato.campoCrf.pregunta != null ? dato.campoCrf.pregunta : dato.campoCrf.nombre}">
+                            th:text="${dato.campoCrf.preguntaFormulario != null ? dato.campoCrf.preguntaFormulario : dato.campoCrf.nombre}">
                         </label>
                         
                         <small th:if="${dato.campoCrf.descripcion != null}" 

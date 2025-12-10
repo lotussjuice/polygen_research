@@ -64,7 +64,7 @@ public class CampoCrf {
 
     // NUEVO: La pregunta real que verá el usuario
     @Column(name = "Pregunta_Formulario", length = 255) 
-    private String pregunta;
+    private String preguntaFormulario;
 
     public Integer getSeccion() {
         return seccion;
@@ -75,11 +75,11 @@ public class CampoCrf {
     }
 
     public String getPreguntaFormulario() {
-        return pregunta;
+        return preguntaFormulario;
     }
 
     public void setPreguntaFormulario(String preguntaFormulario) {
-        this.pregunta = preguntaFormulario;
+        this.preguntaFormulario = preguntaFormulario;
     }
 
 
