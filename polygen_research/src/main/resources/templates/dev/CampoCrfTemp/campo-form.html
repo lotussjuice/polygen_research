@@ -14,7 +14,24 @@
                 <input type="hidden" th:field="*{idCampo}" id="idCampoInput" />
 
                 <div class="form-group">
-                    <label for="nombreInput">Nombre (Variable):</label>
+                    <label for="seccionInput">Sección del Formulario:</label>
+                    <select id="seccionInput" th:field="*{seccion}" class="form-control" required>
+                        <option value="">Seleccione una sección...</option>
+                        <option th:each="i : ${#numbers.sequence(2, 9)}" 
+                                th:value="${i}" 
+                                th:text="|Sección ${i}|"></option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="preguntaInput">Pregunta (Etiqueta en el CRF):</label>
+                    <input type="text" id="preguntaInput" th:field="*{pregunta}" class="form-control" 
+                           placeholder="Ej. ¿El paciente presenta fiebre?" required maxlength="255"/>
+                    <small style="color: var(--color-texto-secundario);">Este es el texto que leerá el usuario al llenar el formulario.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="nombreInput">Nombre (Variable Interna):</label>
                     <input type="text" id="nombreInput" th:field="*{nombre}" class="form-control" placeholder="Ej. Tabaquismo" required />
                 </div>
                 
@@ -76,6 +93,10 @@
                 <p style="color: var(--color-texto-secundario); margin-bottom: 1rem;">Se creará el siguiente campo en el formulario CRF:</p>
                 
                 <div style="background-color: var(--color-fondo); padding: 1rem; border-radius: 8px; text-align: left;">
+                    <p><strong>Sección:</strong> <span id="resumen-seccion"></span></p>
+                    <p><strong>Pregunta:</strong> <span id="resumen-pregunta" style="font-style: italic;"></span></p>
+                    <hr style="border: 0; border-top: 1px dashed var(--color-borde); margin: 0.5rem 0;">
+
                     <p><strong>Nombre:</strong> <span id="resumen-nombre"></span></p>
                     <p><strong>Tipo:</strong> <span id="resumen-tipo"></span></p>
                     <p><strong>Descripción:</strong> <span id="resumen-desc"></span></p>
@@ -186,9 +207,18 @@
                         modalEditar.style.display = 'block';
                     } else {
                         // MODO CREACIÓN: Mostrar resumen
+                        
+                        // --- CAPTURAR NUEVOS VALORES ---
+                        const seccion = document.getElementById('seccionInput').value;
+                        const pregunta = document.getElementById('preguntaInput').value;
+
                         const nombre = document.getElementById('nombreInput').value;
                         const tipo = document.getElementById('tipoCampo').value;
                         const desc = document.getElementById('descInput').value || '-';
+
+                        // --- MOSTRAR NUEVOS VALORES ---
+                        document.getElementById('resumen-seccion').textContent = seccion ? 'Sección ' + seccion : '-';
+                        document.getElementById('resumen-pregunta').textContent = pregunta;
 
                         document.getElementById('resumen-nombre').textContent = nombre;
                         document.getElementById('resumen-tipo').textContent = tipo;

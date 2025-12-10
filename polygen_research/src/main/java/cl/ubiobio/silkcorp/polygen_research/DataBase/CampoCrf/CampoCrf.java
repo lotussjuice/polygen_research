@@ -46,6 +46,7 @@ public class CampoCrf {
     private Boolean activo;
 
     @OneToMany(mappedBy = "campoCrf", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("idDetalle ASC")
     private List<DatosCrf> datosCrfList;
 
     @OneToMany(
@@ -56,6 +57,30 @@ public class CampoCrf {
     )
     @OrderBy("orden ASC") 
     private List<OpcionCampoCrf> opciones = new ArrayList<>();
+
+
+    @Column(name = "Seccion")
+    private Integer seccion;
+
+    // NUEVO: La pregunta real que verá el usuario
+    @Column(name = "Pregunta_Formulario", length = 255) 
+    private String pregunta;
+
+    public Integer getSeccion() {
+        return seccion;
+    }
+
+    public void setSeccion(Integer seccion) {
+        this.seccion = seccion;
+    }
+
+    public String getPreguntaFormulario() {
+        return pregunta;
+    }
+
+    public void setPreguntaFormulario(String preguntaFormulario) {
+        this.pregunta = preguntaFormulario;
+    }
 
 
 
