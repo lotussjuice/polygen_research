@@ -1,4 +1,4 @@
-INSERT INTO campo_crf (id_campo, activo, descripcion, nombre, pregunta_formulario, seccion, tipo) VALUES
+INSERT IGNORE INTO campo_crf (id_campo, activo, descripcion, nombre, pregunta_formulario, seccion, tipo) VALUES
 (1, 1, NULL, 'edad', 'Edad:', 2, 'NUMERO'),
 (2, 1, NULL, 'sexo', 'Sexo:', 2, 'SELECCION_UNICA'),
 (3, 1, NULL, 'nacionalidad', 'Nacionalidad:', 2, 'TEXTO'),
@@ -62,7 +62,7 @@ INSERT INTO campo_crf (id_campo, activo, descripcion, nombre, pregunta_formulari
 (61, 1, NULL, 'estado_clinico', '(SOLO CASOS) - Estadio clínico (TNM):', 9, 'TEXTO');
 
 
-INSERT INTO opcion_campo_crf (id_opcion, etiqueta, orden, id_campo) VALUES
+INSERT IGNORE INTO opcion_campo_crf (id_opcion, etiqueta, orden, id_campo) VALUES
 (1, 'Hombre', 0, 2),
 (2, 'Mujer', 1, 2),
 (3, 'Urbana', 0, 4),
