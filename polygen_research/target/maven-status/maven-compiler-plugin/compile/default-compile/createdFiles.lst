@@ -11,6 +11,7 @@ cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuario.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\dto\RegistroActividadDTO.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\RolUsuario\RolUsuarioController.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\dto\CampoCrfStatsDTO.class
+cl\ubiobio\silkcorp\polygen_research\DataBase\dto\CriterioDTO$ReglaDTO.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\export\ExcelReporteService$1.class
 cl\ubiobio\silkcorp\polygen_research\DataBase\export\StataExportService$1.class
 cl\ubiobio\silkcorp\polygen_research\dashboard\DashboardService.class

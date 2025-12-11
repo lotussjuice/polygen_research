@@ -89,8 +89,8 @@ public class ExcelReporteService {
             List<CriterioDTO> criterios = entry.getValue();
 
             boolean necesitaCalculo = criterios.stream()
-                    .anyMatch(c -> c.getTipo().equals("media") || c.getTipo().equals("promedio")
-                            || c.getTipo().equals("mediana"));
+                    .anyMatch(c -> "media".equals(c.getTipo()) || "promedio".equals(c.getTipo())
+                            || "mediana".equals(c.getTipo()));
 
             if (necesitaCalculo) {
                 String colKey = String.valueOf(campoId); 
@@ -101,9 +101,9 @@ public class ExcelReporteService {
                     String clave = campoId + "_" + tipo;
 
                     if (!puntosDeCorte.containsKey(clave)) {
-                        if (tipo.equals("media") || tipo.equals("promedio")) {
+                        if ("media".equals(tipo) || "promedio".equals(tipo)) {
                             puntosDeCorte.put(clave, calculoService.calcularMedia(valoresColumna));
-                        } else if (tipo.equals("mediana")) {
+                        } else if ("mediana".equals(tipo)) {
                             puntosDeCorte.put(clave, calculoService.calcularMediana(valoresColumna));
                         }
                     }
@@ -114,28 +114,75 @@ public class ExcelReporteService {
     }
 
     public String getNombreColumnaDicotomizada(String nombreCampo, CriterioDTO criterio) {
-        if ("personalizado".equals(criterio.getTipo())) {
-            return nombreCampo + "_" + criterio.getNombre();
-        } else {
-            return nombreCampo + "_" + criterio.getTipo();
+        if (criterio.getNombreColumna() != null && !criterio.getNombreColumna().isEmpty()) {
+            return criterio.getNombreColumna();
         }
+        if ("personalizado".equals(criterio.getTipo()) && criterio.getNombre() != null) {
+            return nombreCampo + "_" + criterio.getNombre();
+        }
+        return nombreCampo + "_" + criterio.getTipo();
     }
 
-    public int calcularValorDicotomizado(double valorNum, CriterioDTO criterio, double puntoCorteCalculado) {
+    public int calcularValorDicotomizado(Map<String, String> valoresFila, double valorNumColumna, CriterioDTO criterio, double puntoCorteCalculado) {
+        
+        if (criterio.getReglas() != null && !criterio.getReglas().isEmpty()) {
+            boolean cumpleTodas = true;
+            for (CriterioDTO.ReglaDTO regla : criterio.getReglas()) {
+                String keyCampo = String.valueOf(regla.getCampoId());
+                String valorCelda = valoresFila.get(keyCampo);
+
+                if (!evaluarReglaIndividual(valorCelda, regla.getOperador(), regla.getValor())) {
+                    cumpleTodas = false;
+                    break;
+                }
+            }
+            return cumpleTodas ? 1 : 0;
+        }
+
+        if (criterio.getTipo() == null) return 0;
+
         double puntoCorte;
         return switch (criterio.getTipo()) {
             case "media", "promedio" -> {
                 puntoCorte = puntoCorteCalculado;
-                yield (valorNum >= puntoCorte) ? 1 : 0;
+                yield (valorNumColumna >= puntoCorte) ? 1 : 0;
             }
             case "mediana" -> {
                 puntoCorte = puntoCorteCalculado;
-                yield (valorNum >= puntoCorte) ? 1 : 0;
+                yield (valorNumColumna >= puntoCorte) ? 1 : 0;
             }
             case "personalizado" ->
-                aplicarRegla(valorNum, criterio.getPuntoCorte()) ? 1 : 0;
+                aplicarRegla(valorNumColumna, criterio.getPuntoCorte()) ? 1 : 0;
             default -> 0;
         };
+    }
+
+    private boolean evaluarReglaIndividual(String valorCelda, String operador, String valorRegla) {
+        if (valorCelda == null || valorCelda.trim().isEmpty() || "-".equals(valorCelda)) return false;
+
+        String vCelda = valorCelda.trim();
+        String vRegla = valorRegla.trim();
+
+        Double nCelda = null;
+        Double nRegla = null;
+        try {
+            nCelda = Double.parseDouble(vCelda.replace(',', '.'));
+            nRegla = Double.parseDouble(vRegla.replace(',', '.'));
+        } catch (NumberFormatException e) {
+        }
+
+        boolean sonNumeros = (nCelda != null && nRegla != null);
+
+        switch (operador) {
+            case "==": return sonNumeros ? nCelda.equals(nRegla) : vCelda.equalsIgnoreCase(vRegla);
+            case "!=": return sonNumeros ? !nCelda.equals(nRegla) : !vCelda.equalsIgnoreCase(vRegla);
+            case ">":  return sonNumeros && nCelda > nRegla;
+            case ">=": return sonNumeros && nCelda >= nRegla;
+            case "<":  return sonNumeros && nCelda < nRegla;
+            case "<=": return sonNumeros && nCelda <= nRegla;
+            case "contains": return vCelda.toLowerCase().contains(vRegla.toLowerCase());
+            default: return false;
+        }
     }
 
     private void crearEncabezado(Row headerRow, List<CampoCrfStatsDTO> columnasStats,
@@ -147,10 +194,7 @@ public class ExcelReporteService {
 
         for (CampoCrfStatsDTO stat : columnasStats) {
             CampoCrf campo = stat.getCampoCrf();
-            
-
             headerRow.createCell(cellIdx++).setCellValue(stat.getNombreColumna());
-            
 
             if (stat.getOpcion() == null && criteriosMap.containsKey(campo.getIdCampo())) {
                 for (CriterioDTO criterio : criteriosMap.get(campo.getIdCampo())) {
@@ -165,7 +209,6 @@ public class ExcelReporteService {
             Map<Integer, List<CriterioDTO>> criteriosMap, Map<String, Double> puntosDeCorte) {
 
         int cellIdx = 0;
-
         dataRow.createCell(cellIdx++).setCellValue(fila.getCrf().getIdCrf());
         dataRow.createCell(cellIdx++).setCellValue(
                 fila.getCrf().getDatosPaciente() != null ? fila.getCrf().getDatosPaciente().getCodigoPaciente() : "");
@@ -178,15 +221,19 @@ public class ExcelReporteService {
             dataRow.createCell(cellIdx++).setCellValue(valorCrudo != null ? valorCrudo : "-");
 
             if (stat.getOpcion() == null && criteriosMap.containsKey(campo.getIdCampo())) {
+                
                 double valorNum = parseDouble(valorCrudo);
+
                 for (CriterioDTO criterio : criteriosMap.get(campo.getIdCampo())) {
-                    if (Double.isNaN(valorNum)) {
-                        dataRow.createCell(cellIdx++).setCellValue("");
-                    } else {
-                        double puntoCorteCalculado = puntosDeCorte.getOrDefault(campo.getIdCampo() + "_" + criterio.getTipo(), 0.0);
-                        int valorDicotomizado = calcularValorDicotomizado(valorNum, criterio, puntoCorteCalculado);
-                        dataRow.createCell(cellIdx++).setCellValue(valorDicotomizado);
+                    
+                    double puntoCorteCalculado = 0.0;
+                    if (criterio.getTipo() != null) {
+                         puntoCorteCalculado = puntosDeCorte.getOrDefault(campo.getIdCampo() + "_" + criterio.getTipo(), 0.0);
                     }
+
+                    int valorDicotomizado = calcularValorDicotomizado(fila.getValores(), valorNum, criterio, puntoCorteCalculado);
+                    
+                    dataRow.createCell(cellIdx++).setCellValue(valorDicotomizado);
                 }
             }
         }

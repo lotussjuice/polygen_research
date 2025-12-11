@@ -15,22 +15,41 @@ public class FaqService {
         // ZONA EPICA DE EDICIÓN DE PREGUNTAS FRECUENTES
         // ============================================================
 
+       // 3. Contacto y Soporte
         lista.add(new FaqItem(
-            "¿Cómo ingreso un nuevo paciente al sistema?", 
-            "Para ingresar un paciente, dirígete al menú lateral 'Gestionar Pacientes' y haz clic en el botón 'Nuevo'."
+            "¿Cómo contacto a soporte técnico?", 
+            "Para reportar fallos o dudas críticas, escriba a <a href='https://mail.google.com/mail/?view=cm&fs=1&to=polygenresearchsys@gmail.com&su=Soporte%20Polygen%20Research' target='_blank'>polygenresearchsys@gmail.com</a>.. Incluya detalles del error o capturas de pantalla para agilizar la ayuda."
         ));
 
         lista.add(new FaqItem(
-            "¿Qué hago si me equivoqué en un registro CRF?", 
-            "Si el estudio está abierto, puedes editar el registro desde 'Gestionar CRF'. Si no, contacta al Admin."
+            "¿En qué formatos puedo descargar la información?", 
+            "El sistema permite la exportación en tres formatos: PDF (vista individual), Excel (reportes generales) y archivos compatibles con STATA (.dta) para análisis estadístico avanzado."
         ));
 
         lista.add(new FaqItem(
-            "¿Cómo puedo cambiar mi contraseña?", 
-            "No me lo vas a creer, pero si se te ocurre, POR ALGUN MOTIVO, hacer clic en el boton de Olvidé mi contraseña, que de forma casual resulta que es tu caso, entonces podrías tener la oportuinidad de recuperar tu tan preciada clave de acceso a este precioso sistema."
+            "¿Quién tiene acceso a los datos sensibles?", 
+            "El acceso está restringido según el rol (Investigador, Admin, etc.). El sistema cumple protocolos de confidencialidad y los datos exportados pueden ser anonimizados según la configuración del estudio."
         ));
-        
-        // SE PUEDEN AGREGAR MAS PREGUNTAS SEIGUIENDO EL FORMATO
+
+        lista.add(new FaqItem(
+            "¿Qué criterio define a un paciente como Caso o Control?", 
+            "Un paciente 'Caso' tiene diagnóstico confirmado de cáncer gástrico. Un paciente 'Control' está en seguimiento sin patología demostrada. Es vital seleccionar la categoría correcta al crear el CRF."
+        ));
+
+        lista.add(new FaqItem(
+            "¿Puedo eliminar un paciente registrado por error?", 
+            "Por integridad de los datos, la eliminación directa no está permitida para usuarios estándar. Si duplicó un registro, contacte al administrador para solicitar la baja de este."
+        ));
+
+        lista.add(new FaqItem(
+            "¿Qué pasa si me equivoco al ingresar datos en un formulario?", 
+            "Puede dirigirse al menú 'Gestionar CRF' o 'Pacientes', buscar el registro y seleccionar la opción de edición y hacer los cambios necesarios."
+        ));
+
+        lista.add(new FaqItem(
+            "¿Qué hago si olvidé mi contraseña?", 
+            "En la pantalla de inicio, haga clic en '¿Olvidó su contraseña?'. El sistema le enviará un código de verificación único a su correo (similar al registro). Ingrese ese código para crear una nueva clave."
+        ));
         
         return lista;
     }

@@ -91,7 +91,15 @@
             </button>
 
             <div class="sidebar-footer">
-                <p><i class="ph-fill ph-lock-simple"></i> <span class="link-text">Conexión Segura (Cifrado)</span></p>
+                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=polygenresearchsys@gmail.com&su=Soporte%20Polygen%20Research" 
+                target="_blank" 
+                class="btn-soporte-theme"
+                title="Contactar a Soporte">
+                
+                    <i class="ph-fill ph-envelope-simple"></i>
+                    
+                    <span class="link-text">Contacto / Soporte</span>
+                </a>
             </div>
         </aside>
 
@@ -147,6 +155,19 @@
                                 <div class="theme-option" onclick="selectTheme('sunset')" id="theme-opt-sunset">
                                     <div class="theme-circle bg-sunset"></div>
                                     <span class="theme-label">Sunset</span>
+                                </div>
+
+                                <div class="theme-option" onclick="selectTheme('aqua')" id="theme-opt-aqua">
+                                    <div class="theme-circle bg-aqua"></div>
+                                    <span class="theme-label">Aqua</span>
+                                </div>
+                                <div class="theme-option" onclick="selectTheme('royal')" id="theme-opt-royal">
+                                    <div class="theme-circle bg-royal"></div>
+                                    <span class="theme-label">Royal</span>
+                                </div>
+                                <div class="theme-option" onclick="selectTheme('cherry')" id="theme-opt-cherry">
+                                    <div class="theme-circle bg-cherry"></div>
+                                    <span class="theme-label">Cherry</span>
                                 </div>
                             </div>
                         </div>
@@ -216,7 +237,8 @@
             <div class="modal-body" style="overflow-y: auto; padding: 1.5rem;">
                 <div class="detail-section"
                     style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-borde); padding-bottom: 1rem;">
-                    <h4 style="color: var(--color-primario); margin-bottom: 0.5rem; font-size: 1.1rem; border-bottom: 2px solid var(--color-fondo); padding-bottom: 5px;">
+                    <h4
+                        style="color: var(--color-primario); margin-bottom: 0.5rem; font-size: 1.1rem; border-bottom: 2px solid var(--color-fondo); padding-bottom: 5px;">
                         <i class="ph-bold ph-user" style="margin-right: 5px;"></i> Paciente
                     </h4>
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
@@ -229,7 +251,8 @@
 
                 <div class="detail-section"
                     style="margin-bottom: 1.5rem; border-bottom: 1px solid var(--color-borde); padding-bottom: 1rem;">
-                    <h4 style="color: var(--color-primario); margin-bottom: 0.5rem; font-size: 1.1rem; border-bottom: 2px solid var(--color-fondo); padding-bottom: 5px;">
+                    <h4
+                        style="color: var(--color-primario); margin-bottom: 0.5rem; font-size: 1.1rem; border-bottom: 2px solid var(--color-fondo); padding-bottom: 5px;">
                         <i class="ph-bold ph-note" style="margin-right: 5px;"></i> Observaciones
                     </h4>
                     <p id="global-detalle-obs"
@@ -238,7 +261,7 @@
                 </div>
 
                 <div id="global-detalle-contenido-dinamico">
-                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -246,7 +269,7 @@
 
     <script>
         const modalGlobal = document.getElementById('modalVerDetalleGlobal');
-        
+
         // Configuración de secciones (misma que en crf-list)
         const sectionConfigGlobal = {
             2: { title: "Datos sociodemográficos", icon: "ph-users" },

@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpHeaders;
@@ -19,6 +20,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPaciente;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPacienteRepository;
+
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfDetalleDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfForm;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO;
@@ -30,16 +34,26 @@ public class CrfController {
 
     private final CrfService crfService;
     private final PdfService pdfService;
+    private final DatosPacienteRepository datosPacienteRepository;
 
-    public CrfController(CrfService crfService, PdfService pdfService) {
+    public CrfController(CrfService crfService, PdfService pdfService, DatosPacienteRepository datosPacienteRepository) {
         this.crfService = crfService;
         this.pdfService = pdfService;
+        this.datosPacienteRepository = datosPacienteRepository;
     }
 
     @GetMapping("/nuevo")
     public String mostrarNuevoCrfForm(Model model) {
         CrfForm form = crfService.prepararNuevoCrfForm();
         model.addAttribute("crfForm", form);
+
+        List<String> codigosOcupados = datosPacienteRepository.findAll()
+            .stream()
+            .map(DatosPaciente::getCodigoPaciente) // Obtenemos solo el string del código
+            .collect(Collectors.toList());
+            
+        model.addAttribute("codigosOcupados", codigosOcupados);
+        
         return "dev/CrfTemp/crf-form";
     }
 

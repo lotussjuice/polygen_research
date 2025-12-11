@@ -18,9 +18,13 @@
                     <div class="form-group">
                         <label for="codigoPaciente">Código</label>
                         <input type="text" class="form-control" id="codigoPaciente"
-                            th:field="*{datosPaciente.codigoPaciente}" required>
+                            th:field="*{datosPaciente.codigoPaciente}" required
+                            autocomplete="off"> <small id="msgErrorCodigo" style="display: none; color: var(--color-error); font-weight: bold; margin-top: 5px;">
+                            <i class="ph-bold ph-warning-circle"></i> Este código ya existe. Debe ser único.
+                        </small>
                     </div>
                 </div>
+
                 <div class="grid-2">
                     <div class="form-group">
                         <label for="nombre">Nombre</label>
@@ -151,7 +155,7 @@
 
         <div class="form-actions" style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
             <button type="button" class="btn-secondary" onclick="window.history.back()">Cancelar</button>
-            <button type="button" class="btn-primario" onclick="abrirConfirmacion()">Guardar CRF</button>
+            <button type="button" class="btn-primario" id="btnGuardarPrincipal" onclick="abrirConfirmacion()">Guardar CRF</button>
         </div>
 
         <div th:if="${errorMessage}" class="alert alert-error" style="margin-top: 1.5rem;">
@@ -160,8 +164,46 @@
 
     </form>
 
-    <script>
+    <script th:inline="javascript">
+        
+        const codigosRegistrados = []; 
+
         document.addEventListener("DOMContentLoaded", function () {
+            
+            const inputCodigo = document.getElementById('codigoPaciente');
+            const msgError = document.getElementById('msgErrorCodigo');
+            const btnGuardar = document.getElementById('btnGuardarPrincipal');
+
+            function validarCodigo() {
+                const valor = inputCodigo.value.trim();
+                
+                const existe = codigosRegistrados.some(c => c.toLowerCase() === valor.toLowerCase());
+
+                if (existe) {
+                    inputCodigo.classList.add('input-error-anim');
+                    inputCodigo.style.borderColor = 'var(--color-error)';
+                    msgError.style.display = 'block';
+                    btnGuardar.disabled = true; // Deshabilita el botón guardar
+                    btnGuardar.style.opacity = '0.5';
+                    btnGuardar.style.cursor = 'not-allowed';
+                } else {
+                    inputCodigo.classList.remove('input-error-anim');
+                    inputCodigo.style.borderColor = '';
+                    msgError.style.display = 'none';
+                    btnGuardar.disabled = false; // Rehabilita
+                    btnGuardar.style.opacity = '1';
+                    btnGuardar.style.cursor = 'pointer';
+                }
+            }
+
+            // Ejecutar validación cada vez que el usuario escribe
+            if(inputCodigo) {
+                inputCodigo.addEventListener('input', validarCodigo);
+                // También validamos al cargar por si el navegador autocompletó algo
+                validarCodigo(); 
+            }
+
+            // --- RESTO DE TU LÓGICA DE ORDENAMIENTO ---
             document.querySelectorAll('.card-body').forEach(container => {
                 const items = Array.from(container.querySelectorAll('.form-group[data-id]'));
                 if (items.length > 0) {
@@ -171,6 +213,8 @@
                     items.forEach(item => container.appendChild(item));
                 }
             });
+
+            // --- ANIMACIONES DE REQUIRED ---
             const requiredInputs = document.querySelectorAll('input[required], select[required], textarea[required]');
             requiredInputs.forEach(input => {
                 input.addEventListener('invalid', function (e) {
@@ -183,7 +227,7 @@
                 });
             });
 
-            //CÁLCULO AUTOMÁTICO DE IMC 
+            // --- CÁLCULO AUTOMÁTICO DE IMC ---
             const NOMBRE_VAR_PESO = 'peso';
             const NOMBRE_VAR_TALLA = 'estatura';
             const NOMBRE_VAR_IMC = 'imc';
@@ -205,8 +249,6 @@
                         if (talla > 3) {
                              talla = talla / 100;
                         }
-                        
-                    
                         const imc = peso / (talla * talla);
                         inputIMC.value = imc.toFixed(1);
                     } else {
@@ -216,14 +258,30 @@
 
                 inputPeso.addEventListener('input', calcularIMC);
                 inputTalla.addEventListener('input', calcularIMC);
-                
-                // Ejecutamos una vez al inicio por si es edición
                 calcularIMC();
             }
+
+
+
+
+
+            const radios = document.querySelectorAll('input[type="radio"]');
+            
+            radios.forEach(radio => {
+                radio.addEventListener('mousedown', function() {
+                    this.dataset.wasChecked = this.checked; 
+                });
+
+                radio.addEventListener('click', function() {
+                    if (this.dataset.wasChecked === 'true') {
+                        this.checked = false;
+                        this.dataset.wasChecked = 'false';
+                    }
+                });
+            });
         });
 
         const modalConf = document.getElementById('modalConfirmarGuardado');
-
         const formCrf = document.getElementById('crfFormulario');
 
         function abrirConfirmacion() {
@@ -231,7 +289,14 @@
                 formCrf.reportValidity();
                 return;
             }
-            // Lógica de llenado del modaL
+            
+            // Doble chequeo por seguridad antes de abrir modal
+            const btnGuardar = document.getElementById('btnGuardarPrincipal');
+            if (btnGuardar.disabled) {
+                alert("Por favor corrige los errores antes de guardar.");
+                return;
+            }
+
             const modalElement = document.getElementById('modalConfirmarGuardado');
             if(modalElement) {
                 modalElement.style.display = 'block';
@@ -241,8 +306,6 @@
                 }
             }
         }
-
-        // AQUI IRIA MODAL
 
         function enviarFormularioReal() {
             formCrf.submit();
@@ -262,7 +325,6 @@
             }
         }
         
-        // Inicializar contador si hay texto
         const obsTextarea = document.getElementById("observacion");
         if (obsTextarea) actualizarContador(obsTextarea);
 

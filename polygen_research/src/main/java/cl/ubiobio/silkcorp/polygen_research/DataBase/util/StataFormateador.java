@@ -1,59 +1,89 @@
 package cl.ubiobio.silkcorp.polygen_research.DataBase.util;
 
+import org.apache.poi.ss.usermodel.Cell;
 import java.text.Normalizer;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class StataFormateador {
 
-    private static final Pattern DIACRITICS_PATTERN = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
+    private static final Pattern PATTERN_CARACTERES_PROHIBIDOS = Pattern.compile("[^a-zA-Z0-9_]");
 
+    private static final Pattern PATTERN_INICIO_NUMERO = Pattern.compile("^[0-9]");
+   
+    private static final Pattern PATTERN_TEXTO_NO_STATA = Pattern.compile("[\r\n\"]");
 
-    public static String formatarNombreVariable(String nombre) {
-        if (nombre == null || nombre.isEmpty()) {
-            return "variable_vacia";
+    /**
+     * @param nombreOriginal
+     * @return 
+     */
+    public static String formatarNombreVariable(String nombreOriginal) {
+        if (nombreOriginal == null || nombreOriginal.trim().isEmpty()) {
+            return "var_empty";
         }
+        
+        String nombre = nombreOriginal.trim();
 
-        // Quitar acentos y caracteres especiales (ñ -> n, á -> a)
-        String str = Normalizer.normalize(nombre, Normalizer.Form.NFD);
-        str = DIACRITICS_PATTERN.matcher(str).replaceAll("");
+        nombre = Normalizer.normalize(nombre, Normalizer.Form.NFD)
+                           .replaceAll("[^\\p{ASCII}]", ""); 
+        
+        
+        nombre = nombre.replaceAll("\\s", "_");
+        Matcher matcher = PATTERN_CARACTERES_PROHIBIDOS.matcher(nombre);
+        nombre = matcher.replaceAll("_");
 
-        // Reemplazar espacios por guión bajo
-        str = str.replaceAll("\\s+", "_");
-
-        // Eliminar todos los símbolos no alfanuméricos (excepto '_')
-        str = str.replaceAll("[^a-zA-Z0-9_]", "");
-
-        // Asegurar que no comience con un número
-        if (Character.isDigit(str.charAt(0))) {
-            str = "v_" + str;
+        nombre = nombre.replaceAll("_{2,}", "_");
+        nombre = nombre.replaceAll("^_|_$", "");
+        
+        if (PATTERN_INICIO_NUMERO.matcher(nombre).find() || nombre.isEmpty()) {
+            nombre = "v_" + nombre;
         }
+        
+        nombre = nombre.toLowerCase();
 
-        // Truncar a 32 caracteres
-        if (str.length() > 32) {
-            str = str.substring(0, 32);
+    
+        if (nombre.length() > 32) {
+            nombre = nombre.substring(0, 32);
         }
-
-        return str.toLowerCase();
+        
+        return nombre;
     }
 
+    /**
+     * @param valor
+     * @return 
+     */
     public static String formatarValor(String valor) {
         if (valor == null) {
             return "";
         }
-
-        // Quitar saltos de línea
-        String str = valor.replaceAll("[\\r\\n]+", " ");
-
-        // Manejar comillas dobles (las reemplazamos por comillas simples)
-        str = str.replace('"', '\'');
+        String valorLimpio = valor.trim();
         
-        // Quitar acentos y caracteres extraños (opcional pero recomendado)
-        str = Normalizer.normalize(str, Normalizer.Form.NFD);
-        str = DIACRITICS_PATTERN.matcher(str).replaceAll("");
+        valorLimpio = PATTERN_TEXTO_NO_STATA.matcher(valorLimpio).replaceAll("");
         
-        // Eliminar otros caracteres que puedan corromper (ej: tabulaciones)
-        str = str.replaceAll("\t", " ");
 
-        return str.trim();
+        if (valorLimpio.matches("-?\\d+,\\d+.*")) {
+            valorLimpio = valorLimpio.replace(',', '.');
+        }
+        
+        return valorLimpio;
+    }
+
+    /**
+     * @param cell 
+     * @param valorFormateado
+     */
+    public static void escribirValorEnCelda(Cell cell, String valorFormateado) {
+        if (valorFormateado == null || valorFormateado.isEmpty()) {
+            cell.setCellValue("");
+            return;
+        }
+        
+        try {
+            double valorNum = Double.parseDouble(valorFormateado);
+            cell.setCellValue(valorNum);
+        } catch (NumberFormatException e) {
+            cell.setCellValue(valorFormateado);
+        }
     }
 }
