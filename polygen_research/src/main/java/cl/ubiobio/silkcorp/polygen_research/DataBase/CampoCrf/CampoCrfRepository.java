@@ -12,11 +12,12 @@ import org.springframework.stereotype.Repository;
 public interface CampoCrfRepository extends JpaRepository<CampoCrf, Integer> {
     
 
-    @Query("SELECT c FROM CampoCrf c LEFT JOIN FETCH c.opciones o WHERE c.activo = true ORDER BY c.nombre, o.orden ASC")
-    List<CampoCrf> findByActivoTrueOrderByNombre();
-
+    @Query("SELECT c FROM CampoCrf c LEFT JOIN FETCH c.opciones o WHERE c.activo = true ORDER BY c.seccion ASC, c.nombre ASC, o.orden ASC")
+    List<CampoCrf> findByActivoTrueOrderBySeccionAndNombre();
 
     @Query("SELECT c FROM CampoCrf c LEFT JOIN FETCH c.opciones o WHERE c.idCampo = :id ORDER BY o.orden ASC")
-    Optional<CampoCrf> findByIdWithOptions(@Param("id") Integer id);
+    Optional<CampoCrf> findByIdWithOptions(@Param("id") Integer id);;
+
+    
 
 }
