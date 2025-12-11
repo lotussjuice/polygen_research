@@ -62,7 +62,7 @@ public class CampoCrf {
     @Column(name = "Seccion")
     private Integer seccion;
 
-    // NUEVO: La pregunta real que verá el usuario
+    // La pregunta real que se lista en el formulario.
     @Column(name = "Pregunta_Formulario", length = 255) 
     private String preguntaFormulario;
 
@@ -148,5 +148,9 @@ public class CampoCrf {
     public void removeOpcion(OpcionCampoCrf opcion) {
         opciones.remove(opcion);
         opcion.setCampoCrf(null);
+    }
+
+    public boolean isActivo() {
+        return activo != null ? activo : false;
     }
 }

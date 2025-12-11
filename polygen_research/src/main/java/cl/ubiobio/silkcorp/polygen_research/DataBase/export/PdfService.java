@@ -3,7 +3,12 @@ package cl.ubiobio.silkcorp.polygen_research.DataBase.export;
 import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -17,6 +22,7 @@ import com.lowagie.text.FontFactory;
 import com.lowagie.text.PageSize;
 import com.lowagie.text.Paragraph;
 import com.lowagie.text.Phrase;
+import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.PdfPCell;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
@@ -24,15 +30,17 @@ import com.lowagie.text.pdf.PdfWriter;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.Crf.CrfService;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosCrf.DatosCrf;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.DatosPaciente.DatosPaciente;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfForm;
-
-// --- CORRECCIÓN: Importación exacta de tu clase ---
 import cl.ubiobio.silkcorp.polygen_research.DataBase.OpcionCampoCrf.OpcionCampoCrf;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfForm;
 
 @Service
 public class PdfService {
 
-    private final CrfService crfService; 
+    private final CrfService crfService;
+    
+    private static final Color COLOR_PRIMARIO = new Color(52, 152, 219);
+    private static final Color COLOR_SECUNDARIO = new Color(44, 62, 80);
+    private static final Color COLOR_FONDO_ZEBRA = new Color(248, 249, 250);
 
     public PdfService(CrfService crfService) {
         this.crfService = crfService;
@@ -43,7 +51,7 @@ public class PdfService {
         CrfForm form = crfService.prepararCrfFormParaEditar(crfId);
         DatosPaciente paciente = form.getDatosPaciente(); 
 
-        Document document = new Document(PageSize.A4);
+        Document document = new Document(PageSize.A4, 36, 36, 50, 50); 
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Map<String, Object> resultado = new HashMap<>();
 
@@ -51,129 +59,183 @@ public class PdfService {
             PdfWriter.getInstance(document, out);
             document.open();
 
-            // Fuentes
-            Font fontTitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
-            Font fontSubtitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14, Color.BLUE);
-            Font fontHeaderTabla = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10, Color.WHITE);
-            Font fontCelda = FontFactory.getFont(FontFactory.HELVETICA, 10);
-            Font fontCeldaBold = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
+            Font fontTitulo = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18, COLOR_SECUNDARIO);
+            Font fontLabel = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, Color.GRAY);
+            Font fontValue = FontFactory.getFont(FontFactory.HELVETICA, 10, Color.BLACK);
+            
+            Font fontSeccionHeader = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11, Color.WHITE);
+            Font fontPregunta = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 9, COLOR_SECUNDARIO);
+            Font fontRespuesta = FontFactory.getFont(FontFactory.HELVETICA, 9, Color.BLACK);
 
-            // Título
             Paragraph titulo = new Paragraph("Reporte de Formulario CRF", fontTitulo);
             titulo.setAlignment(Element.ALIGN_CENTER);
             document.add(titulo);
-            document.add(Chunk.NEWLINE);
-
-            // Datos del Paciente
-            document.add(new Paragraph("1. Datos del Paciente", fontSubtitulo));
-            document.add(Chunk.NEWLINE);
             
-            PdfPTable tablaPaciente = new PdfPTable(2);
-            tablaPaciente.setWidthPercentage(100);
-            addCeldaTabla(tablaPaciente, "Cód. Paciente:", fontCeldaBold);
-            addCeldaTabla(tablaPaciente, paciente.getCodigoPaciente(), fontCelda);
-            addCeldaTabla(tablaPaciente, "Nombre:", fontCeldaBold);
-            addCeldaTabla(tablaPaciente, paciente.getNombre() + " " + paciente.getApellido(), fontCelda);
-            addCeldaTabla(tablaPaciente, "Número Contacto:", fontCeldaBold);
-            addCeldaTabla(tablaPaciente, paciente.getNumero(), fontCelda);
-            addCeldaTabla(tablaPaciente, "Dirección:", fontCeldaBold);
-            addCeldaTabla(tablaPaciente, paciente.getDireccion(), fontCelda);
-            document.add(tablaPaciente);
-
-            // Datos del Estudio
-            document.add(Chunk.NEWLINE);
-            document.add(new Paragraph("2. Datos del Estudio", fontSubtitulo));
+            Paragraph fechaImp = new Paragraph("Generado el: " + new SimpleDateFormat("dd/MM/yyyy HH:mm").format(new java.util.Date()), 
+                    FontFactory.getFont(FontFactory.HELVETICA, 8, Color.GRAY));
+            fechaImp.setAlignment(Element.ALIGN_CENTER);
+            document.add(fechaImp);
             document.add(Chunk.NEWLINE);
 
-            PdfPTable tablaEstudio = new PdfPTable(2);
-            tablaEstudio.setWidthPercentage(100);
+            PdfPTable tablaInfo = new PdfPTable(4); 
+            tablaInfo.setWidthPercentage(100);
+            tablaInfo.setWidths(new float[]{15f, 35f, 15f, 35f});
+            tablaInfo.setSpacingAfter(15f);
+
+            addCellInfo(tablaInfo, "Paciente:", fontLabel);
+            addCellInfo(tablaInfo, paciente.getNombre() + " " + paciente.getApellido(), fontValue);
+            addCellInfo(tablaInfo, "Código:", fontLabel);
+            addCellInfo(tablaInfo, paciente.getCodigoPaciente(), fontValue);
             
-            addCeldaTabla(tablaEstudio, "Tipo de Estudio:", fontCeldaBold);
-            addCeldaTabla(tablaEstudio, form.isEsCasoEstudio() ? "Caso Estudio" : "Caso Control", fontCelda);
-            addCeldaTabla(tablaEstudio, "Observaciones:", fontCeldaBold);
-            addCeldaTabla(tablaEstudio, form.getObservacion() != null ? form.getObservacion() : "N/A", fontCelda);
-            document.add(tablaEstudio);
+            addCellInfo(tablaInfo, "Contacto:", fontLabel);
+            addCellInfo(tablaInfo, paciente.getNumero(), fontValue);
+            addCellInfo(tablaInfo, "Tipo:", fontLabel);
+            addCellInfo(tablaInfo, form.isEsCasoEstudio() ? "Caso Estudio" : "Control", fontValue);
+
+            document.add(tablaInfo);
             
-            // Campos Dinámicos
-            document.add(Chunk.NEWLINE);
-            document.add(new Paragraph("3. Campos del Formulario", fontSubtitulo));
+            if(form.getObservacion() != null && !form.getObservacion().isEmpty()) {
+                Paragraph obs = new Paragraph("Obs: " + form.getObservacion(), fontValue);
+                obs.setSpacingAfter(15f);
+                document.add(obs);
+            }
+
             document.add(Chunk.NEWLINE);
 
-            PdfPTable tablaDatos = new PdfPTable(2); 
+            List<DatosCrf> datosOrdenados = new ArrayList<>(form.getDatosCrfList());
+            Collections.sort(datosOrdenados, Comparator
+                .comparing((DatosCrf d) -> d.getCampoCrf().getSeccion())
+                .thenComparing(d -> d.getCampoCrf().getIdCampo()) 
+            );
+
+            PdfPTable tablaDatos = new PdfPTable(2);
             tablaDatos.setWidthPercentage(100);
+            tablaDatos.setWidths(new float[]{60f, 40f}); 
+            tablaDatos.setHeaderRows(0); 
 
-            // Encabezado
-            PdfPCell headerPregunta = new PdfPCell(new Phrase("Campo", fontHeaderTabla));
-            headerPregunta.setBackgroundColor(Color.DARK_GRAY);
-            tablaDatos.addCell(headerPregunta);
-            
-            PdfPCell headerRespuesta = new PdfPCell(new Phrase("Valor", fontHeaderTabla));
-            headerRespuesta.setBackgroundColor(Color.DARK_GRAY);
-            tablaDatos.addCell(headerRespuesta);
+            int seccionActual = -1;
+            boolean alternateColor = false;
 
-            // Filas de datos con TRADUCCIÓN
-            for (DatosCrf dato : form.getDatosCrfList()) {
-                addCeldaTabla(tablaDatos, dato.getCampoCrf().getNombre(), fontCeldaBold);
+            for (DatosCrf dato : datosOrdenados) {
+                if (!dato.getCampoCrf().isActivo()) continue;
 
-                String valor = dato.getValor();
-                String tipo = dato.getCampoCrf().getTipo();
-                String valorMostrar = valor;
+                int sec = dato.getCampoCrf().getSeccion();
 
-                // Lógica de Traducción
-                if (valor != null && !valor.trim().isEmpty()) {
-                    if ("SI/NO".equals(tipo)) {
-                        // Traducir 1/0 a Sí/No
-                        if ("1".equals(valor)) valorMostrar = "Sí";
-                        else if ("0".equals(valor)) valorMostrar = "No";
-                    } 
-                    else if ("SELECCION_UNICA".equals(tipo)) {
-                        // Traducir ID de opción a Etiqueta (Texto)
-                        if (dato.getCampoCrf().getOpciones() != null) {
-                            // CORRECCIÓN: Usamos el tipo correcto OpcionCampoCrf
-                            for (OpcionCampoCrf op : dato.getCampoCrf().getOpciones()) {
-                                // Comparamos el valor guardado (String) con el orden de la opción (Integer)
-                                if (String.valueOf(op.getOrden()).equals(valor)) {
-                                    valorMostrar = op.getEtiqueta();
-                                    break; // Encontrado, salimos del bucle
-                                }
-                            }
-                        }
+                if (sec != seccionActual) {
+                    if (seccionActual != -1) {
+                        PdfPCell spacer = new PdfPCell();
+                        spacer.setColspan(2);
+                        spacer.setFixedHeight(10f);
+                        spacer.setBorder(Rectangle.NO_BORDER);
+                        tablaDatos.addCell(spacer);
                     }
-                } else {
-                    valorMostrar = "-";
+
+                    seccionActual = sec;
+                    alternateColor = false; 
+
+                    PdfPCell cellHeader = new PdfPCell(new Phrase(getNombreSeccion(sec), fontSeccionHeader));
+                    cellHeader.setColspan(2);
+                    cellHeader.setBackgroundColor(COLOR_PRIMARIO); 
+                    cellHeader.setPadding(8f);
+                    cellHeader.setBorder(Rectangle.NO_BORDER);
+                    tablaDatos.addCell(cellHeader);
                 }
 
-                addCeldaTabla(tablaDatos, valorMostrar, fontCelda);
-            }
-            document.add(tablaDatos);
+                String textoPregunta = dato.getCampoCrf().getPreguntaFormulario();
+                if (textoPregunta == null || textoPregunta.trim().isEmpty()) {
+                    textoPregunta = dato.getCampoCrf().getDescripcion();
+                }
+                if (textoPregunta == null || textoPregunta.trim().isEmpty()) {
+                    textoPregunta = dato.getCampoCrf().getNombre();
+                }
 
+                String valorMostrar = traducirValor(dato);
+
+                PdfPCell cellKey = new PdfPCell(new Phrase(textoPregunta, fontPregunta));
+                cellKey.setPadding(6f);
+                cellKey.setBorder(Rectangle.BOTTOM);
+                cellKey.setBorderColor(Color.LIGHT_GRAY);
+                
+                PdfPCell cellVal = new PdfPCell(new Phrase(valorMostrar, fontRespuesta));
+                cellVal.setPadding(6f);
+                cellVal.setBorder(Rectangle.BOTTOM);
+                cellVal.setBorderColor(Color.LIGHT_GRAY);
+
+                if (alternateColor) {
+                    cellKey.setBackgroundColor(COLOR_FONDO_ZEBRA);
+                    cellVal.setBackgroundColor(COLOR_FONDO_ZEBRA);
+                } else {
+                    cellKey.setBackgroundColor(Color.WHITE);
+                    cellVal.setBackgroundColor(Color.WHITE);
+                }
+                alternateColor = !alternateColor;
+
+                tablaDatos.addCell(cellKey);
+                tablaDatos.addCell(cellVal);
+            }
+
+            document.add(tablaDatos);
             document.close();
 
-            // Nombre del archivo
             String codigoLimpio = paciente.getCodigoPaciente();
             if (codigoLimpio != null && (codigoLimpio.startsWith("C") || codigoLimpio.startsWith("E"))) {
                 codigoLimpio = codigoLimpio.substring(1);
             }
-
             String prefijo = form.isEsCasoEstudio() ? "E" : "C";
-            String filename = prefijo + codigoLimpio + ".pdf";
+            String filename = "CRF_" + prefijo + codigoLimpio + ".pdf";
 
             resultado.put("pdfStream", new ByteArrayInputStream(out.toByteArray()));
-            resultado.put("filename", filename); 
+            resultado.put("filename", filename);
 
         } catch (DocumentException e) {
             e.printStackTrace();
-            resultado.put("pdfStream", new ByteArrayInputStream(new byte[0])); 
-            resultado.put("filename", "Error_CRF_" + crfId + ".pdf");
+            resultado.put("pdfStream", new ByteArrayInputStream(new byte[0]));
+            resultado.put("filename", "Error.pdf");
         }
 
-        return resultado; 
+        return resultado;
     }
 
-    private void addCeldaTabla(PdfPTable table, String texto, Font font) {
-        PdfPCell cell = new PdfPCell(new Phrase(texto, font));
-        cell.setPadding(5);
-        cell.setVerticalAlignment(Element.ALIGN_MIDDLE);
+    private void addCellInfo(PdfPTable table, String text, Font font) {
+        PdfPCell cell = new PdfPCell(new Phrase(text, font));
+        cell.setBorder(Rectangle.NO_BORDER);
+        cell.setPadding(4f);
         table.addCell(cell);
+    }
+
+    private String traducirValor(DatosCrf dato) {
+        String valor = dato.getValor();
+        String tipo = dato.getCampoCrf().getTipo();
+
+        if (valor == null || valor.trim().isEmpty()) return "-";
+
+        if ("SI/NO".equals(tipo)) {
+            if ("1".equals(valor)) return "Sí";
+            if ("0".equals(valor)) return "No";
+        } 
+        else if ("SELECCION_UNICA".equals(tipo) && dato.getCampoCrf().getOpciones() != null) {
+            for (OpcionCampoCrf op : dato.getCampoCrf().getOpciones()) {
+                if (String.valueOf(op.getOrden()).equals(valor) || 
+                    String.valueOf(op.getIdOpcion()).equals(valor)) { 
+                    return op.getEtiqueta();
+                }
+            }
+        }
+        return valor;
+    }
+
+    private String getNombreSeccion(int seccionId) {
+        return switch (seccionId) {
+            case 1 -> "1. Información General";
+            case 2 -> "2. Datos Sociodemográficos";
+            case 3 -> "3. Antecedentes Clínicos";
+            case 4 -> "4. Antropometría";
+            case 5 -> "5. Hábitos - Tabaquismo";
+            case 6 -> "6. Hábitos - Alcohol";
+            case 7 -> "7. Hábitos - Alimentación";
+            case 8 -> "8. Exposiciones";
+            case 9 -> "9. Exámenes / Otros";
+            default -> "Sección " + seccionId;
+        };
     }
 }

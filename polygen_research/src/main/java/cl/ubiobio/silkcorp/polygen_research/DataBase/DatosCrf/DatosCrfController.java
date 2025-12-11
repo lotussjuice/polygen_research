@@ -50,11 +50,15 @@ public class DatosCrfController {
         return "dev/DatosCrfTemp/datos-crf-list"; 
     }
 
-   @PostMapping("/list/exportar")
+    // --- CAMBIO IMPORTANTE: Recibimos excludedColsJson ---
+    @PostMapping("/list/exportar")
     public ResponseEntity<InputStreamResource> exportarReporte(
-            @RequestParam("criteriosJson") String criteriosJson) throws IOException {
+            @RequestParam("criteriosJson") String criteriosJson,
+            @RequestParam(value = "excludedColsJson", required = false, defaultValue = "[]") String excludedColsJson) throws IOException {
 
-        ByteArrayInputStream stream = excelReporteService.generarReporteDicotomizado(criteriosJson);
+        // Pasamos AMBOS datos al servicio
+        ByteArrayInputStream stream = excelReporteService.generarReporteDicotomizado(criteriosJson, excludedColsJson);
+        
         String fechaActual = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         String nombreArchivo = "ReporteDicotomizado_" + fechaActual + ".xlsx";
 

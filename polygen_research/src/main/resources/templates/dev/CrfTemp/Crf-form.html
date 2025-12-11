@@ -51,11 +51,11 @@
                     <div style="display: flex; gap: 1.5rem;">
                         <label class="radio-label">
                             <input type="radio" th:field="*{esCasoEstudio}" th:value="false" required> 
-                            <span>Caso Control</span>
+                            <span>Control</span>
                         </label>
                         <label class="radio-label">
                             <input type="radio" th:field="*{esCasoEstudio}" th:value="true" required> 
-                            <span>Caso Estudio</span>
+                            <span>Caso (Cancér Gástrico))</span>
                         </label>
                     </div>
                 </div>
@@ -203,7 +203,7 @@
                 validarCodigo(); 
             }
 
-            // --- RESTO DE TU LÓGICA DE ORDENAMIENTO ---
+            // --- LÓGICA DE ORDENAMIENTO ---
             document.querySelectorAll('.card-body').forEach(container => {
                 const items = Array.from(container.querySelectorAll('.form-group[data-id]'));
                 if (items.length > 0) {
