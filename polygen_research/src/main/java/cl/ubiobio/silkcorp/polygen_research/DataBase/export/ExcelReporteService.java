@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -47,7 +48,6 @@ public class ExcelReporteService {
     public ByteArrayInputStream generarReporteDicotomizado(String criteriosJson) throws IOException {
 
         Map<Integer, List<CriterioDTO>> criteriosMap = parsearCriterios(criteriosJson);
-        
         CrfResumenViewDTO data = crfService.getCrfResumenView(true); 
 
         List<CampoCrfStatsDTO> columnasStats = data.getCamposConStats(); 
@@ -93,7 +93,12 @@ public class ExcelReporteService {
                             || "mediana".equals(c.getTipo()));
 
             if (necesitaCalculo) {
-                String colKey = String.valueOf(campoId); 
+                String colKey = stats.stream()
+                        .filter(s -> s.getCampoCrf().getIdCampo().equals(campoId))
+                        .map(CampoCrfStatsDTO::getColumnaKey)
+                        .findFirst()
+                        .orElse(String.valueOf(campoId));
+
                 List<Double> valoresColumna = getValoresNumericos(filas, colKey);
 
                 for (CriterioDTO criterio : criterios) {
@@ -124,13 +129,12 @@ public class ExcelReporteService {
     }
 
     public int calcularValorDicotomizado(Map<String, String> valoresFila, double valorNumColumna, CriterioDTO criterio, double puntoCorteCalculado) {
-        
         if (criterio.getReglas() != null && !criterio.getReglas().isEmpty()) {
             boolean cumpleTodas = true;
             for (CriterioDTO.ReglaDTO regla : criterio.getReglas()) {
                 String keyCampo = String.valueOf(regla.getCampoId());
                 String valorCelda = valoresFila.get(keyCampo);
-
+                
                 if (!evaluarReglaIndividual(valorCelda, regla.getOperador(), regla.getValor())) {
                     cumpleTodas = false;
                     break;
@@ -161,26 +165,23 @@ public class ExcelReporteService {
         if (valorCelda == null || valorCelda.trim().isEmpty() || "-".equals(valorCelda)) return false;
 
         String vCelda = valorCelda.trim();
-        String vRegla = valorRegla.trim();
-
         Double nCelda = null;
         Double nRegla = null;
         try {
             nCelda = Double.parseDouble(vCelda.replace(',', '.'));
-            nRegla = Double.parseDouble(vRegla.replace(',', '.'));
-        } catch (NumberFormatException e) {
-        }
+            nRegla = Double.parseDouble(valorRegla.trim().replace(',', '.'));
+        } catch (NumberFormatException e) { }
 
         boolean sonNumeros = (nCelda != null && nRegla != null);
 
         switch (operador) {
-            case "==": return sonNumeros ? nCelda.equals(nRegla) : vCelda.equalsIgnoreCase(vRegla);
-            case "!=": return sonNumeros ? !nCelda.equals(nRegla) : !vCelda.equalsIgnoreCase(vRegla);
+            case "==": return sonNumeros ? nCelda.equals(nRegla) : vCelda.equalsIgnoreCase(valorRegla.trim());
+            case "!=": return sonNumeros ? !nCelda.equals(nRegla) : !vCelda.equalsIgnoreCase(valorRegla.trim());
             case ">":  return sonNumeros && nCelda > nRegla;
             case ">=": return sonNumeros && nCelda >= nRegla;
             case "<":  return sonNumeros && nCelda < nRegla;
             case "<=": return sonNumeros && nCelda <= nRegla;
-            case "contains": return vCelda.toLowerCase().contains(vRegla.toLowerCase());
+            case "contains": return vCelda.toLowerCase().contains(valorRegla.trim().toLowerCase());
             default: return false;
         }
     }
@@ -194,6 +195,13 @@ public class ExcelReporteService {
 
         for (CampoCrfStatsDTO stat : columnasStats) {
             CampoCrf campo = stat.getCampoCrf();
+            String tipo = campo.getTipo();
+
+            if (!"NUMERO".equals(tipo) && !"SI/NO".equals(tipo) && !"SELECCION_UNICA".equals(tipo)
+                && !"TEXTO".equals(tipo) && !"FECHA".equals(tipo)) {
+                continue;
+            }
+
             headerRow.createCell(cellIdx++).setCellValue(stat.getNombreColumna());
 
             if (stat.getOpcion() == null && criteriosMap.containsKey(campo.getIdCampo())) {
@@ -209,17 +217,38 @@ public class ExcelReporteService {
             Map<Integer, List<CriterioDTO>> criteriosMap, Map<String, Double> puntosDeCorte) {
 
         int cellIdx = 0;
+        // ID CRF y Paciente como números/texto estándar
         dataRow.createCell(cellIdx++).setCellValue(fila.getCrf().getIdCrf());
         dataRow.createCell(cellIdx++).setCellValue(
                 fila.getCrf().getDatosPaciente() != null ? fila.getCrf().getDatosPaciente().getCodigoPaciente() : "");
         
         for (CampoCrfStatsDTO stat : columnasStats) {
             CampoCrf campo = stat.getCampoCrf();
+            String tipo = campo.getTipo();
+
+            // Filtro para ignorar títulos y secciones
+            if (!"NUMERO".equals(tipo) && !"SI/NO".equals(tipo) && !"SELECCION_UNICA".equals(tipo)
+                && !"TEXTO".equals(tipo) && !"FECHA".equals(tipo)) {
+                continue; 
+            }
+
             String colKey = stat.getColumnaKey();
             String valorCrudo = fila.getValores().get(colKey);
 
-            dataRow.createCell(cellIdx++).setCellValue(valorCrudo != null ? valorCrudo : "-");
+            Cell celda = dataRow.createCell(cellIdx++);
+            
+            if ("NUMERO".equals(tipo)) {
+                double valorNumerico = parseDouble(valorCrudo);
+                if (!Double.isNaN(valorNumerico)) {
+                    celda.setCellValue(valorNumerico);
+                } else {
+                    celda.setCellValue(valorCrudo != null ? valorCrudo : "-");
+                }
+            } else {
+                celda.setCellValue(valorCrudo != null ? valorCrudo : "-");
+            }
 
+            // Lógica de Dicotomización
             if (stat.getOpcion() == null && criteriosMap.containsKey(campo.getIdCampo())) {
                 
                 double valorNum = parseDouble(valorCrudo);
@@ -233,6 +262,7 @@ public class ExcelReporteService {
 
                     int valorDicotomizado = calcularValorDicotomizado(fila.getValores(), valorNum, criterio, puntoCorteCalculado);
                     
+                    // Los valores dicotomizados (0 y 1) SIEMPRE son números
                     dataRow.createCell(cellIdx++).setCellValue(valorDicotomizado);
                 }
             }
