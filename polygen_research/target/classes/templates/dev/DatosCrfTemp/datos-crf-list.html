@@ -28,12 +28,12 @@
 
                     <div>
                         <div style="display: flex; gap: 0.5rem;">
-                            <button type="button" id="btn-excel-confirm" class="btn-sm btn-chart-2"
+                            <button type="button" id="btn-excel-confirm" class="btn-exito btn-sm"
                                 title="Descargar Excel">
                                 <i class="ph-bold ph-file-xls"></i> Exportar a Excel
                             </button>
 
-                            <button type="button" id="btn-stata-preview" class="btn-sm btn-chart-1"
+                            <button type="button" id="btn-stata-preview" class="btn-stata btn-sm"
                                 style="margin-left: 0.5rem;" title="Exportar para STATA">
                                 <i class="ph-bold ph-file"></i> Exportar para STATA
                             </button>
@@ -48,307 +48,398 @@
                             style="display: none;">
                             <input type="hidden" id="stataCriteriosExport" name="criteriosJson" />
                         </form>
-                    </div>
 
-                    <div th:if="${#lists.isEmpty(filasCrf)}" class="alert"
-                        style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
-                        No se han encontrado CRFs para mostrar en el reporte.
-                    </div>
+                        <div th:if="${#lists.isEmpty(filasCrf)}" class="alert"
+                            style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
+                            No se han encontrado CRFs para mostrar en el reporte.
+                        </div>
 
-                    <div class="table-responsive-wrapper" th:if="${!#lists.isEmpty(filasCrf)}">
-                        <table class="tabla-bonita">
-                            <thead>
-                                <tr>
-                                    <th>Cód. Paciente</th>
+                        <div class="table-responsive-wrapper" th:if="${!#lists.isEmpty(filasCrf)}">
+                            <table class="tabla-bonita">
+                                <thead>
+                                    <tr>
+                                        <th>Cód. Paciente</th>
 
-                                    <th th:each="campoStat : ${camposColumnas}"
-                                        th:title="${campoStat.opcion != null ? campoStat.campoCrf.nombre : (campoStat.campoCrf.descripcion ?: campoStat.campoCrf.nombre)}">
+                                        <th th:each="campoStat : ${camposColumnas}">
+                                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                <span th:text="${campoStat.campoCrf.nombre}">...</span>
+                                                <button th:if="${campoStat.campoCrf.tipo == 'NUMERO'}" type="button"
+                                                    class="btn-add-criterion"
+                                                    th:data-campo-id="${campoStat.campoCrf.idCampo}"
+                                                    th:data-campo-nombre="${campoStat.campoCrf.nombre}">
+                                                    +
+                                                </button>
+                                            </div>
+                                            <div class="criteria-tags"
+                                                th:id="'tags-campo-' + ${campoStat.campoCrf.idCampo}"></div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="fila : ${filasCrf}">
+                                        <td th:text="${fila.crf.datosPaciente?.codigoPaciente}">...</td>
 
-                                        <div
-                                            style="display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                        <td th:each="campoStat : ${camposColumnas}">
                                             <span
-                                                th:text="${campoStat.opcion != null ? campoStat.opcion.etiqueta : campoStat.campoCrf.nombre}">...</span>
+                                                th:text="${fila.valores.get(campoStat.campoCrf.idCampo) ?: '-'}"></span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot style="background-color: var(--color-fondo); font-weight: 600;">
+                                    <tr>
+                                        <td colspan="1" style="text-align: right; padding-right: 1rem;">Total Vacíos:
+                                        </td>
+                                        <td th:each="stat : ${camposColumnas}" th:text="${stat.countVacios}"
+                                            style="text-align: center;">...</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="1" style="text-align: right; padding-right: 1rem;">Total Ceros (0):
+                                        </td>
+                                        <td th:each="stat : ${camposColumnas}" th:text="${stat.countCeros}"
+                                            style="text-align: center;">...</td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="1" style="text-align: right; padding-right: 1rem;">Total Unos (1):
+                                        </td>
+                                        <td th:each="stat : ${camposColumnas}" th:text="${stat.countUnos}"
+                                            style="text-align: center;">...</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
 
-                                            <button
-                                                th:if="${#strings.equalsIgnoreCase(campoStat.campoCrf.tipo, 'NUMERO')}"
-                                                type="button" class="btn-add-criterion"
-                                                th:data-campo-id="${campoStat.campoCrf.idCampo}"
-                                                th:data-campo-nombre="${campoStat.campoCrf.nombre}">
-                                                +
-                                            </button>
-                                        </div>
-                                        <div class="criteria-tags" th:id="'tags-campo-' + ${campoStat.campoCrf.idCampo}"
-                                            style="justify-content: center;"></div>
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:each="fila : ${filasCrf}">
-                                    <td th:text="${fila.crf.datosPaciente?.codigoPaciente}">...</td>
-
-                                    <td th:each="campoStat : ${camposColumnas}">
-                                        <span th:text="${fila.valores.get(campoStat.columnaKey) ?: '-'}"></span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                            <tfoot>
-                                <tr>
-                                    <td>Total Vacíos:</td>
-                                    <td th:each="stat : ${camposColumnas}" th:text="${stat.countVacios}">...</td>
-                                </tr>
-                                <tr>
-                                    <td>Total Ceros (0):</td>
-                                    <td th:each="stat : ${camposColumnas}" th:text="${stat.countCeros}">...</td>
-                                </tr>
-                                <tr>
-                                    <td>Total Unos (1):</td>
-                                    <td th:each="stat : ${camposColumnas}" th:text="${stat.countUnos}">...</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-
-                    <div class="modal fade" id="modalCriterio" tabindex="-1" aria-labelledby="modalCriterioLabel"
-                        aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content"
-                                style="background-color: var(--color-tarjeta); color: var(--color-texto); border-color: var(--color-borde); max-width: 500px;">
-                                <div class="modal-header" style="border-bottom-color: var(--color-borde);">
-                                    <h5 class="modal-title" id="modalCriterioLabel">Agregar Criterio: <span
-                                            id="modalCampoNombre"></span></h5>
-                                    <button type="button" class="close-modal" data-bs-dismiss="modal">&times;</button>
-                                </div>
-                                <div class="modal-body">
-                                    <input type="hidden" id="modalCampoId" />
-                                    <div class="form-group">
-                                        <label>Tipo de Criterio</label>
-                                        <select class="form-control" id="selectTipoCriterio">
-                                            <option value="media">Media</option>
-                                            <option value="mediana">Mediana</option>
-                                            <option value="promedio">Promedio</option>
-                                            <option value="personalizado">Personalizado</option>
-                                        </select>
+                        <div class="modal fade" id="modalCriterio" tabindex="-1" aria-labelledby="modalCriterioLabel"
+                            aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content"
+                                    style="background-color: var(--color-tarjeta); color: var(--color-texto); border-color: var(--color-borde); max-width: 500px;">
+                                    <div class="modal-header" style="border-bottom-color: var(--color-borde);">
+                                        <h5 class="modal-title" id="modalCriterioLabel">Agregar Criterio para: <span
+                                                id="modalCampoNombre"></span></h5>
+                                        <button type="button" class="close-modal" data-bs-dismiss="modal"
+                                            aria-label="Cerrar">&times;</button>
                                     </div>
-                                    <div id="divPersonalizado" style="display: none;">
+                                    <div class="modal-body">
+                                        <input type="hidden" id="modalCampoId" />
                                         <div class="form-group">
-                                            <label>Nombre Columna Excel</label>
-                                            <input type="text" class="form-control" id="inputNombreCriterio"
-                                                placeholder="Ej: Edad_Joven">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Punto de Corte</label>
-                                            <input type="number" class="form-control" id="inputPuntoCorte"
-                                                placeholder="Ej: 30">
-                                        </div>
-                                        <div class="form-group">
-                                            <label>Operador</label>
-                                            <select class="form-control" id="selectOperador">
-                                                <option value="<">&lt; (Menor que)</option>
-                                                <option value="<=">&lt;= (Menor o igual que)</option>
-                                                <option value=">">&gt; (Mayor que)</option>
-                                                <option value=">=">&gt;= (Mayor o igual que)</option>
-                                                <option value="==">== (Igual a)</option>
+                                            <label for="selectTipoCriterio">Tipo de Criterio</label>
+                                            <select class="form-control" id="selectTipoCriterio">
+                                                <option value="media">Media</option>
+                                                <option value="mediana">Mediana</option>
+                                                <option value="promedio">Promedio</option>
+                                                <option value="personalizado">Personalizado</option>
                                             </select>
                                         </div>
+                                        <div id="divPersonalizado" style="display: none;">
+                                            <div class="form-group">
+                                                <label for="inputNombreCriterio">Nombre para la Columna Excel</label>
+                                                <input type="text" class="form-control" id="inputNombreCriterio"
+                                                    placeholder="Ej: Edad_Joven">
+                                                <small style="color: var(--color-texto-secundario);">Se usará como
+                                                    cabecera en Excel</small>
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="inputPuntoCorte">Punto de Corte (Valor numérico)</label>
+                                                <input type="number" class="form-control" id="inputPuntoCorte"
+                                                    placeholder="Ej: 30">
+                                            </div>
+                                            <div class="form-group">
+                                                <label for="selectOperador">Operador</label>
+                                                <select class="form-control" id="selectOperador">
+                                                    <option value="<">&lt; (Menor que)</option>
+                                                    <option value="<=">&lt;= (Menor o igual que)</option>
+                                                    <option value=">">&gt; (Mayor que)</option>
+                                                    <option value=">=">&gt;= (Mayor o igual que)</option>
+                                                    <option value="==">== (Igual a)</option>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="modal-footer" style="border-top-color: var(--color-borde);">
-                                    <div class="btn-group-equal">
-                                        <button type="button" class="btn-secundario"
-                                            data-bs-dismiss="modal">Cancelar</button>
-                                        <button type="button" class="btn-primario"
-                                            id="btnGuardarCriterio">Guardar</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="modal fade" id="modalExcelConfirm" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content"
-                                style="max-width: 450px; text-align: center; background-color: var(--color-tarjeta); color: var(--color-texto); border-color: var(--color-borde);">
-                                <div class="modal-header" style="justify-content: center; border-bottom: none;">
-                                    <div style="background-color: #f0fff4; padding: 1rem; border-radius: 50%;">
-                                        <i class="ph-bold ph-file-xls"
-                                            style="font-size: 2.5rem; color: var(--color-exito);"></i>
-                                    </div>
-                                </div>
-                                <div class="modal-body">
-                                    <h2 style="margin-bottom: 1rem;">¿Exportar a Excel?</h2>
-                                    <div style="margin-top: 1rem; text-align: left;">
-                                        <strong style="font-size: 0.9rem;">Dicotomizaciones a incluir:</strong>
-                                        <div id="excel-dicotom-list"
-                                            style="margin-top: 0.5rem; padding: 0.8rem; background-color: var(--color-fondo); border-radius: 6px; max-height: 150px; overflow-y: auto; font-size: 0.85rem;">
-                                            <em style="color: var(--color-texto-secundario);">Calculando...</em>
+                                    <div class="modal-footer" style="border-top-color: var(--color-borde);">
+                                        <div class="btn-group-equal">
+                                            <button type="button" class="btn-secundario"
+                                                data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="button" class="btn-primario" id="btnGuardarCriterio">Guardar</button>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="modal-footer" style="justify-content: center; border-top: none;">
-                                    <div class="btn-group-equal" style="display: flex; gap: 10px; width: 100%;">
-                                        <button type="button" class="btn-secundario" data-bs-dismiss="modal"
-                                            style="flex: 1;">Cancelar</button>
-                                        <button type="button" class="btn-exito" id="btn-execute-excel"
-                                            style="flex: 1;">Descargar</button>
-                                    </div>
-                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <div class="modal fade" id="modalStataPreview" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content"
-                                style="max-width: 500px; text-align: center; background-color: var(--color-tarjeta); color: var(--color-texto); border-color: var(--color-borde);">
-                                <div class="modal-header" style="justify-content: center; border-bottom: none;">
-                                    <div style="background-color: #eef4fc; padding: 1rem; border-radius: 50%;">
-                                        <i class="ph-bold ph-file-code"
-                                            style="font-size: 2.5rem; color: var(--color-primario);"></i>
+                        <div class="modal fade" id="modalExcelConfirm" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content"
+                                    style="max-width: 450px; text-align: center; background-color: var(--color-tarjeta); color: var(--color-texto); border-color: var(--color-borde);">
+                                    <div class="modal-header"
+                                        style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                                        <div style="background-color: #f0fff4; padding: 1rem; border-radius: 50%;">
+                                            <i class="ph-bold ph-file-xls"
+                                                style="font-size: 2.5rem; color: var(--color-exito);"></i>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="modal-body">
-                                    <h2 style="margin-bottom: 1rem;">Formato STATA</h2>
-                                    <div style="text-align: left;">
-                                        <strong style="font-size: 0.9rem;">Dicotomizaciones a incluir:</strong>
-                                        <div id="stata-dicotom-list"
-                                            style="margin-top: 0.5rem; padding: 0.8rem; background-color: var(--color-fondo); border-radius: 6px; max-height: 150px; overflow-y: auto; font-size: 0.85rem;">
-                                            <em style="color: var(--color-texto-secundario);">Ninguna.</em>
+                                    <div class="modal-body">
+                                        <h2 style="margin-bottom: 1rem;">¿Exportar a Excel?</h2>
+                                        <p>Se generará un archivo .xlsx con los datos filtrados.</p>
+                                        
+                                        <div style="margin-top: 1rem; text-align: left;">
+                                            <strong style="font-size: 0.9rem;">Dicotomizaciones a incluir:</strong>
+                                            <div id="excel-dicotom-list"
+                                                style="margin-top: 0.5rem; padding: 0.8rem; background-color: var(--color-fondo); border-radius: 6px; max-height: 150px; overflow-y: auto; font-size: 0.85rem;">
+                                                <em style="color: var(--color-texto-secundario);">Calculando...</em>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer" style="justify-content: center; border-top: none;">
+                                        <div class="btn-group-equal" style="display: flex; gap: 10px; width: 100%;">
+                                            <button type="button" class="btn-secundario" data-bs-dismiss="modal"
+                                                style="flex: 1;">Cancelar</button>
+                                            <button type="button" class="btn-exito" id="btn-execute-excel"
+                                                style="flex: 1;">Descargar</button>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="modal-footer" style="justify-content: center; border-top: none;">
-                                    <div class="btn-group-equal" style="display: flex; gap: 10px; width: 100%;">
-                                        <button type="button" class="btn-secundario" data-bs-dismiss="modal"
-                                            style="flex: 1;">Cancelar</button>
-                                        <button type="button" class="btn-stata" id="btn-confirmar-descarga-stata"
-                                            style="flex: 1;">Exportar</button>
+                            </div>
+                        </div>
+
+                        <div class="modal fade" id="modalStataPreview" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content"
+                                    style="max-width: 500px; text-align: center; background-color: var(--color-tarjeta); color: var(--color-texto); border-color: var(--color-borde);">
+                                    <div class="modal-header"
+                                        style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                                        <div style="background-color: #eef4fc; padding: 1rem; border-radius: 50%;">
+                                            <i class="ph-bold ph-file-code"
+                                                style="font-size: 2.5rem; color: var(--color-primario);"></i>
+                                        </div>
+                                    </div>
+                                    <div class="modal-body">
+                                        <h2 style="margin-bottom: 1rem;">Formato STATA</h2>
+                                        
+                                        <p style="font-size: 0.9rem; color: var(--color-texto-secundario); margin-bottom: 1rem;">
+                                            El archivo se generará compatible con STATA 14+ (.xlsx optimizado):
+                                        </p>
+                                        <ul style="text-align: left; font-size: 0.85rem; background: var(--color-fondo); padding: 1rem 1rem 1rem 2rem; border-radius: 8px; margin-bottom: 1rem;">
+                                            <li>Variables en formato <code>snake_case</code>.</li>
+                                            <li>Eliminación de tildes y caracteres especiales.</li>
+                                            <li>Valores vacíos convertidos a nulos estándar.</li>
+                                        </ul>
+
+                                        <div style="text-align: left;">
+                                            <strong style="font-size: 0.9rem;">Dicotomizaciones a incluir:</strong>
+                                            <div id="stata-dicotom-list"
+                                                style="margin-top: 0.5rem; padding: 0.8rem; background-color: var(--color-fondo); border-radius: 6px; max-height: 150px; overflow-y: auto; font-size: 0.85rem;">
+                                                <em style="color: var(--color-texto-secundario);">Ninguna.</em>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer" style="justify-content: center; border-top: none;">
+                                        <div class="btn-group-equal" style="display: flex; gap: 10px; width: 100%;">
+                                            <button type="button" class="btn-secundario" data-bs-dismiss="modal"
+                                                style="flex: 1;">Cancelar</button>
+                                            <button type="button" class="btn-stata"
+                                                id="btn-confirmar-descarga-stata" style="flex: 1;">Exportar</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
-                    <script>
-                        document.addEventListener('DOMContentLoaded', () => {
-                            let criterios = {};
-                            const modalCriterioEl = document.getElementById('modalCriterio');
-                            const modalStataEl = document.getElementById('modalStataPreview');
-                            const modalExcelEl = document.getElementById('modalExcelConfirm');
+                        <script>
+                            document.addEventListener('DOMContentLoaded', () => {
+                                let criterios = {};
 
-                            if (typeof bootstrap === 'undefined' || typeof bootstrap.Modal === 'undefined') {
-                                if (!document.querySelector('script[src*="bootstrap.bundle.min.js"]')) {
-                                    let script = document.createElement('script');
-                                    script.src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js";
-                                    script.crossOrigin = "anonymous";
-                                    script.onload = inicializarModales;
-                                    document.body.appendChild(script);
-                                } else { inicializarModales(); }
-                            } else { inicializarModales(); }
+                                const modalCriterioEl = document.getElementById('modalCriterio');
+                                const modalStataEl = document.getElementById('modalStataPreview');
+                                const modalExcelEl = document.getElementById('modalExcelConfirm');
 
-                            let bsModalCriterio, bsModalStata, bsModalExcel;
-                            const modalCampoId = document.getElementById('modalCampoId');
-                            const modalCampoNombre = document.getElementById('modalCampoNombre');
-                            const selectTipo = document.getElementById('selectTipoCriterio');
-                            const divPersonalizado = document.getElementById('divPersonalizado');
-                            const inputNombre = document.getElementById('inputNombreCriterio');
-                            const inputCorte = document.getElementById('inputPuntoCorte');
-                            const selectOperador = document.getElementById('selectOperador');
-                            const btnGuardarCriterio = document.getElementById('btnGuardarCriterio');
-                            const btnExcelConfirm = document.getElementById('btn-excel-confirm');
-                            const btnExecuteExcel = document.getElementById('btn-execute-excel');
-                            const btnStataPreview = document.getElementById('btn-stata-preview');
-                            const btnExecuteStata = document.getElementById('btn-confirmar-descarga-stata');
-                            const excelForm = document.getElementById('exportForm');
-                            const excelInput = document.getElementById('criteriosExport');
-                            const excelListContainer = document.getElementById('excel-dicotom-list');
-                            const stataForm = document.getElementById('stataExportForm');
-                            const stataInput = document.getElementById('stataCriteriosExport');
-                            const stataListContainer = document.getElementById('stata-dicotom-list');
-
-                            function inicializarModales() {
-                                if (typeof bootstrap === 'undefined') return;
-                                if (modalCriterioEl) bsModalCriterio = new bootstrap.Modal(modalCriterioEl);
-                                if (modalStataEl) bsModalStata = new bootstrap.Modal(modalStataEl);
-                                if (modalExcelEl) bsModalExcel = new bootstrap.Modal(modalExcelEl);
-                                if (btnGuardarCriterio) btnGuardarCriterio.onclick = guardarCriterioAction;
-                            }
-
-                            function guardarCriterioAction() {
-                                const id = parseInt(modalCampoId.value, 10);
-                                const nombreCampo = modalCampoNombre.textContent;
-                                const tipo = selectTipo.value;
-                                let nuevo = { tipo: tipo, campoNombre: nombreCampo };
-                                if (tipo === 'personalizado') {
-                                    const nom = inputNombre.value.trim();
-                                    const val = inputCorte.value.trim();
-                                    const op = selectOperador.value;
-                                    if (!nom || !val) { alert('Complete los campos.'); return; }
-                                    nuevo.nombre = nom; nuevo.puntoCorte = `${op}${val}`;
+                                if (typeof bootstrap === 'undefined' || typeof bootstrap.Modal === 'undefined') {
+                                    if (!document.querySelector('script[src*="bootstrap.bundle.min.js"]')) {
+                                        let script = document.createElement('script');
+                                        script.src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js";
+                                        script.integrity = "sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz";
+                                        script.crossOrigin = "anonymous";
+                                        script.onload = inicializarModales;
+                                        document.body.appendChild(script);
+                                    } else {
+                                        inicializarModales();
+                                    }
+                                } else {
+                                    inicializarModales();
                                 }
-                                if (!criterios[id]) criterios[id] = [];
-                                criterios[id].push(nuevo);
-                                actualizarTags();
-                                if (bsModalCriterio) bsModalCriterio.hide();
-                            }
 
-                            if (selectTipo) selectTipo.addEventListener('change', () => divPersonalizado.style.display = (selectTipo.value === 'personalizado') ? 'block' : 'none');
+                                let bsModalCriterio, bsModalStata, bsModalExcel;
 
-                            document.querySelectorAll('.btn-add-criterion').forEach(btn => {
-                                btn.addEventListener('click', (e) => {
-                                    if (!bsModalCriterio) return;
-                                    modalCampoId.value = e.target.dataset.campoId;
-                                    modalCampoNombre.textContent = e.target.dataset.campoNombre;
-                                    selectTipo.value = 'media'; divPersonalizado.style.display = 'none';
-                                    inputNombre.value = ''; inputCorte.value = '';
-                                    bsModalCriterio.show();
+                                const modalCampoId = document.getElementById('modalCampoId');
+                                const modalCampoNombre = document.getElementById('modalCampoNombre');
+                                const selectTipo = document.getElementById('selectTipoCriterio');
+                                const divPersonalizado = document.getElementById('divPersonalizado');
+                                const inputNombre = document.getElementById('inputNombreCriterio');
+                                const inputCorte = document.getElementById('inputPuntoCorte');
+                                const selectOperador = document.getElementById('selectOperador');
+                                const btnGuardarCriterio = document.getElementById('btnGuardarCriterio');
+
+                                const btnExcelConfirm = document.getElementById('btn-excel-confirm');
+                                const btnExecuteExcel = document.getElementById('btn-execute-excel');
+                                const btnStataPreview = document.getElementById('btn-stata-preview');
+                                const btnExecuteStata = document.getElementById('btn-confirmar-descarga-stata');
+
+                                const excelForm = document.getElementById('exportForm');
+                                const excelInput = document.getElementById('criteriosExport');
+                                const excelListContainer = document.getElementById('excel-dicotom-list');
+
+                                const stataForm = document.getElementById('stataExportForm');
+                                const stataInput = document.getElementById('stataCriteriosExport');
+                                const stataListContainer = document.getElementById('stata-dicotom-list');
+
+                                function inicializarModales() {
+                                    if (typeof bootstrap === 'undefined') return;
+                                    if (modalCriterioEl) bsModalCriterio = new bootstrap.Modal(modalCriterioEl);
+                                    if (modalStataEl) bsModalStata = new bootstrap.Modal(modalStataEl);
+                                    if (modalExcelEl) bsModalExcel = new bootstrap.Modal(modalExcelEl);
+
+                                    if (btnGuardarCriterio) btnGuardarCriterio.onclick = guardarCriterioAction;
+                                }
+
+                                function guardarCriterioAction() {
+                                    const id = parseInt(modalCampoId.value, 10);
+                                    const nombreCampo = modalCampoNombre.textContent;
+                                    const tipo = selectTipo.value;
+                                    
+                                    let nuevo = { 
+                                        tipo: tipo,
+                                        campoNombre: nombreCampo 
+                                    };
+
+                                    if (tipo === 'personalizado') {
+                                        const nom = inputNombre.value.trim();
+                                        const val = inputCorte.value.trim();
+                                        const op = selectOperador.value;
+                                        if (!nom || !val) {
+                                            alert('Complete los campos requeridos.');
+                                            return;
+                                        }
+                                        nuevo.nombre = nom;
+                                        nuevo.puntoCorte = `${op}${val}`;
+                                    }
+
+                                    if (!criterios[id]) criterios[id] = [];
+                                    criterios[id].push(nuevo);
+                                    actualizarTags();
+                                    if (bsModalCriterio) bsModalCriterio.hide();
+                                }
+
+                                if (selectTipo) {
+                                    selectTipo.addEventListener('change', () => {
+                                        divPersonalizado.style.display = (selectTipo.value === 'personalizado') ? 'block' : 'none';
+                                    });
+                                }
+
+                                document.querySelectorAll('.btn-add-criterion').forEach(btn => {
+                                    btn.addEventListener('click', (e) => {
+                                        if (!bsModalCriterio) return;
+
+                                        modalCampoId.value = e.target.dataset.campoId;
+                                        modalCampoNombre.textContent = e.target.dataset.campoNombre;
+                                        selectTipo.value = 'media';
+                                        divPersonalizado.style.display = 'none';
+                                        inputNombre.value = '';
+                                        inputCorte.value = '';
+
+                                        bsModalCriterio.show();
+                                    });
                                 });
-                            });
 
-                            function actualizarTags() {
-                                document.querySelectorAll('.criteria-tags').forEach(div => div.innerHTML = '');
-                                for (const id in criterios) {
-                                    const container = document.getElementById(`tags-campo-${id}`);
-                                    if (container) {
-                                        criterios[id].forEach((c, idx) => {
-                                            let texto = c.tipo;
-                                            if (c.tipo === 'personalizado') texto = `${c.nombre} (${c.puntoCorte})`;
-                                            const tag = document.createElement('span'); tag.className = 'criterion-tag';
-                                            tag.innerHTML = `${texto} <button type="button" class="btn-remove" data-id="${id}" data-idx="${idx}">&times;</button>`;
-                                            container.appendChild(tag);
-                                        });
+                                function actualizarTags() {
+                                    document.querySelectorAll('.criteria-tags').forEach(div => div.innerHTML = '');
+                                    for (const id in criterios) {
+                                        const container = document.getElementById(`tags-campo-${id}`);
+                                        if (container) {
+                                            criterios[id].forEach((c, idx) => {
+                                                let texto = c.tipo;
+                                                if (c.tipo === 'personalizado') texto = `${c.nombre} (${c.puntoCorte})`;
+
+                                                const tag = document.createElement('span');
+                                                tag.className = 'criterion-tag';
+                                                tag.innerHTML = `${texto} <button type="button" class="btn-remove" data-id="${id}" data-idx="${idx}">&times;</button>`;
+                                                container.appendChild(tag);
+                                            });
+                                        }
                                     }
                                 }
-                            }
 
-                            document.body.addEventListener('click', (e) => {
-                                if (e.target.classList.contains('btn-remove')) {
-                                    const id = e.target.dataset.id; const idx = e.target.dataset.idx;
-                                    if (criterios[id]) { criterios[id].splice(idx, 1); if (criterios[id].length === 0) delete criterios[id]; actualizarTags(); }
+                                document.body.addEventListener('click', (e) => {
+                                    if (e.target.classList.contains('btn-remove')) {
+                                        const id = e.target.dataset.id;
+                                        const idx = e.target.dataset.idx;
+                                        if (criterios[id]) {
+                                            criterios[id].splice(idx, 1);
+                                            if (criterios[id].length === 0) delete criterios[id];
+                                            actualizarTags();
+                                        }
+                                    }
+                                });
+
+                                function generarListaHtml() {
+                                    let html = '<ul style="padding-left: 1rem; margin: 0;">';
+                                    let hayCriterios = false;
+
+                                    for (let id in criterios) {
+                                        if (criterios[id].length > 0) {
+                                            hayCriterios = true;
+                                            criterios[id].forEach(c => {
+                                                let desc = '';
+                                                if (c.tipo === 'personalizado') {
+                                                    desc = `<strong>${c.nombre}</strong> (Corte: ${c.puntoCorte})`;
+                                                } else {
+                                                    desc = `<strong>${c.tipo.charAt(0).toUpperCase() + c.tipo.slice(1)}</strong>`;
+                                                }
+                                                html += `<li style="margin-bottom: 4px;">${c.campoNombre}: ${desc}</li>`;
+                                            });
+                                        }
+                                    }
+                                    html += '</ul>';
+
+                                    if (!hayCriterios) return '<em style="color: var(--color-texto-secundario);">Ninguna. Se exportarán los datos crudos.</em>';
+                                    return html;
+                                }
+
+                                if (btnExcelConfirm) {
+                                    btnExcelConfirm.addEventListener('click', () => {
+                                        if (bsModalExcel) {
+                                            excelListContainer.innerHTML = generarListaHtml();
+                                            bsModalExcel.show();
+                                        }
+                                    });
+                                }
+
+                                if (btnExecuteExcel) {
+                                    btnExecuteExcel.addEventListener('click', () => {
+                                        excelInput.value = JSON.stringify(criterios);
+                                        excelForm.submit();
+                                        bsModalExcel.hide();
+                                    });
+                                }
+
+                                if (btnStataPreview) {
+                                    btnStataPreview.addEventListener('click', () => {
+                                        if (bsModalStata) {
+                                            stataListContainer.innerHTML = generarListaHtml();
+                                            bsModalStata.show();
+                                        }
+                                    });
+                                }
+
+                                if (btnExecuteStata) {
+                                    btnExecuteStata.addEventListener('click', () => {
+                                        stataInput.value = JSON.stringify(criterios);
+                                        stataForm.submit();
+                                        bsModalStata.hide();
+                                    });
                                 }
                             });
+                        </script>
 
-                            function generarListaHtml() {
-                                let html = '<ul style="padding-left: 1rem; margin: 0;">'; let hay = false;
-                                for (let id in criterios) {
-                                    if (criterios[id].length > 0) {
-                                        hay = true;
-                                        criterios[id].forEach(c => {
-                                            let desc = c.tipo === 'personalizado' ? `<strong>${c.nombre}</strong> (Corte: ${c.puntoCorte})` : `<strong>${c.tipo.charAt(0).toUpperCase() + c.tipo.slice(1)}</strong>`;
-                                            html += `<li style="margin-bottom: 4px;">${c.campoNombre}: ${desc}</li>`;
-                                        });
-                                    }
-                                }
-                                html += '</ul>';
-                                return hay ? html : '<em style="color: var(--color-texto-secundario);">Ninguna. Se exportarán los datos crudos.</em>';
-                            }
-
-                            if (btnExcelConfirm) btnExcelConfirm.addEventListener('click', () => { if (bsModalExcel) { excelListContainer.innerHTML = generarListaHtml(); bsModalExcel.show(); } });
-                            if (btnExecuteExcel) btnExecuteExcel.addEventListener('click', () => { excelInput.value = JSON.stringify(criterios); excelForm.submit(); bsModalExcel.hide(); });
-                            if (btnStataPreview) btnStataPreview.addEventListener('click', () => { if (bsModalStata) { stataListContainer.innerHTML = generarListaHtml(); bsModalStata.show(); } });
-                            if (btnExecuteStata) btnExecuteStata.addEventListener('click', () => { stataInput.value = JSON.stringify(criterios); stataForm.submit(); bsModalStata.hide(); });
-                        });
-                    </script>
-                </div>
+                    </div>
 </body>
 
 </html>

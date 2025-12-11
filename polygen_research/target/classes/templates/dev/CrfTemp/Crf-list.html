@@ -67,9 +67,7 @@
                                 <th>Dirección</th>
                                 <th>Estado Paciente</th>
 
-                                <th th:each="campoStat : ${camposColumnas}"
-                                    th:title="${campoStat.opcion != null ? campoStat.campoCrf.nombre : (campoStat.campoCrf.descripcion ?: '')}">
-                                    <span th:text="${campoStat.opcion != null ? campoStat.opcion.etiqueta : campoStat.campoCrf.nombre}">...</span>
+                                <th th:each="campoStat : ${camposColumnas}" th:text="${campoStat.campoCrf.nombre}">...
                                 </th>
                             </tr>
                         </thead>
@@ -116,7 +114,7 @@
                                         </button>
                                     </div>
                                 </td>
-                                
+
                                 <td
                                     th:text="${fila.crf.fechaConsulta != null ? #temporals.format(fila.crf.fechaConsulta, 'dd/MM/yyyy') : 'N/A'}">
                                     ...</td>

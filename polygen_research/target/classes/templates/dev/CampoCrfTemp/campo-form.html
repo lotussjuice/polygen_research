@@ -2,39 +2,31 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
 
 <div th:fragment="contenido">
-    
+
     <div class="card">
         <div class="card-header">
             <h3><i class="ph-bold ph-pencil-simple"></i> Formulario de Campo (Variable)</h3>
         </div>
-        
+
         <div class="card-body">
             <form th:action="@{/campos/guardar}" th:object="${campo}" method="POST" id="campoForm">
-                
+
                 <input type="hidden" th:field="*{idCampo}" id="idCampoInput" />
 
                 <div class="form-group">
-                    <label for="seccionInput">Sección del Formulario:</label>
-                    <select id="seccionInput" th:field="*{seccion}" class="form-control" required>
-                        <option value="">Seleccione una sección...</option>
-                        <option th:each="i : ${#numbers.sequence(2, 9)}" 
-                                th:value="${i}" 
-                                th:text="|Sección ${i}|"></option>
-                    </select>
-                </div>
-
-                <div class="form-group">
                     <label for="preguntaInput">Pregunta (Etiqueta en el CRF):</label>
-                    <input type="text" id="preguntaInput" th:field="*{pregunta}" class="form-control" 
-                           placeholder="Ej. ¿El paciente presenta fiebre?" required maxlength="255"/>
-                    <small style="color: var(--color-texto-secundario);">Este es el texto que leerá el usuario al llenar el formulario.</small>
+                    <input type="text" id="preguntaInput" th:field="*{preguntaFormulario}" class="form-control"
+                        placeholder="Ej. ¿El paciente presenta fiebre?" required maxlength="255" />
+                    <small style="color: var(--color-texto-secundario);">Este es el texto que leerá el usuario al llenar
+                        el formulario.</small>
                 </div>
 
                 <div class="form-group">
                     <label for="nombreInput">Nombre (Variable Interna):</label>
-                    <input type="text" id="nombreInput" th:field="*{nombre}" class="form-control" placeholder="Ej. Tabaquismo" required />
+                    <input type="text" id="nombreInput" th:field="*{nombre}" class="form-control"
+                        placeholder="Ej. Tabaquismo" required />
                 </div>
-                
+
                 <div class="form-group">
                     <label for="tipoCampo">Tipo:</label>
                     <select id="tipoCampo" th:field="*{tipo}" class="form-control" required>
@@ -49,20 +41,26 @@
 
                 <div class="form-group">
                     <label for="descInput">Descripción:</label>
-                    <input type="text" id="descInput" th:field="*{descripcion}" class="form-control" placeholder="Ayuda visual para el recolector de datos" />
+                    <input type="text" id="descInput" th:field="*{descripcion}" class="form-control"
+                        placeholder="Ayuda visual para el recolector de datos" />
                 </div>
 
-                <div id="opcionesContainer" style="display: none; margin-top: 1.5rem; border: 1px solid var(--color-borde); border-radius: 8px; padding: 1rem;">
+                <div id="opcionesContainer"
+                    style="display: none; margin-top: 1.5rem; border: 1px solid var(--color-borde); border-radius: 8px; padding: 1rem;">
                     <h4>Opciones para Selección Única</h4>
                     <p style="font-size: 0.9rem; color: var(--color-texto-secundario); margin-bottom: 1rem;">
-                        Defina las etiquetas que verá el investigador. La primera opción se guardará como '0', la segunda como '1', y así sucesivamente.
+                        Defina las etiquetas que verá el investigador. La primera opción se guardará como '0', la
+                        segunda como '1', y así sucesivamente.
                     </p>
-                    
+
                     <div id="opcionesLista">
-                        <div th:each="opcion, stat : *{opciones}" class="opcion-item" style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <div th:each="opcion, stat : *{opciones}" class="opcion-item"
+                            style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
                             <input type="hidden" th:field="*{opciones[__${stat.index}__].idOpcion}" />
-                            <input type="text" th:field="*{opciones[__${stat.index}__].etiqueta}" class="form-control" placeholder="Nombre de la opción (Ej. Leve)" required />
-                            <button type="button" class="btn-error btn-sm" onclick="this.closest('.opcion-item').remove()">
+                            <input type="text" th:field="*{opciones[__${stat.index}__].etiqueta}" class="form-control"
+                                placeholder="Nombre de la opción (Ej. Leve)" required />
+                            <button type="button" class="btn-error btn-sm"
+                                onclick="this.closest('.opcion-item').remove()">
                                 <i class="ph-bold ph-trash"></i>
                             </button>
                         </div>
@@ -90,8 +88,9 @@
             </div>
             <div class="modal-body">
                 <h2 style="margin-bottom: 1rem;">Confirmar Nuevo Campo</h2>
-                <p style="color: var(--color-texto-secundario); margin-bottom: 1rem;">Se creará el siguiente campo en el formulario CRF:</p>
-                
+                <p style="color: var(--color-texto-secundario); margin-bottom: 1rem;">Se creará el siguiente campo en el
+                    formulario CRF:</p>
+
                 <div style="background-color: var(--color-fondo); padding: 1rem; border-radius: 8px; text-align: left;">
                     <p><strong>Sección:</strong> <span id="resumen-seccion"></span></p>
                     <p><strong>Pregunta:</strong> <span id="resumen-pregunta" style="font-style: italic;"></span></p>
@@ -121,9 +120,10 @@
             <div class="modal-body">
                 <h2 style="margin-bottom: 1rem;">¿Guardar Cambios?</h2>
                 <p>Estás editando un campo existente.</p>
-                
+
                 <div class="alert alert-error" style="text-align: left; margin-top: 1rem; font-size: 0.9rem;">
-                    <strong>Advertencia:</strong> Si cambias el TIPO de dato o eliminas opciones, los valores registrados previamente en los pacientes podrían <strong>vaciarse o perderse</strong>.
+                    <strong>Advertencia:</strong> Si cambias el TIPO de dato o eliminas opciones, los valores
+                    registrados previamente en los pacientes podrían <strong>vaciarse o perderse</strong>.
                 </div>
             </div>
             <div class="modal-footer" style="justify-content: center; gap: 1rem; border-top: none;">
@@ -144,7 +144,7 @@
                 const btnAddOpcion = document.getElementById('btnAddOpcion');
                 const form = document.getElementById('campoForm');
                 const idInput = document.getElementById('idCampoInput');
-                
+
                 // Modales
                 const modalCrear = document.getElementById('modalConfirmarCreacion');
                 const modalEditar = document.getElementById('modalConfirmarEdicion');
@@ -166,24 +166,24 @@
                 }
 
                 function addNuevaOpcion(placeholder = '') {
-                    const index = opcionIndex++; 
+                    const index = opcionIndex++;
                     const div = document.createElement('div');
                     div.className = 'opcion-item';
                     div.style = 'display: flex; gap: 0.5rem; margin-bottom: 0.5rem;';
-                    
+
                     const input = document.createElement('input');
                     input.type = 'text';
-                    input.name = `opciones[${index}].etiqueta`; 
+                    input.name = `opciones[${index}].etiqueta`;
                     input.className = 'form-control';
                     input.placeholder = placeholder || `Nombre de la opción`;
                     input.required = true;
-                    
+
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.className = 'btn-error btn-sm';
                     button.innerHTML = '<i class="ph-bold ph-trash"></i>';
                     button.onclick = () => div.remove();
-                    
+
                     div.appendChild(input);
                     div.appendChild(button);
                     opcionesLista.appendChild(div);
@@ -191,12 +191,12 @@
 
                 tipoSelect.addEventListener('change', () => toggleOpciones(tipoSelect.value));
                 btnAddOpcion.addEventListener('click', () => addNuevaOpcion());
-                
+
                 toggleOpciones(tipoSelect.value);
 
                 // --- LÓGICA DE CONFIRMACIÓN ---
-                
-                window.intentarGuardar = function() {
+
+                window.intentarGuardar = function () {
                     if (!form.checkValidity()) {
                         form.reportValidity();
                         return;
@@ -207,7 +207,7 @@
                         modalEditar.style.display = 'block';
                     } else {
                         // MODO CREACIÓN: Mostrar resumen
-                        
+
                         // --- CAPTURAR NUEVOS VALORES ---
                         const seccion = document.getElementById('seccionInput').value;
                         const pregunta = document.getElementById('preguntaInput').value;
@@ -228,16 +228,16 @@
                     }
                 };
 
-                window.cerrarModales = function() {
+                window.cerrarModales = function () {
                     modalCrear.style.display = 'none';
                     modalEditar.style.display = 'none';
                 };
 
-                window.enviarFormularioReal = function() {
+                window.enviarFormularioReal = function () {
                     form.submit();
                 };
 
-                window.onclick = function(event) {
+                window.onclick = function (event) {
                     if (event.target == modalCrear || event.target == modalEditar) {
                         cerrarModales();
                     }
@@ -246,4 +246,5 @@
         </script>
     </th:block>
 </div>
+
 </html>
