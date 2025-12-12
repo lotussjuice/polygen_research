@@ -6,6 +6,7 @@ public class FaqItem {
     @SuppressWarnings("FieldMayBeFinal")
     private String respuesta;
 
+
     public FaqItem(String pregunta, String respuesta) {
         this.pregunta = pregunta;
         this.respuesta = respuesta;

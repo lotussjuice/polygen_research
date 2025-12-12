@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
+    <script>
+        (function () {
+            try {
+                var theme = localStorage.getItem('theme');
+                if (theme === 'dark') { document.documentElement.classList.add('dark-mode'); }
+                var appTheme = localStorage.getItem('appTheme');
+                if (appTheme && appTheme !== 'default') { document.documentElement.setAttribute('data-theme', appTheme); }
+            } catch (e) {}
+        })();
+    </script>
+
     <title>Registrar Usuario</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" th:href="@{/css/styles.css}" />
@@ -75,24 +86,12 @@
             const input = document.getElementById(targetId);
             const icon = btn.querySelector('i');
 
-            // Mostrar al presionar (mouse o touch)
-            const showPassword = () => {
-                input.type = 'text';
-                icon.classList.replace('ph-eye', 'ph-eye-slash');
-            };
+            const showPassword = () => { input.type = 'text'; icon.classList.replace('ph-eye', 'ph-eye-slash'); };
+            const hidePassword = () => { input.type = 'password'; icon.classList.replace('ph-eye-slash', 'ph-eye'); };
 
-            // Ocultar al soltar
-            const hidePassword = () => {
-                input.type = 'password';
-                icon.classList.replace('ph-eye-slash', 'ph-eye');
-            };
-
-            // Eventos Mouse (PC)
             btn.addEventListener('mousedown', showPassword);
             btn.addEventListener('mouseup', hidePassword);
             btn.addEventListener('mouseleave', hidePassword);
-
-            // Eventos Touch (Móvil)
             btn.addEventListener('touchstart', (e) => { e.preventDefault(); showPassword(); });
             btn.addEventListener('touchend', hidePassword);
         });

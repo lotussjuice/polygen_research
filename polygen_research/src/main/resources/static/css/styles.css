@@ -1736,7 +1736,7 @@ input:checked+.slider-clean {
     transform: translateY(0);
 }
 
-  /* --- 16. TEMAS Y PERSONALIZACIÓN (NUEVO) --- */
+  /* --- 16. TEMAS Y PERSONALIZACIÓN --- */
 :root {
     --chart-color-1: #005a9c;
     --chart-color-2: #28a745;
@@ -1747,118 +1747,117 @@ html, body, .card, .sidebar, .header {
 }
 
 
+/* 1. Cream*/
 html[data-theme="cream"] {
     --color-primario: #8d6e63;
     --color-secundario: #a1887f;
     --color-fondo: #fdfbf7; 
     --color-tarjeta: #ffffff;
-    
     --chart-color-1: #5D4037;
     --chart-color-2: #FFCA28;
 }
 html[data-theme="cream"].dark-mode {
-    --color-primario: #d7ccc8;
-    --color-secundario: #efebe9;
+    --color-primario: #a1887f; 
+    --color-secundario: #8d6e63;
     --color-fondo: #2d2a28; 
     --color-tarjeta: #3e3b39;
 }
 
+/* 2. Forest*/
 html[data-theme="forest"] {
     --color-primario: #2e7d32;
     --color-secundario: #4caf50;
-    
     --chart-color-1: #1B5E20;
     --chart-color-2: #76FF03;
 }
 html[data-theme="forest"].dark-mode {
-    --color-primario: #81c784;
-    --color-secundario: #a5d6a7;
+    --color-primario: #388e3c; 
+    --color-secundario: #2e7d32;
     --color-fondo: #1b261b;
     --color-tarjeta: #253025;
 }
 
-
+/* 3. Berry*/
 html[data-theme="berry"] {
     --color-primario: #8e24aa;
     --color-secundario: #ba68c8;
-    
-
     --chart-color-1: #4A148C;
     --chart-color-2: #FF4081;
 }
 html[data-theme="berry"].dark-mode {
-    --color-primario: #ce93d8;
-    --color-secundario: #e1bee7;
+    --color-primario: #ab47bc; 
+    --color-secundario: #8e24aa;
     --color-fondo: #1f1020;
     --color-tarjeta: #2d1a30;
 }
 
-/* 4. Titanium */
+/* 4. Titanium*/
 html[data-theme="titanium"] {
     --color-primario: #455a64;
     --color-secundario: #607d8b;
     --color-fondo: #f0f2f5; 
-    
     --chart-color-1: #263238;
     --chart-color-2: #00E5FF; 
 }
 html[data-theme="titanium"].dark-mode {
-    --color-primario: #b0bec5;
-    --color-secundario: #cfd8dc;
+    --color-primario: #546e7a;
+    --color-secundario: #455a64;
     --color-fondo: #101518;
     --color-tarjeta: #1c2329;
 }
 
+/* 5. Sunset*/
 html[data-theme="sunset"] {
     --color-primario: #e65100;
     --color-secundario: #ff9800;
-    
-
     --chart-color-1: #BF360C; 
     --chart-color-2: #FFD600;
 }
 html[data-theme="sunset"].dark-mode {
-    --color-primario: #ffcc80;
-    --color-secundario: #ffe0b2;
+    --color-primario: #f57c00; 
+    --color-secundario: #e65100;
     --color-fondo: #211208;
     --color-tarjeta: #2e1c0e;
 }
+
+/* 6. Aqua*/
 html[data-theme="aqua"] {
     --color-primario: #00897b;
     --color-secundario: #4db6ac;
-    
     --chart-color-1: #00695C;
     --chart-color-2: #26A69A;
 }
 html[data-theme="aqua"].dark-mode {
-    --color-primario: #80cbc4;
-    --color-secundario: #b2dfdb;
+    --color-primario: #00897b; 
+    --color-secundario: #00695c;
     --color-fondo: #101918;
     --color-tarjeta: #1a2625;
 }
+
+/* 7. Royal*/
 html[data-theme="royal"] {
     --color-primario: #3949ab;
     --color-secundario: #7986cb;
-    
     --chart-color-1: #283593;
     --chart-color-2: #5C6BC0;
 }
 html[data-theme="royal"].dark-mode {
-    --color-primario: #9fa8da;
-    --color-secundario: #c5cae9;
+    --color-primario: #5c6bc0; 
+    --color-secundario: #3949ab;
     --color-fondo: #121218;
     --color-tarjeta: #1c1c2e;
 }
+
+/* 8. Cherry*/
 html[data-theme="cherry"] {
     --color-primario: #ad1457;
     --color-secundario: #ec407a;
-    
     --chart-color-1: #880E4F;
     --chart-color-2: #D81B60;
 }
 html[data-theme="cherry"].dark-mode {
-    --color-primario: #f48fb1;
-    --color-secundario: #f8bbd0;
+    --color-primario: #d81b60; 
+    --color-secundario: #ad1457;
     --color-fondo: #211a1d;
     --color-tarjeta: #2e2226;
 }

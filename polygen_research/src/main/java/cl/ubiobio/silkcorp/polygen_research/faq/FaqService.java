@@ -11,14 +11,11 @@ public class FaqService {
     public List<FaqItem> obtenerPreguntas() {
         List<FaqItem> lista = new ArrayList<>();
 
-        // ============================================================
         // ZONA EPICA DE EDICIÓN DE PREGUNTAS FRECUENTES
-        // ============================================================
 
-       // 3. Contacto y Soporte
         lista.add(new FaqItem(
             "¿Cómo contacto a soporte técnico?", 
-            "Para reportar fallos o dudas críticas, escriba a <a href='https://mail.google.com/mail/?view=cm&fs=1&to=polygenresearchsys@gmail.com&su=Soporte%20Polygen%20Research' target='_blank'>polygenresearchsys@gmail.com</a>.. Incluya detalles del error o capturas de pantalla para agilizar la ayuda."
+            "Para reportar fallos o dudas críticas, escriba a 'polygenresearchsys@gmail.com' Incluya detalles del error o capturas de pantalla para agilizar la ayuda."
         ));
 
         lista.add(new FaqItem(

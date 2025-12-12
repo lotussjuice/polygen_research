@@ -31,34 +31,119 @@ import cl.ubiobio.silkcorp.polygen_research.DataBase.OpcionCampoCrf.OpcionCampoC
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CampoCrfStatsDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenRowDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CriterioDTO;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.util.CalculoService;
 
 @Service
 public class ExcelReporteService {
 
     private final CrfService crfService;
+    private final CalculoService calculoService;
     private final ObjectMapper objectMapper;
 
-    public ExcelReporteService(CrfService crfService) {
+    public ExcelReporteService(CrfService crfService, CalculoService calculoService) {
         this.crfService = crfService;
+        this.calculoService = calculoService;
         this.objectMapper = new ObjectMapper();
         this.objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
+    public double parseDouble(String valor) {
+        if (valor == null || valor.trim().isEmpty() || valor.equals("-")) {
+            return Double.NaN;
+        }
+        try {
+            return Double.parseDouble(valor.trim().replace(',', '.'));
+        } catch (NumberFormatException e) {
+            return Double.NaN;
+        }
+    }
+
+    public String getNombreColumnaDicotomizada(String nombreOriginal, CriterioDTO criterio) {
+        if ("media".equals(criterio.getTipo())) return nombreOriginal + "_Media";
+        if ("mediana".equals(criterio.getTipo())) return nombreOriginal + "_Mediana";
+        if ("personalizado".equals(criterio.getTipo())) return nombreOriginal + "_" + (criterio.getNombre() != null ? criterio.getNombre() : "Corte");
+        return nombreOriginal + "_Calc";
+    }
+
+    public Map<String, Double> preCalcularPuntosDeCorte(List<CrfResumenRowDTO> filas, 
+                                                        Map<Integer, List<CriterioDTO>> criteriosMap,
+                                                        List<CampoCrfStatsDTO> columnasStats) {
+        Map<String, Double> puntos = new HashMap<>();
+
+        for (CampoCrfStatsDTO col : columnasStats) {
+            Integer idCampo = col.getCampoCrf().getIdCampo();
+            if (!criteriosMap.containsKey(idCampo)) continue;
+
+            List<Double> valoresColumna = new ArrayList<>();
+            for (CrfResumenRowDTO fila : filas) {
+                String valStr = fila.getValores().get(col.getColumnaKey());
+                Double val = obtenerValorNumerico(valStr, col.getCampoCrf());
+                if (val != null && !Double.isNaN(val)) {
+                    valoresColumna.add(val);
+                }
+            }
+
+            for (CriterioDTO crit : criteriosMap.get(idCampo)) {
+                if ("media".equals(crit.getTipo())) {
+                    puntos.put(idCampo + "_media", calculoService.calcularMedia(valoresColumna));
+                } else if ("mediana".equals(crit.getTipo())) {
+                    puntos.put(idCampo + "_mediana", calculoService.calcularMediana(valoresColumna));
+                }
+            }
+        }
+        return puntos;
+    }
+
+    public Integer calcularValorDicotomizado(Map<String, String> valoresFila, double valorFila, CriterioDTO criterio, double puntoCorteCalculado) {
+        if (Double.isNaN(valorFila)) return null; 
+
+        double target = 0.0;
+        String op = ">"; 
+
+        if ("media".equals(criterio.getTipo()) || "mediana".equals(criterio.getTipo())) {
+            target = puntoCorteCalculado;
+            op = ">"; 
+        } else if ("personalizado".equals(criterio.getTipo())) {
+            target = parseDouble(criterio.getPuntoCorte());
+            if (Double.isNaN(target)) target = 0.0;
+            op = criterio.getOperador() != null ? criterio.getOperador() : ">";
+        }
+
+        return evaluarOperacionSimple(valorFila, op, target) ? 1 : 0;
+    }
+
     public ByteArrayInputStream generarReporteDicotomizado(String criteriosJson, String excludedColsJson) throws IOException {
-        
-        // 1. Parsear JSONs del frontend
         Map<String, CriterioFrontDTO> criteriosMap = parsearCriterios(criteriosJson);
         Set<String> columnasExcluidas = parsearExcluidas(excludedColsJson);
 
-        // 2. Obtener Datos
         CrfResumenViewDTO data = crfService.getCrfResumenView(true);
         List<CampoCrfStatsDTO> columnasOriginales = data.getCamposConStats();
         List<CrfResumenRowDTO> filas = data.getFilas();
 
+        Map<String, Double> puntosCorteCache = new HashMap<>();
+        for (String uuid : criteriosMap.keySet()) {
+            CriterioFrontDTO crit = criteriosMap.get(uuid);
+            if (("media".equals(crit.getTipo()) || "mediana".equals(crit.getTipo())) && crit.getOrigenId() != null) {
+                List<Double> vals = new ArrayList<>();
+                String colKey = crit.getOrigenId(); 
+                CampoCrfStatsDTO colStat = columnasOriginales.stream()
+                    .filter(c -> String.valueOf(c.getCampoCrf().getIdCampo()).equals(colKey))
+                    .findFirst().orElse(null);
+
+                if (colStat != null) {
+                    for (CrfResumenRowDTO f : filas) {
+                        Double v = obtenerValorNumerico(f.getValores().get(colStat.getColumnaKey()), colStat.getCampoCrf());
+                        if (v != null && !Double.isNaN(v)) vals.add(v);
+                    }
+                    if ("media".equals(crit.getTipo())) puntosCorteCache.put(uuid, calculoService.calcularMedia(vals));
+                    else puntosCorteCache.put(uuid, calculoService.calcularMediana(vals));
+                }
+            }
+        }
+
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Datos CRF Numéricos");
-
-            // Estilos
             CellStyle headerStyle = workbook.createCellStyle();
             headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -66,21 +151,16 @@ public class ExcelReporteService {
             font.setBold(true);
             headerStyle.setFont(font);
 
-            // Estilo para columnas calculadas (Azul claro)
             CellStyle calcHeaderStyle = workbook.createCellStyle();
             calcHeaderStyle.setFillForegroundColor(IndexedColors.LIGHT_CORNFLOWER_BLUE.getIndex());
             calcHeaderStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             calcHeaderStyle.setFont(font);
 
-            // --- HEADER ---
             Row headerRow = sheet.createRow(0);
             int colIdx = 0;
-
-            // 1. Estáticos
             crearCeldaHeader(headerRow, colIdx++, "ID CRF", headerStyle);
             crearCeldaHeader(headerRow, colIdx++, "Cód. Paciente", headerStyle);
 
-            // 2. Columnas Originales (Filtrando excluidas)
             List<CampoCrfStatsDTO> columnasAExportar = new ArrayList<>();
             for (CampoCrfStatsDTO stat : columnasOriginales) {
                 String idStr = String.valueOf(stat.getCampoCrf().getIdCampo());
@@ -90,111 +170,84 @@ public class ExcelReporteService {
                 }
             }
 
-            // 3. Columnas Calculadas (Nuevas variables)
             List<String> uuidsOrdenados = new ArrayList<>(criteriosMap.keySet());
             for (String uuid : uuidsOrdenados) {
                 CriterioFrontDTO criterio = criteriosMap.get(uuid);
                 crearCeldaHeader(headerRow, colIdx++, criterio.getNombreColumna(), calcHeaderStyle);
             }
 
-            // --- DATA ROWS ---
             int rowIdx = 1;
             for (CrfResumenRowDTO fila : filas) {
                 Row row = sheet.createRow(rowIdx++);
                 int cellIdx = 0;
-
-                // 1. Estáticos
                 row.createCell(cellIdx++).setCellValue(fila.getCrf().getIdCrf());
                 String cod = fila.getCrf().getDatosPaciente() != null ? fila.getCrf().getDatosPaciente().getCodigoPaciente() : "";
                 row.createCell(cellIdx++).setCellValue(cod);
 
-                // 2. Columnas Originales (Convertidas a Número)
                 for (CampoCrfStatsDTO stat : columnasAExportar) {
                     String valTexto = fila.getValores().get(stat.getColumnaKey());
                     Double valNum = obtenerValorNumerico(valTexto, stat.getCampoCrf());
-                    
                     Cell cell = row.createCell(cellIdx++);
-                    if (valNum != null) {
-                        cell.setCellValue(valNum);
-                    } else {
-                        // Si no es número (ej: texto libre), poner texto, o vacío si es null
-                        if(valTexto != null && !valTexto.equals("-")) cell.setCellValue(valTexto);
-                        else cell.setBlank();
-                    }
+                    if (valNum != null && !Double.isNaN(valNum)) cell.setCellValue(valNum);
+                    else cell.setBlank();
                 }
 
-                // 3. Columnas Calculadas
                 for (String uuid : uuidsOrdenados) {
                     CriterioFrontDTO criterio = criteriosMap.get(uuid);
-                    int resultado = evaluarCriterio(fila, criterio, data.getCamposConStats());
-                    row.createCell(cellIdx++).setCellValue(resultado);
+                    Double puntoCorte = puntosCorteCache.get(uuid);
+                    Integer resultado = evaluarCriterioFront(fila, criterio, data.getCamposConStats(), puntoCorte);
+                    
+                    Cell cell = row.createCell(cellIdx++);
+                    if (resultado != null) {
+                        cell.setCellValue(resultado);
+                    } else {
+                        cell.setBlank(); 
+                    }
                 }
             }
-
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
         }
     }
 
-    /**
-     * Convierte el valor de texto (Frontend) a valor numérico real para el Excel y cálculos.
-     */
-    private Double obtenerValorNumerico(String valorTexto, CampoCrf campo) {
-        if (valorTexto == null || valorTexto.trim().isEmpty() || valorTexto.equals("-")) {
-            return null;
-        }
+    private Integer evaluarCriterioFront(CrfResumenRowDTO fila, CriterioFrontDTO criterio, List<CampoCrfStatsDTO> allStats, Double puntoCortePrecalc) {
+        // Lógica Simple
+        if ("media".equals(criterio.getTipo()) || "mediana".equals(criterio.getTipo()) || "personalizado".equals(criterio.getTipo())) {
+            if (criterio.getOrigenId() != null) {
+                CampoCrfStatsDTO stat = allStats.stream()
+                    .filter(s -> String.valueOf(s.getCampoCrf().getIdCampo()).equals(criterio.getOrigenId()))
+                    .findFirst().orElse(null);
+                
+                if (stat != null) {
+                    String valTexto = fila.getValores().get(stat.getColumnaKey());
+                    Double valNum = obtenerValorNumerico(valTexto, stat.getCampoCrf());
+                    
+                    if (valNum == null || Double.isNaN(valNum)) return null;
 
-        String val = valorTexto.trim();
-        String tipo = campo.getTipo();
-
-        try {
-            if ("NUMERO".equalsIgnoreCase(tipo)) {
-                return Double.parseDouble(val.replace(',', '.'));
-            } 
-            else if ("SI/NO".equalsIgnoreCase(tipo)) {
-                val = val.toLowerCase();
-                if (val.equals("sí") || val.equals("si") || val.equals("yes") || val.equals("s") || val.equals("1")) return 1.0;
-                if (val.equals("no") || val.equals("n") || val.equals("0")) return 0.0;
-            } 
-            else if ("SELECCION_UNICA".equalsIgnoreCase(tipo)) {
-                // El valor en 'val' es el TEXTO de la opción (ej: "Fumador"). Buscamos su ID/Orden.
-                if (campo.getOpciones() != null) {
-                    for (OpcionCampoCrf op : campo.getOpciones()) {
-                        if (op.getEtiqueta().equalsIgnoreCase(val)) {
-                            // Retornamos el valor numérico de la opción (usualmente 'orden' o 'id')
-                            return Double.valueOf(op.getOrden()); 
-                        }
-                        // Caso borde: si el valor ya viene como número string "2"
-                        if (String.valueOf(op.getOrden()).equals(val)) {
-                             return Double.valueOf(op.getOrden());
-                        }
+                    double target;
+                    if ("personalizado".equals(criterio.getTipo())) {
+                        target = parseDouble(criterio.getPuntoCorte());
+                        if(Double.isNaN(target)) target = 0.0;
+                    } else {
+                        target = puntoCortePrecalc != null ? puntoCortePrecalc : 0.0;
                     }
+
+                    String op = criterio.getOperador() != null ? criterio.getOperador() : ">";
+                    return evaluarOperacionSimple(valNum, op, target) ? 1 : 0;
                 }
             }
-        } catch (NumberFormatException e) {
-            return null; // No se pudo convertir
-        }
-        return null; // Por defecto null si no es numérico
-    }
-
-    private int evaluarCriterio(CrfResumenRowDTO fila, CriterioFrontDTO criterio, List<CampoCrfStatsDTO> allStats) {
-        if ("simple".equals(criterio.getTipo())) {
-            // Lógica simple (Media, Mediana, etc) - Simplificado para este ejemplo
-            // Se debería implementar buscando el valor y comparando con criterio.puntoCorte
-            return 0; 
+            return null;
         } 
+        // Lógica Compleja (ARREGLADO PARA PROPAGAR NULOS)
         else if ("complejo".equals(criterio.getTipo()) && criterio.getBloques() != null) {
             
-            boolean globalResult = "AND".equals(criterio.getGlobalLogic()); // Inicial para AND es true, para OR es false? 
-            // Mejor enfoque: coleccionar resultados de bloques
             List<Boolean> blockResults = new ArrayList<>();
-
+            
             for (BloqueDTO bloque : criterio.getBloques()) {
-                boolean blockResult = "AND".equals(bloque.getLogic()); // Base para AND
-
                 List<Boolean> rulesResults = new ArrayList<>();
+                boolean blockHasNulls = false;
+
                 for (ReglaDTO regla : bloque.getRules()) {
-                    // Buscar el CampoCrf correspondiente al ID de la regla
                     CampoCrfStatsDTO campoStat = allStats.stream()
                         .filter(s -> String.valueOf(s.getCampoCrf().getIdCampo()).equals(regla.getCampoId()))
                         .findFirst().orElse(null);
@@ -202,47 +255,90 @@ public class ExcelReporteService {
                     if (campoStat != null) {
                         String valTexto = fila.getValores().get(campoStat.getColumnaKey());
                         Double valNum = obtenerValorNumerico(valTexto, campoStat.getCampoCrf());
-                        rulesResults.add(evaluarRegla(valNum, valTexto, regla.getOperador(), regla.getValor()));
+                        
+                        // Si falta el dato, marcamos el bloque como contaminado por nulos
+                        if (valNum == null || Double.isNaN(valNum)) {
+                            blockHasNulls = true;
+                            // En lógica estricta, si un operando es nulo, el resultado de la regla es nulo.
+                            // Pero para seguir iterando, guardamos null en la lista (si java lo permite en boolean, no, usamos Boolean objeto)
+                            rulesResults.add(null); 
+                        } else {
+                            rulesResults.add(evaluarRegla(valNum, valTexto, regla.getOperador(), regla.getValor()));
+                        }
                     } else {
-                        rulesResults.add(false);
+                        blockHasNulls = true;
+                        rulesResults.add(null);
                     }
                 }
 
-                if ("AND".equals(bloque.getLogic())) {
-                    blockResult = rulesResults.stream().allMatch(b -> b);
-                } else { // OR
-                    blockResult = rulesResults.stream().anyMatch(b -> b);
+                // Evaluar Bloque
+                // Si hay nulos, el bloque entero es nulo (desconocido)
+                if (blockHasNulls) {
+                    blockResults.add(null);
+                } else {
+                    if ("AND".equals(bloque.getLogic())) {
+                        blockResults.add(rulesResults.stream().allMatch(b -> b != null && b));
+                    } else { // OR
+                        blockResults.add(rulesResults.stream().anyMatch(b -> b != null && b));
+                    }
                 }
-                blockResults.add(blockResult);
+            }
+
+            // Evaluar Global (Si algún bloque es nulo, el resultado final es nulo)
+            if (blockResults.contains(null)) {
+                return null;
             }
 
             if ("AND".equals(criterio.getGlobalLogic())) {
                 return blockResults.stream().allMatch(b -> b) ? 1 : 0;
-            } else { // OR Global
+            } else { // OR
                 return blockResults.stream().anyMatch(b -> b) ? 1 : 0;
             }
         }
-        return 0;
+        return null;
+    }
+
+    private boolean evaluarOperacionSimple(double val, String op, double target) {
+        switch (op) {
+            case ">": return val > target;
+            case ">=": return val >= target;
+            case "<": return val < target;
+            case "<=": return val <= target;
+            case "==": return Math.abs(val - target) < 0.0001;
+            case "!=": return Math.abs(val - target) > 0.0001;
+            default: return false;
+        }
+    }
+
+    private Double obtenerValorNumerico(String valorTexto, CampoCrf campo) {
+        if (valorTexto == null || valorTexto.trim().isEmpty() || valorTexto.equals("-")) return null;
+        String val = valorTexto.trim();
+        String tipo = campo.getTipo();
+        try {
+            if ("NUMERO".equalsIgnoreCase(tipo)) return Double.parseDouble(val.replace(',', '.'));
+            else if ("SI/NO".equalsIgnoreCase(tipo)) return val.equalsIgnoreCase("sí") || val.equals("1") || val.equalsIgnoreCase("si") ? 1.0 : 0.0;
+            else if ("SELECCION_UNICA".equalsIgnoreCase(tipo)) {
+                if (campo.getOpciones() != null) {
+                    for (OpcionCampoCrf op : campo.getOpciones()) {
+                        // Comparar tanto por ORDEN (valor numérico) como por ETIQUETA (texto)
+                        if (String.valueOf(op.getOrden()).equals(val) || op.getEtiqueta().equalsIgnoreCase(val)) 
+                            return Double.valueOf(op.getOrden());
+                    }
+                }
+                try { return Double.parseDouble(val); } catch(Exception e) { return null; }
+            }
+        } catch (Exception e) { return null; }
+        return null;
     }
 
     private boolean evaluarRegla(Double valNum, String valTexto, String op, String target) {
         if (valNum == null && (valTexto == null || "contains".equals(op))) return false;
-
         Double targetNum = null;
         try { targetNum = Double.parseDouble(target); } catch(Exception e){}
 
         if (targetNum != null && valNum != null) {
-            // Comparación Numérica
-            switch (op) {
-                case "==": return valNum.equals(targetNum);
-                case "!=": return !valNum.equals(targetNum);
-                case ">": return valNum > targetNum;
-                case "<": return valNum < targetNum;
-                case ">=": return valNum >= targetNum;
-                case "<=": return valNum <= targetNum;
-            }
+            return evaluarOperacionSimple(valNum, op, targetNum);
         } else if (valTexto != null) {
-            // Comparación Texto
             if ("contains".equals(op)) return valTexto.toLowerCase().contains(target.toLowerCase());
             if ("==".equals(op)) return valTexto.equalsIgnoreCase(target);
             if ("!=".equals(op)) return !valTexto.equalsIgnoreCase(target);
@@ -256,43 +352,37 @@ public class ExcelReporteService {
         cell.setCellStyle(style);
     }
 
-    // --- CLASES DTO INTERNAS PARA MAPEAR EL JSON DEL FRONTEND ---
-    // (Deben coincidir con la estructura JS: criterio[uuid] = { ... })
-
     private Map<String, CriterioFrontDTO> parsearCriterios(String json) {
-        try {
-            if(json == null || json.isEmpty()) return new HashMap<>();
-            return objectMapper.readValue(json, new TypeReference<HashMap<String, CriterioFrontDTO>>(){});
-        } catch(Exception e) { return new HashMap<>(); }
+        try { return objectMapper.readValue(json, new TypeReference<HashMap<String, CriterioFrontDTO>>(){}); } 
+        catch(Exception e) { return new HashMap<>(); }
     }
 
     private Set<String> parsearExcluidas(String json) {
-        try {
-            if(json == null || json.isEmpty()) return new HashSet<>();
-            return objectMapper.readValue(json, new TypeReference<HashSet<String>>(){});
-        } catch(Exception e) { return new HashSet<>(); }
+        try { return objectMapper.readValue(json, new TypeReference<HashSet<String>>(){}); } 
+        catch(Exception e) { return new HashSet<>(); }
     }
 
-    // DTOs estáticos auxiliares para mapeo JSON
+    // DTOs auxiliares
     public static class CriterioFrontDTO {
         public String nombreColumna;
-        public String tipo; // "simple" o "complejo"
+        public String tipo;
         public String globalLogic;
         public List<BloqueDTO> bloques;
-        public String puntoCorte; // Para simple
-        public String operador;   // Para simple
-        
-        // Getters
+        public String puntoCorte;
+        public String operador;
+        public String origenId; 
+
         public String getNombreColumna() { return nombreColumna; }
         public String getTipo() { return tipo; }
         public String getGlobalLogic() { return globalLogic; }
         public List<BloqueDTO> getBloques() { return bloques; }
         public String getPuntoCorte() { return puntoCorte; }
         public String getOperador() { return operador; }
+        public String getOrigenId() { return origenId; }
     }
 
     public static class BloqueDTO {
-        public String logic; // "AND" o "OR"
+        public String logic;
         public List<ReglaDTO> rules;
         public String getLogic() { return logic; }
         public List<ReglaDTO> getRules() { return rules; }
