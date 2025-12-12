@@ -58,6 +58,17 @@
         }
         
         .faq-answer p { margin: 15px 0; }
+
+        .faq-answer a {
+            color: #0d6efd !important;
+            text-decoration: underline !important;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .faq-answer a:hover {
+            color: #0a58ca !important;
+        }
     </style>
 
     <div class="dashboard-header">
@@ -73,8 +84,8 @@
                 <span class="faq-icon"></span>
             </button>
             
-            <div class="faq-answer">
-                <p th:text="${item.respuesta}">Respuesta...</p>
+           <div class="faq-answer">
+                <p th:utext="${item.respuesta}">Respuesta...</p>
             </div>
 
         </div>

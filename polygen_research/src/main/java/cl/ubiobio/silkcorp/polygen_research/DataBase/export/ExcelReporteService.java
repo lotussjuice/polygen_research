@@ -113,6 +113,7 @@ public class ExcelReporteService {
         return evaluarOperacionSimple(valorFila, op, target) ? 1 : 0;
     }
 
+    // --- LOGICA EXCEL ---
     public ByteArrayInputStream generarReporteDicotomizado(String criteriosJson, String excludedColsJson) throws IOException {
         Map<String, CriterioFrontDTO> criteriosMap = parsearCriterios(criteriosJson);
         Set<String> columnasExcluidas = parsearExcluidas(excludedColsJson);
@@ -121,6 +122,7 @@ public class ExcelReporteService {
         List<CampoCrfStatsDTO> columnasOriginales = data.getCamposConStats();
         List<CrfResumenRowDTO> filas = data.getFilas();
 
+        // 1. Pre-Calcular Medias y Medianas
         Map<String, Double> puntosCorteCache = new HashMap<>();
         for (String uuid : criteriosMap.keySet()) {
             CriterioFrontDTO crit = criteriosMap.get(uuid);
@@ -144,6 +146,8 @@ public class ExcelReporteService {
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Datos CRF Numéricos");
+            
+            // Estilos
             CellStyle headerStyle = workbook.createCellStyle();
             headerStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -156,6 +160,7 @@ public class ExcelReporteService {
             calcHeaderStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
             calcHeaderStyle.setFont(font);
 
+            // Header
             Row headerRow = sheet.createRow(0);
             int colIdx = 0;
             crearCeldaHeader(headerRow, colIdx++, "ID CRF", headerStyle);
@@ -164,7 +169,10 @@ public class ExcelReporteService {
             List<CampoCrfStatsDTO> columnasAExportar = new ArrayList<>();
             for (CampoCrfStatsDTO stat : columnasOriginales) {
                 String idStr = String.valueOf(stat.getCampoCrf().getIdCampo());
-                if (!columnasExcluidas.contains(idStr)) {
+                String tipo = stat.getCampoCrf().getTipo();
+
+                // FILTRO ACTUALIZADO: Excluir TEXTO y FECHA explícitamente
+                if (!columnasExcluidas.contains(idStr) && !"TEXTO".equals(tipo) && !"FECHA".equals(tipo)) {
                     crearCeldaHeader(headerRow, colIdx++, stat.getNombreColumna(), headerStyle);
                     columnasAExportar.add(stat);
                 }
@@ -176,6 +184,7 @@ public class ExcelReporteService {
                 crearCeldaHeader(headerRow, colIdx++, criterio.getNombreColumna(), calcHeaderStyle);
             }
 
+            // Datos
             int rowIdx = 1;
             for (CrfResumenRowDTO fila : filas) {
                 Row row = sheet.createRow(rowIdx++);
@@ -184,14 +193,20 @@ public class ExcelReporteService {
                 String cod = fila.getCrf().getDatosPaciente() != null ? fila.getCrf().getDatosPaciente().getCodigoPaciente() : "";
                 row.createCell(cellIdx++).setCellValue(cod);
 
+                // Columnas Originales (FORZAR NÚMERO)
                 for (CampoCrfStatsDTO stat : columnasAExportar) {
                     String valTexto = fila.getValores().get(stat.getColumnaKey());
                     Double valNum = obtenerValorNumerico(valTexto, stat.getCampoCrf());
+                    
                     Cell cell = row.createCell(cellIdx++);
-                    if (valNum != null && !Double.isNaN(valNum)) cell.setCellValue(valNum);
-                    else cell.setBlank();
+                    if (valNum != null && !Double.isNaN(valNum)) {
+                        cell.setCellValue(valNum); 
+                    } else {
+                        cell.setBlank(); 
+                    }
                 }
 
+                // Columnas Calculadas
                 for (String uuid : uuidsOrdenados) {
                     CriterioFrontDTO criterio = criteriosMap.get(uuid);
                     Double puntoCorte = puntosCorteCache.get(uuid);
@@ -211,7 +226,6 @@ public class ExcelReporteService {
     }
 
     private Integer evaluarCriterioFront(CrfResumenRowDTO fila, CriterioFrontDTO criterio, List<CampoCrfStatsDTO> allStats, Double puntoCortePrecalc) {
-        // Lógica Simple
         if ("media".equals(criterio.getTipo()) || "mediana".equals(criterio.getTipo()) || "personalizado".equals(criterio.getTipo())) {
             if (criterio.getOrigenId() != null) {
                 CampoCrfStatsDTO stat = allStats.stream()
@@ -237,16 +251,11 @@ public class ExcelReporteService {
                 }
             }
             return null;
-        } 
-        // Lógica Compleja (ARREGLADO PARA PROPAGAR NULOS)
-        else if ("complejo".equals(criterio.getTipo()) && criterio.getBloques() != null) {
-            
+        } else if ("complejo".equals(criterio.getTipo()) && criterio.getBloques() != null) {
             List<Boolean> blockResults = new ArrayList<>();
-            
             for (BloqueDTO bloque : criterio.getBloques()) {
+                boolean blockResult = "AND".equals(bloque.getLogic()); 
                 List<Boolean> rulesResults = new ArrayList<>();
-                boolean blockHasNulls = false;
-
                 for (ReglaDTO regla : bloque.getRules()) {
                     CampoCrfStatsDTO campoStat = allStats.stream()
                         .filter(s -> String.valueOf(s.getCampoCrf().getIdCampo()).equals(regla.getCampoId()))
@@ -255,45 +264,15 @@ public class ExcelReporteService {
                     if (campoStat != null) {
                         String valTexto = fila.getValores().get(campoStat.getColumnaKey());
                         Double valNum = obtenerValorNumerico(valTexto, campoStat.getCampoCrf());
-                        
-                        // Si falta el dato, marcamos el bloque como contaminado por nulos
-                        if (valNum == null || Double.isNaN(valNum)) {
-                            blockHasNulls = true;
-                            // En lógica estricta, si un operando es nulo, el resultado de la regla es nulo.
-                            // Pero para seguir iterando, guardamos null en la lista (si java lo permite en boolean, no, usamos Boolean objeto)
-                            rulesResults.add(null); 
-                        } else {
-                            rulesResults.add(evaluarRegla(valNum, valTexto, regla.getOperador(), regla.getValor()));
-                        }
-                    } else {
-                        blockHasNulls = true;
-                        rulesResults.add(null);
-                    }
+                        rulesResults.add(evaluarRegla(valNum, valTexto, regla.getOperador(), regla.getValor()));
+                    } else rulesResults.add(false);
                 }
-
-                // Evaluar Bloque
-                // Si hay nulos, el bloque entero es nulo (desconocido)
-                if (blockHasNulls) {
-                    blockResults.add(null);
-                } else {
-                    if ("AND".equals(bloque.getLogic())) {
-                        blockResults.add(rulesResults.stream().allMatch(b -> b != null && b));
-                    } else { // OR
-                        blockResults.add(rulesResults.stream().anyMatch(b -> b != null && b));
-                    }
-                }
+                if ("AND".equals(bloque.getLogic())) blockResult = rulesResults.stream().allMatch(b -> b);
+                else blockResult = rulesResults.stream().anyMatch(b -> b);
+                blockResults.add(blockResult);
             }
-
-            // Evaluar Global (Si algún bloque es nulo, el resultado final es nulo)
-            if (blockResults.contains(null)) {
-                return null;
-            }
-
-            if ("AND".equals(criterio.getGlobalLogic())) {
-                return blockResults.stream().allMatch(b -> b) ? 1 : 0;
-            } else { // OR
-                return blockResults.stream().anyMatch(b -> b) ? 1 : 0;
-            }
+            if ("AND".equals(criterio.getGlobalLogic())) return blockResults.stream().allMatch(b -> b) ? 1 : 0;
+            else return blockResults.stream().anyMatch(b -> b) ? 1 : 0;
         }
         return null;
     }
@@ -320,7 +299,6 @@ public class ExcelReporteService {
             else if ("SELECCION_UNICA".equalsIgnoreCase(tipo)) {
                 if (campo.getOpciones() != null) {
                     for (OpcionCampoCrf op : campo.getOpciones()) {
-                        // Comparar tanto por ORDEN (valor numérico) como por ETIQUETA (texto)
                         if (String.valueOf(op.getOrden()).equals(val) || op.getEtiqueta().equalsIgnoreCase(val)) 
                             return Double.valueOf(op.getOrden());
                     }
@@ -362,7 +340,6 @@ public class ExcelReporteService {
         catch(Exception e) { return new HashSet<>(); }
     }
 
-    // DTOs auxiliares
     public static class CriterioFrontDTO {
         public String nombreColumna;
         public String tipo;
