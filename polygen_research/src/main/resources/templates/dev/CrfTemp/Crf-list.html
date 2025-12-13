@@ -139,12 +139,21 @@
                                             <i class="ph-bold ph-pencil-simple" style="font-size: 1.1rem;"></i>
                                         </a>
 
-                                        <button type="button" class="btn-error btn-sm"
-                                            th:attr="data-crf-id=${fila.crf.idCrf}" onclick="confirmarEliminarCRF(this)"
-                                            title="Eliminar CRF">
-                                            <i class="ph-bold ph-trash" style="font-size: 1.1rem;"></i>
+
+                                        <button type="button" 
+                                                class="btn-sm"
+                                                th:if="${fila.crf.datosPaciente != null}"
+                                                th:classappend="${fila.crf.datosPaciente.estado == 'ACTIVO' ? 'btn-exito' : 'btn-error'}"
+                                                th:onclick="|cambiarEstadoPaciente(${fila.crf.datosPaciente.idPaciente})|"
+                                                th:title="${fila.crf.datosPaciente.estado == 'ACTIVO' ? 'Desactivar Paciente' : 'Activar Paciente'}">
+                                            
+                                            <i class="ph-bold" 
+                                            th:classappend="${fila.crf.datosPaciente.estado == 'ACTIVO' ? 'ph-toggle-right' : 'ph-toggle-left'}">
+                                            </i>
                                         </button>
                                     </div>
+
+                                    
                                 </td>
 
                                 <td
@@ -166,27 +175,6 @@
                             </tr>
                         </tbody>
                     </table>
-                </div>
-            </div>
-        </div>
-
-        <div id="modalConfirmacionEliminarCRF" class="modal" style="display: none;">
-            <div class="modal-content" style="max-width: 500px;">
-                <div class="modal-header">
-                    <h2>Confirmar Eliminación</h2>
-                    <span class="close-modal" onclick="cerrarConfirmacionEliminarCRF()">&times;</span>
-                </div>
-                <div class="modal-body">
-                    <p>¿Estás seguro de que deseas eliminar permanentemente el CRF con ID <strong
-                            id="confirm-crf-id-text"></strong>?</p>
-                    <p style="color: var(--color-error); font-weight: bold;">Esta acción no se puede deshacer y
-                        eliminará todos los datos asociados.</p>
-                    <input type="hidden" id="confirm-crf-id" value="" />
-                </div>
-                <div class="modal-footer" style="justify-content: space-between;">
-                    <button type="button" class="btn-secundario"
-                        onclick="cerrarConfirmacionEliminarCRF()">Cancelar</button>
-                    <button type="button" class="btn-error" onclick="ejecutarEliminacionCRF()">Sí, Eliminar CRF</button>
                 </div>
             </div>
         </div>
@@ -249,6 +237,36 @@
 
         <th:block th:fragment="pageScript">
             <script th:inline="javascript">
+
+                async function cambiarEstadoPaciente(idPaciente) {
+
+                    try {
+                        // Obtener token CSRF del meta tag (si existe)
+                        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+                        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+                        
+                        const headers = { 'Content-Type': 'application/json' };
+                        if (csrfToken && csrfHeader) {
+                            headers[csrfHeader] = csrfToken;
+                        }
+
+                        const response = await fetch(`/pacientes/${idPaciente}/toggle-estado`, {
+                            method: 'PUT',
+                            headers: headers
+                        });
+
+                        if (response.ok) {
+                            // Recargar para ver cambios
+                            window.location.reload();
+                        } else {
+                            const msg = await response.text();
+                            alert("Error al cambiar el estado: " + msg);
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        alert("Error de conexión.");
+                    }
+                }
                 const modalConfirmacionCRF = document.getElementById('modalConfirmacionEliminarCRF');
                 const confirmCrfIdText = document.getElementById('confirm-crf-id-text');
                 const confirmCrfIdInput = document.getElementById('confirm-crf-id');
@@ -267,32 +285,6 @@
                     8: { title: "Infección por Helicobacter pylori", icon: "ph-virus" },
                     9: { title: "Histopatología (SOLO CASOS)", icon: "ph-microscope" }
                 };
-
-                function confirmarEliminarCRF(button) {
-                    const crfId = button.getAttribute('data-crf-id');
-                    confirmCrfIdText.textContent = crfId;
-                    confirmCrfIdInput.value = crfId;
-                    if (modalConfirmacionCRF) modalConfirmacionCRF.style.display = 'block';
-                }
-
-                function cerrarConfirmacionEliminarCRF() {
-                    if (modalConfirmacionCRF) modalConfirmacionCRF.style.display = 'none';
-                    confirmCrfIdText.textContent = '';
-                    confirmCrfIdInput.value = '';
-                }
-
-                async function ejecutarEliminacionCRF() {
-                    const crfId = confirmCrfIdInput.value;
-                    if (!crfId) return;
-
-                    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
-                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
-                    const headers = { 'Accept': 'application/json' };
-                    if (csrfToken && csrfHeader) { headers[csrfHeader] = csrfToken; }
-
-                    cerrarConfirmacionEliminarCRF();
-                    alert("Lógica de eliminación pendiente de implementación completa.");
-                }
 
                 async function verDatosFaltantes(crfId) {
                     if (!modalDatosFaltantes) return;
