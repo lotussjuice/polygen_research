@@ -6,9 +6,11 @@ import java.io.IOException;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.poi.ss.usermodel.Cell;
@@ -23,40 +25,45 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import cl.ubiobio.silkcorp.polygen_research.DataBase.CampoCrf.CampoCrf;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.Crf.CrfService;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.OpcionCampoCrf.OpcionCampoCrf;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CampoCrfStatsDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenRowDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CriterioDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.StataPreviewDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.util.CalculoService;
+
+// Importamos los DTOs estáticos de ExcelReporteService para compartir la estructura del JSON
+import cl.ubiobio.silkcorp.polygen_research.DataBase.export.ExcelReporteService.CriterioFrontDTO;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.export.ExcelReporteService.BloqueDTO;
+import cl.ubiobio.silkcorp.polygen_research.DataBase.export.ExcelReporteService.ReglaDTO;
 
 @Service
 public class StataExportService {
 
     private final CrfService crfService;
-    private final ExcelReporteService excelReporteService;
+    private final CalculoService calculoService;
     private final ObjectMapper objectMapper;
 
-    // Patrones precompilados para rendimiento
+    // Patrones para sanitizar nombres de variables (Reglas de Stata)
     private static final Pattern PATTERN_ACENTOS = Pattern.compile("[^\\p{ASCII}]");
     private static final Pattern PATTERN_CARACTERES_INVALIDOS = Pattern.compile("[^a-zA-Z0-9_]");
     private static final Pattern PATTERN_INICIO_NUMERO = Pattern.compile("^[0-9]");
     private static final Pattern PATTERN_SALTO_LINEA = Pattern.compile("[\r\n]+");
 
-    public StataExportService(CrfService crfService, CalculoService calculoService,
-            ExcelReporteService excelReporteService) {
+    public StataExportService(CrfService crfService, CalculoService calculoService) {
         this.crfService = crfService;
-        this.excelReporteService = excelReporteService;
+        this.calculoService = calculoService;
         this.objectMapper = new ObjectMapper();
     }
 
-    public ByteArrayInputStream generarReporteStata(String criteriosJson) throws IOException {
-        StataPreviewDTO data = prepararDatosStata(criteriosJson);
+    // --- GENERACIÓN DEL ARCHIVO ---
+    public ByteArrayInputStream generarReporteStata(String criteriosJson, String excludedColsJson) throws IOException {
+        StataPreviewDTO data = prepararDatosStata(criteriosJson, excludedColsJson);
 
         try (Workbook workbook = new XSSFWorkbook(); ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Sheet sheet = workbook.createSheet("Datos_STATA");
 
-            // Header
+            // 1. Header
             Row headerRow = sheet.createRow(0);
             List<String> headers = data.getHeadersStata();
             for (int i = 0; i < headers.size(); i++) {
@@ -64,7 +71,7 @@ public class StataExportService {
                 cell.setCellValue(headers.get(i));
             }
 
-            // Datos
+            // 2. Datos
             int rowIdx = 1;
             List<Map<String, String>> filas = data.getFilasStata();
 
@@ -77,16 +84,14 @@ public class StataExportService {
                     Cell cell = dataRow.createCell(i);
                     
                     if (valor == null || valor.isEmpty()) {
-                        cell.setBlank(); // Nulo real para Stata
+                        cell.setBlank(); // Importante: Celda vacía real para Nulos
                     } else {
-                        // Intentar guardar como número si es posible
                         try {
+                            // Intentar guardar como número real para que Stata lo reconozca como numeric
                             double valNum = Double.parseDouble(valor.replace(',', '.'));
-                            // Si es entero (ej: 1.0), guardar sin decimales visualmente si se desea, 
-                            // pero POI maneja double.
                             cell.setCellValue(valNum);
                         } catch (NumberFormatException e) {
-                            // Es texto, limpiar caracteres conflictivos para Stata
+                            // Si es texto, limpiarlo
                             cell.setCellValue(limpiarTextoStata(valor));
                         }
                     }
@@ -99,174 +104,281 @@ public class StataExportService {
     }
 
     public StataPreviewDTO getPreview(String criteriosJson) throws IOException {
-        return prepararDatosStata(criteriosJson);
+        return prepararDatosStata(criteriosJson, "[]");
     }
 
-    private StataPreviewDTO prepararDatosStata(String criteriosJson) throws IOException {
+    // --- LÓGICA CENTRAL (IDÉNTICA A EXCEL, PERO CON NOMBRES SANITIZADOS) ---
+    private StataPreviewDTO prepararDatosStata(String criteriosJson, String excludedColsJson) throws IOException {
         CrfResumenViewDTO data = crfService.getCrfResumenView(true);
-        List<CampoCrfStatsDTO> columnasDinamicasStats = data.getCamposConStats();
+        List<CampoCrfStatsDTO> columnasOriginales = data.getCamposConStats();
         List<CrfResumenRowDTO> filas = data.getFilas();
 
-        Map<Integer, List<CriterioDTO>> criteriosMap;
+        // 1. Parsear JSONs (Usando las mismas clases que Excel)
+        Map<String, CriterioFrontDTO> criteriosMap;
         try {
             if (criteriosJson != null && !criteriosJson.isEmpty() && !criteriosJson.equals("{}")) {
-                criteriosMap = objectMapper.readValue(criteriosJson, new TypeReference<HashMap<Integer, List<CriterioDTO>>>() {});
+                criteriosMap = objectMapper.readValue(criteriosJson, new TypeReference<HashMap<String, CriterioFrontDTO>>(){});
             } else {
                 criteriosMap = new HashMap<>();
             }
-        } catch (IOException e) {
-            criteriosMap = new HashMap<>(); // Fallback seguro
+        } catch (IOException e) { criteriosMap = new HashMap<>(); }
+
+        Set<String> columnasExcluidas;
+        try {
+            if (excludedColsJson == null || excludedColsJson.isEmpty()) columnasExcluidas = new HashSet<>();
+            else columnasExcluidas = objectMapper.readValue(excludedColsJson, new TypeReference<HashSet<String>>(){});
+        } catch(Exception e) { columnasExcluidas = new HashSet<>(); }
+
+        // 2. Pre-Calcular Medias y Medianas (Igual que Excel)
+        Map<String, Double> puntosCorteCache = new HashMap<>();
+        for (String uuid : criteriosMap.keySet()) {
+            CriterioFrontDTO crit = criteriosMap.get(uuid);
+            if (("media".equals(crit.getTipo()) || "mediana".equals(crit.getTipo())) && crit.getOrigenId() != null) {
+                List<Double> vals = new ArrayList<>();
+                String colKey = crit.getOrigenId(); 
+                CampoCrfStatsDTO colStat = columnasOriginales.stream()
+                    .filter(c -> String.valueOf(c.getCampoCrf().getIdCampo()).equals(colKey))
+                    .findFirst().orElse(null);
+
+                if (colStat != null) {
+                    for (CrfResumenRowDTO f : filas) {
+                        Double v = obtenerValorNumerico(f.getValores().get(colStat.getColumnaKey()), colStat.getCampoCrf());
+                        if (v != null && !Double.isNaN(v)) vals.add(v);
+                    }
+                    if ("media".equals(crit.getTipo())) puntosCorteCache.put(uuid, calculoService.calcularMedia(vals));
+                    else puntosCorteCache.put(uuid, calculoService.calcularMediana(vals));
+                }
+            }
         }
 
-        Map<String, Double> puntosDeCorte = excelReporteService.preCalcularPuntosDeCorte(filas, criteriosMap, columnasDinamicasStats);
-
-        List<String> headersOriginal = new ArrayList<>();
-        List<String> headersStata = new ArrayList<>();
-        List<Map<String, String>> filasOriginal = new ArrayList<>();
+        // 3. Preparar Estructuras
+        List<String> headersOriginal = new ArrayList<>(); // Para uso interno o debug
+        List<String> headersStata = new ArrayList<>();    // Los que irán al archivo
         List<Map<String, String>> filasStata = new ArrayList<>();
 
         // Headers Fijos
-        headersOriginal.add("ID_CRF");
         headersStata.add("id_crf");
-        headersOriginal.add("Codigo_Paciente");
         headersStata.add("cod_paciente");
 
-        // Headers Dinámicos
-        for (CampoCrfStatsDTO stat : columnasDinamicasStats) {
-            CampoCrf campo = stat.getCampoCrf();
-            String tipo = campo.getTipo();
+        // Headers Dinámicos (Columnas Originales)
+        for (CampoCrfStatsDTO stat : columnasOriginales) {
+            String idStr = String.valueOf(stat.getCampoCrf().getIdCampo());
+            String tipo = stat.getCampoCrf().getTipo();
 
-            if (!"NUMERO".equals(tipo) && !"SI/NO".equals(tipo) && !"SELECCION_UNICA".equals(tipo)
-                && !"TEXTO".equals(tipo) && !"FECHA".equals(tipo)) { 
-                continue;
-            }
-
-            String nombreReal = stat.getNombreColumna();
-            headersOriginal.add(nombreReal);
-            headersStata.add(sanitizarNombreVariable(nombreReal));
-
-            // Columnas Calculadas (Criterios)
-            if (criteriosMap.containsKey(campo.getIdCampo())) {
-                for (CriterioDTO criterio : criteriosMap.get(campo.getIdCampo())) {
-                    String nombreColDico = excelReporteService.getNombreColumnaDicotomizada(nombreReal, criterio);
-                    headersOriginal.add(nombreColDico);
-                    headersStata.add(sanitizarNombreVariable(nombreColDico));
-                }
+            // FILTRO ESTRICTO IGUAL A EXCEL: Excluir TEXTO, FECHA y Excluidos manuales
+            if (!columnasExcluidas.contains(idStr) && !"TEXTO".equals(tipo) && !"FECHA".equals(tipo)) {
+                String nombreReal = stat.getNombreColumna();
+                headersOriginal.add(nombreReal);
+                headersStata.add(sanitizarNombreVariable(nombreReal)); // Sanitizar para Stata
             }
         }
 
-        // Procesar Filas
+        // Headers Calculados (Criterios) - Siempre se agregan al final, ordenados
+        List<String> uuidsOrdenados = new ArrayList<>(criteriosMap.keySet());
+        for (String uuid : uuidsOrdenados) {
+            CriterioFrontDTO criterio = criteriosMap.get(uuid);
+            headersOriginal.add(criterio.getNombreColumna());
+            headersStata.add(sanitizarNombreVariable(criterio.getNombreColumna())); // Sanitizar para Stata
+        }
+
+        // 4. Procesar Filas
         for (CrfResumenRowDTO fila : filas) {
-            Map<String, String> filaOrig = new LinkedHashMap<>();
             Map<String, String> filaStata = new LinkedHashMap<>();
 
-            String idCrf = String.valueOf(fila.getCrf().getIdCrf());
+            // Datos Fijos
+            filaStata.put("id_crf", String.valueOf(fila.getCrf().getIdCrf()));
             String codPac = fila.getCrf().getDatosPaciente() != null ? fila.getCrf().getDatosPaciente().getCodigoPaciente() : "";
-
-            filaOrig.put("ID_CRF", idCrf);
-            filaStata.put("id_crf", idCrf);
-            
-            filaOrig.put("Codigo_Paciente", codPac);
             filaStata.put("cod_paciente", limpiarTextoStata(codPac));
 
-            for (CampoCrfStatsDTO stat : columnasDinamicasStats) {
-                CampoCrf campo = stat.getCampoCrf();
-                String tipo = campo.getTipo();
+            // Datos Originales
+            for (CampoCrfStatsDTO stat : columnasOriginales) {
+                String idStr = String.valueOf(stat.getCampoCrf().getIdCampo());
+                String tipo = stat.getCampoCrf().getTipo();
 
-                if (!"NUMERO".equals(tipo) && !"SI/NO".equals(tipo) && !"SELECCION_UNICA".equals(tipo)
-                    && !"TEXTO".equals(tipo) && !"FECHA".equals(tipo)) {
-                    continue;
-                }
-
-                String colKey = stat.getColumnaKey();
-                String valorCrudo = fila.getValores().get(colKey);
-                // Si es nulo o guión, lo dejamos nulo para Stata (celda vacía)
-                String valorStata = (valorCrudo == null || valorCrudo.equals("-") || valorCrudo.trim().isEmpty()) ? null : valorCrudo.trim();
-
-                String headerOrig = stat.getNombreColumna();
-                String headerStata = sanitizarNombreVariable(headerOrig);
-
-                filaOrig.put(headerOrig, valorCrudo);
-                filaStata.put(headerStata, valorStata);
-
-                // Calculados
-                if (criteriosMap.containsKey(campo.getIdCampo())) {
-                    double valorNum = excelReporteService.parseDouble(valorCrudo);
-                    // Si valorNum es NaN (era nulo), el resultado también debe ser nulo
-
-                    for (CriterioDTO criterio : criteriosMap.get(campo.getIdCampo())) {
-                        double puntoCorte = 0.0;
-                        if(criterio.getTipo() != null) {
-                            puntoCorte = puntosDeCorte.getOrDefault(campo.getIdCampo() + "_" + criterio.getTipo(), 0.0);
-                        }
-
-                        Integer valorDicotomizado = excelReporteService.calcularValorDicotomizado(fila.getValores(), valorNum, criterio, puntoCorte);
-                        String valorDicoStr = (valorDicotomizado != null) ? String.valueOf(valorDicotomizado) : null;
-
-                        String headerOrigDico = excelReporteService.getNombreColumnaDicotomizada(headerOrig, criterio);
-                        String headerStataDico = sanitizarNombreVariable(headerOrigDico);
-
-                        filaOrig.put(headerOrigDico, valorDicoStr);
-                        filaStata.put(headerStataDico, valorDicoStr);
-                    }
+                if (!columnasExcluidas.contains(idStr) && !"TEXTO".equals(tipo) && !"FECHA".equals(tipo)) {
+                    String colKey = stat.getColumnaKey();
+                    String valorCrudo = fila.getValores().get(colKey);
+                    
+                    // LÓGICA NUMÉRICA ESTRICTA (Igual a Excel)
+                    Double valNum = obtenerValorNumerico(valorCrudo, stat.getCampoCrf());
+                    String valorFinal = (valNum != null && !Double.isNaN(valNum)) ? String.valueOf(valNum) : null;
+                    
+                    // Usamos el nombre sanitizado como clave para el mapa de Stata
+                    filaStata.put(sanitizarNombreVariable(stat.getNombreColumna()), valorFinal);
                 }
             }
-            filasOriginal.add(filaOrig);
+
+            // Datos Calculados
+            for (String uuid : uuidsOrdenados) {
+                CriterioFrontDTO criterio = criteriosMap.get(uuid);
+                Double puntoCorte = puntosCorteCache.get(uuid);
+                
+                // LÓGICA DE EVALUACIÓN (Copiada de ExcelReporteService para consistencia)
+                Integer resultado = evaluarCriterioStata(fila, criterio, columnasOriginales, puntoCorte);
+                
+                String valorDicoStr = (resultado != null) ? String.valueOf(resultado) : null;
+                filaStata.put(sanitizarNombreVariable(criterio.getNombreColumna()), valorDicoStr);
+            }
+
             filasStata.add(filaStata);
         }
 
-        return new StataPreviewDTO(headersOriginal, headersStata, filasOriginal, filasStata);
+        return new StataPreviewDTO(headersOriginal, headersStata, null, filasStata);
     }
 
-    /**
-     * Limpia el nombre de la variable según las reglas estrictas de STATA:
-     * - Max 32 chars
-     * - Solo a-z, 0-9, _
-     * - No empezar con número
-     * - Sin espacios ni acentos
-     */
-    private String sanitizarNombreVariable(String nombreOriginal) {
-        if (nombreOriginal == null || nombreOriginal.trim().isEmpty()) {
-            return "var_sin_nombre";
+    // --- MÉTODOS DE CÁLCULO (Copiados de ExcelReporteService para asegurar igualdad) ---
+
+    private Integer evaluarCriterioStata(CrfResumenRowDTO fila, CriterioFrontDTO criterio, List<CampoCrfStatsDTO> allStats, Double puntoCortePrecalc) {
+        // 1. Lógica Simple
+        if ("media".equals(criterio.getTipo()) || "mediana".equals(criterio.getTipo()) || "personalizado".equals(criterio.getTipo())) {
+            if (criterio.getOrigenId() != null) {
+                CampoCrfStatsDTO stat = allStats.stream()
+                    .filter(s -> String.valueOf(s.getCampoCrf().getIdCampo()).equals(criterio.getOrigenId()))
+                    .findFirst().orElse(null);
+                
+                if (stat != null) {
+                    String valTexto = fila.getValores().get(stat.getColumnaKey());
+                    Double valNum = obtenerValorNumerico(valTexto, stat.getCampoCrf());
+                    
+                    if (valNum == null || Double.isNaN(valNum)) return null; // Nulo si falta dato original
+
+                    double target;
+                    if ("personalizado".equals(criterio.getTipo())) {
+                        target = parseDouble(criterio.getPuntoCorte());
+                        if(Double.isNaN(target)) target = 0.0;
+                    } else {
+                        target = puntoCortePrecalc != null ? puntoCortePrecalc : 0.0;
+                    }
+
+                    String op = criterio.getOperador() != null ? criterio.getOperador() : ">";
+                    return evaluarOperacionSimple(valNum, op, target) ? 1 : 0;
+                }
+            }
+            return null;
+        } 
+        
+        // 2. Lógica Compleja (Ahora soportada en Stata)
+        else if ("complejo".equals(criterio.getTipo()) && criterio.getBloques() != null) {
+            boolean isMissingData = false;
+            List<Boolean> blockResults = new ArrayList<>();
+
+            for (BloqueDTO bloque : criterio.getBloques()) {
+                List<Boolean> rulesResults = new ArrayList<>();
+                for (ReglaDTO regla : bloque.getRules()) {
+                    CampoCrfStatsDTO campoStat = allStats.stream()
+                        .filter(s -> String.valueOf(s.getCampoCrf().getIdCampo()).equals(regla.getCampoId()))
+                        .findFirst().orElse(null);
+
+                    if (campoStat != null) {
+                        String valTexto = fila.getValores().get(campoStat.getColumnaKey());
+                        Double valNum = obtenerValorNumerico(valTexto, campoStat.getCampoCrf());
+                        
+                        if ((valNum == null || Double.isNaN(valNum)) && (valTexto == null || valTexto.equals("-") || valTexto.isEmpty())) {
+                            isMissingData = true;
+                        }
+                        rulesResults.add(evaluarRegla(valNum, valTexto, regla.getOperador(), regla.getValor()));
+                    } else {
+                        isMissingData = true;
+                        rulesResults.add(false);
+                    }
+                }
+                
+                boolean blockResult;
+                if ("AND".equals(bloque.getLogic())) blockResult = rulesResults.stream().allMatch(b -> b);
+                else blockResult = rulesResults.stream().anyMatch(b -> b);
+                blockResults.add(blockResult);
+            }
+
+            if (isMissingData) return null; // Si falta dato, retorna NULL
+
+            if ("AND".equals(criterio.getGlobalLogic())) return blockResults.stream().allMatch(b -> b) ? 1 : 0;
+            else return blockResults.stream().anyMatch(b -> b) ? 1 : 0;
         }
+        return null;
+    }
+
+    private Double obtenerValorNumerico(String valorTexto, CampoCrf campo) {
+        if (valorTexto == null || valorTexto.trim().isEmpty() || valorTexto.equals("-")) return null;
+        String val = valorTexto.trim();
+        String tipo = campo.getTipo();
+        try {
+            if ("NUMERO".equalsIgnoreCase(tipo)) return Double.parseDouble(val.replace(',', '.'));
+            else if ("SI/NO".equalsIgnoreCase(tipo)) return val.equalsIgnoreCase("sí") || val.equals("1") || val.equalsIgnoreCase("si") ? 1.0 : 0.0;
+            else if ("SELECCION_UNICA".equalsIgnoreCase(tipo)) {
+                if (campo.getOpciones() != null) {
+                    for (OpcionCampoCrf op : campo.getOpciones()) {
+                        if (String.valueOf(op.getOrden()).equals(val) || op.getEtiqueta().equalsIgnoreCase(val)) 
+                            return Double.valueOf(op.getOrden());
+                    }
+                }
+                try { return Double.parseDouble(val); } catch(Exception e) { return null; }
+            }
+        } catch (Exception e) { return null; }
+        return null;
+    }
+
+    private boolean evaluarRegla(Double valNum, String valTexto, String op, String target) {
+        if (valNum == null && (valTexto == null || "contains".equals(op))) return false;
+        Double targetNum = null;
+        try { targetNum = Double.parseDouble(target); } catch(Exception e){}
+
+        if (targetNum != null && valNum != null) {
+            return evaluarOperacionSimple(valNum, op, targetNum);
+        } else if (valTexto != null) {
+            if ("contains".equals(op)) return valTexto.toLowerCase().contains(target.toLowerCase());
+            if ("==".equals(op)) return valTexto.equalsIgnoreCase(target);
+            if ("!=".equals(op)) return !valTexto.equalsIgnoreCase(target);
+        }
+        return false;
+    }
+
+    private boolean evaluarOperacionSimple(double val, String op, double target) {
+        switch (op) {
+            case ">": return val > target;
+            case ">=": return val >= target;
+            case "<": return val < target;
+            case "<=": return val <= target;
+            case "==": return Math.abs(val - target) < 0.0001;
+            case "!=": return Math.abs(val - target) > 0.0001;
+            default: return false;
+        }
+    }
+
+    private double parseDouble(String valor) {
+        if (valor == null || valor.trim().isEmpty() || valor.equals("-")) return Double.NaN;
+        try { return Double.parseDouble(valor.trim().replace(',', '.')); } catch (NumberFormatException e) { return Double.NaN; }
+    }
+
+    // --- LIMPIEZA PARA STATA ---
+    private String sanitizarNombreVariable(String nombreOriginal) {
+        if (nombreOriginal == null || nombreOriginal.trim().isEmpty()) return "var_sin_nombre";
         
-        // 1. Normalizar (eliminar acentos)
         String nombre = Normalizer.normalize(nombreOriginal.trim(), Normalizer.Form.NFD);
-        nombre = PATTERN_ACENTOS.matcher(nombre).replaceAll("");
+        nombre = PATTERN_ACENTOS.matcher(nombre).replaceAll(""); // Quitar tildes
         
-        // 2. Reemplazar espacios y caracteres inválidos por guión bajo
         nombre = nombre.replaceAll("\\s+", "_"); // Espacios a _
         nombre = PATTERN_CARACTERES_INVALIDOS.matcher(nombre).replaceAll("_"); // Símbolos a _
         
-        // 3. Eliminar guiones bajos duplicados o al inicio/fin
-        nombre = nombre.replaceAll("_{2,}", "_");
-        nombre = nombre.replaceAll("^_+|_+$", "");
+        nombre = nombre.replaceAll("_{2,}", "_"); // Evitar __
+        nombre = nombre.replaceAll("^_+|_+$", ""); // Quitar _ al inicio/fin
         
-        // 4. Asegurar que no empiece con número
         if (PATTERN_INICIO_NUMERO.matcher(nombre).find() || nombre.isEmpty()) {
-            nombre = "v_" + nombre;
+            nombre = "v_" + nombre; // Stata no permite empezar con número
         }
         
-        // 5. Todo a minúsculas
-        nombre = nombre.toLowerCase();
+        nombre = nombre.toLowerCase(); // Todo minúsculas
         
-        // 6. Truncar a 32 caracteres (límite de versiones antiguas de Stata, seguro para compatibilidad)
         if (nombre.length() > 32) {
-            nombre = nombre.substring(0, 32);
+            nombre = nombre.substring(0, 32); // Límite 32 chars
         }
         
         return nombre;
     }
 
-    /**
-     * Limpia el contenido de texto para evitar errores de importación:
-     * - Elimina saltos de línea
-     * - Reemplaza comillas dobles
-     */
     private String limpiarTextoStata(String texto) {
         if (texto == null) return null;
         String limpio = PATTERN_SALTO_LINEA.matcher(texto).replaceAll(" ");
-        limpio = limpio.replace("\"", "'"); // Comillas dobles a simples para no romper CSV/String
+        limpio = limpio.replace("\"", "'");
         return limpio.trim();
     }
 }

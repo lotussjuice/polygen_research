@@ -28,39 +28,38 @@ import cl.ubiobio.silkcorp.polygen_research.DataBase.export.StataExportService;
 @RequestMapping("/datos-crf")
 public class DatosCrfController {
 
+    private final DatosCrfService datosCrfService;
     private final CrfService crfService;
+    private final CampoCrfService campoCrfService;
     private final ExcelReporteService excelReporteService;
     private final StataExportService stataExportService;
-    
+
     public DatosCrfController(DatosCrfService datosCrfService, CrfService crfService, CampoCrfService campoCrfService, ExcelReporteService excelReporteService, StataExportService stataExportService) {
+        this.datosCrfService = datosCrfService;
         this.crfService = crfService;
+        this.campoCrfService = campoCrfService;
         this.excelReporteService = excelReporteService;
         this.stataExportService = stataExportService;
     }
 
     @GetMapping("/list")
-    public String mostrarReporteDeDatos(Model model,
-                                        @RequestParam(name = "codigoPaciente", required = false) String codigoBusqueda) {
-
+    public String listarDatosCrf(Model model, @RequestParam(required = false) String codigoPaciente) {
+        String codigoBusqueda = (codigoPaciente != null && !codigoPaciente.isEmpty()) ? codigoPaciente : null;
         CrfResumenViewDTO data = crfService.getCrfResumenView(codigoBusqueda, true);
-
         model.addAttribute("camposColumnas", data.getCamposConStats());
         model.addAttribute("filasCrf", data.getFilas());
-
-        return "dev/DatosCrfTemp/datos-crf-list"; 
+        return "dev/DatosCrfTemp/datos-crf-list";
     }
 
-    // --- CAMBIO IMPORTANTE: Recibimos excludedColsJson ---
     @PostMapping("/list/exportar")
     public ResponseEntity<InputStreamResource> exportarReporte(
             @RequestParam("criteriosJson") String criteriosJson,
-            @RequestParam(value = "excludedColsJson", required = false, defaultValue = "[]") String excludedColsJson) throws IOException {
+            @RequestParam("excludedColsJson") String excludedColsJson) throws IOException {
 
-        // Pasamos AMBOS datos al servicio
         ByteArrayInputStream stream = excelReporteService.generarReporteDicotomizado(criteriosJson, excludedColsJson);
-        
-        String fechaActual = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-        String nombreArchivo = "ReporteDicotomizado_" + fechaActual + ".xlsx";
+
+        String fecha = LocalDate.now().format(DateTimeFormatter.ofPattern("dd-MM-yyyy"));
+        String nombreArchivo = "Reporte_Polygen_" + fecha + ".xlsx";
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + nombreArchivo + "\"");
@@ -76,6 +75,7 @@ public class DatosCrfController {
     @ResponseBody
     public ResponseEntity<StataPreviewDTO> getStataPreview(@RequestParam("criteriosJson") String criteriosJson) {
         try {
+            // Nota: El preview podría no filtrar columnas, pero la exportación final sí lo hará.
             StataPreviewDTO previewData = stataExportService.getPreview(criteriosJson);
             return ResponseEntity.ok(previewData);
         } catch (IOException e) {
@@ -83,11 +83,13 @@ public class DatosCrfController {
         }
     }
     
+    // MÉTODO ACTUALIZADO PARA RECIBIR excludedColsJson
     @PostMapping("/list/exportar-stata")
     public ResponseEntity<InputStreamResource> exportarReporteStata(
-            @RequestParam("criteriosJson") String criteriosJson) throws IOException {
+            @RequestParam("criteriosJson") String criteriosJson,
+            @RequestParam("excludedColsJson") String excludedColsJson) throws IOException {
 
-        ByteArrayInputStream stream = stataExportService.generarReporteStata(criteriosJson);
+        ByteArrayInputStream stream = stataExportService.generarReporteStata(criteriosJson, excludedColsJson);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=Reporte_STATA.xlsx");

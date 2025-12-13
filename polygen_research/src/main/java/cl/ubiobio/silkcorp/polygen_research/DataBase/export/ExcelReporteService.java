@@ -171,7 +171,7 @@ public class ExcelReporteService {
                 String idStr = String.valueOf(stat.getCampoCrf().getIdCampo());
                 String tipo = stat.getCampoCrf().getTipo();
 
-                // FILTRO ACTUALIZADO: Excluir TEXTO y FECHA explícitamente
+                // FILTRO: Excluir TEXTO y FECHA explícitamente
                 if (!columnasExcluidas.contains(idStr) && !"TEXTO".equals(tipo) && !"FECHA".equals(tipo)) {
                     crearCeldaHeader(headerRow, colIdx++, stat.getNombreColumna(), headerStyle);
                     columnasAExportar.add(stat);
@@ -214,9 +214,9 @@ public class ExcelReporteService {
                     
                     Cell cell = row.createCell(cellIdx++);
                     if (resultado != null) {
-                        cell.setCellValue(resultado);
+                        cell.setCellValue(resultado); // Escribe 1 o 0 si el cálculo fue exitoso
                     } else {
-                        cell.setBlank(); 
+                        cell.setBlank(); // Escribe NADA si faltaban datos
                     }
                 }
             }
@@ -226,6 +226,7 @@ public class ExcelReporteService {
     }
 
     private Integer evaluarCriterioFront(CrfResumenRowDTO fila, CriterioFrontDTO criterio, List<CampoCrfStatsDTO> allStats, Double puntoCortePrecalc) {
+        // --- LOGICA SIMPLE ---
         if ("media".equals(criterio.getTipo()) || "mediana".equals(criterio.getTipo()) || "personalizado".equals(criterio.getTipo())) {
             if (criterio.getOrigenId() != null) {
                 CampoCrfStatsDTO stat = allStats.stream()
@@ -236,6 +237,7 @@ public class ExcelReporteService {
                     String valTexto = fila.getValores().get(stat.getColumnaKey());
                     Double valNum = obtenerValorNumerico(valTexto, stat.getCampoCrf());
                     
+                    // CORRECCIÓN: Si el valor original no existe, retornamos NULL
                     if (valNum == null || Double.isNaN(valNum)) return null;
 
                     double target;
@@ -250,11 +252,18 @@ public class ExcelReporteService {
                     return evaluarOperacionSimple(valNum, op, target) ? 1 : 0;
                 }
             }
-            return null;
-        } else if ("complejo".equals(criterio.getTipo()) && criterio.getBloques() != null) {
+            return null; // Si no encuentra columna origen, retorna null
+        } 
+        
+        // --- LOGICA COMPLEJA ---
+        else if ("complejo".equals(criterio.getTipo()) && criterio.getBloques() != null) {
+            
+            // CORRECCIÓN PRINCIPAL PARA COMPLEJOS: Detectar datos faltantes
+            boolean isMissingData = false;
+
             List<Boolean> blockResults = new ArrayList<>();
             for (BloqueDTO bloque : criterio.getBloques()) {
-                boolean blockResult = "AND".equals(bloque.getLogic()); 
+                
                 List<Boolean> rulesResults = new ArrayList<>();
                 for (ReglaDTO regla : bloque.getRules()) {
                     CampoCrfStatsDTO campoStat = allStats.stream()
@@ -264,13 +273,31 @@ public class ExcelReporteService {
                     if (campoStat != null) {
                         String valTexto = fila.getValores().get(campoStat.getColumnaKey());
                         Double valNum = obtenerValorNumerico(valTexto, campoStat.getCampoCrf());
+                        
+                        // Si falta el dato en la celda, marcamos la bandera de faltante
+                        if ((valNum == null || Double.isNaN(valNum)) && (valTexto == null || valTexto.equals("-") || valTexto.isEmpty())) {
+                            isMissingData = true;
+                        }
+
                         rulesResults.add(evaluarRegla(valNum, valTexto, regla.getOperador(), regla.getValor()));
-                    } else rulesResults.add(false);
+                    } else {
+                        // Si el campo ni siquiera existe en la definición
+                        isMissingData = true; 
+                        rulesResults.add(false);
+                    }
                 }
+                
+                // Calcular lógica del bloque
+                boolean blockResult;
                 if ("AND".equals(bloque.getLogic())) blockResult = rulesResults.stream().allMatch(b -> b);
                 else blockResult = rulesResults.stream().anyMatch(b -> b);
                 blockResults.add(blockResult);
             }
+
+            // Si detectamos que faltaba algún dato crítico, retornamos NULL
+            if (isMissingData) return null;
+
+            // Si todos los datos estaban presentes, calculamos el resultado final
             if ("AND".equals(criterio.getGlobalLogic())) return blockResults.stream().allMatch(b -> b) ? 1 : 0;
             else return blockResults.stream().anyMatch(b -> b) ? 1 : 0;
         }
@@ -310,7 +337,10 @@ public class ExcelReporteService {
     }
 
     private boolean evaluarRegla(Double valNum, String valTexto, String op, String target) {
+        // Nota: Este método retorna false si falta el dato, para que el stream().allMatch funcione.
+        // Pero arriba ya controlamos con 'isMissingData' si debemos invalidar todo el cálculo.
         if (valNum == null && (valTexto == null || "contains".equals(op))) return false;
+        
         Double targetNum = null;
         try { targetNum = Double.parseDouble(target); } catch(Exception e){}
 
