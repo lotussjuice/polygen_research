@@ -2,13 +2,18 @@
 <html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
 
 <body>
-    <div th:fragment="contenido">
+    <div th:fragment="contenido" style="position: relative; min-height: 80vh;">
+
+        <div id="loading-overlay">
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Procesando datos...</div>
+        </div>
 
         <script src="https://unpkg.com/@phosphor-icons/web"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
         <style>
-            /* --- ESTILOS GENERALES INTEGRADOS AL TEMA --- */
+            /* --- ESTILOS GENERALES --- */
             .border-section-start { border-left: 2px solid var(--color-borde) !important; }
             .header-icon { font-size: 1.1rem; color: var(--color-primario); margin-right: 4px; vertical-align: middle; }
             
@@ -68,6 +73,76 @@
             .form-control:focus, .form-select:focus { border-color: var(--color-primario); background-color: var(--color-tarjeta); color: var(--color-texto); }
             .btn-subtle { border: 1px dashed var(--color-borde); color: var(--color-texto-secundario); background: var(--color-fondo); transition: all 0.2s; }
             .btn-subtle:hover { border-color: var(--color-primario); color: var(--color-primario); background: var(--color-tarjeta); }
+
+            /* --- PANTALLA DE CARGA --- */
+            #loading-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: var(--color-fondo); 
+                z-index: 50;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                transition: opacity 0.5s ease, visibility 0.5s ease;
+                border-radius: 12px;
+            }
+
+            .loader-spinner {
+                width: 50px;
+                height: 50px;
+                border: 5px solid var(--color-borde);
+                border-top: 5px solid var(--color-primario);
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                margin-bottom: 1rem;
+            }
+
+            .loader-text {
+                font-size: 1.2rem;
+                font-weight: 600;
+                color: var(--color-texto);
+                animation: pulse 1.5s infinite ease-in-out;
+            }
+
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+            @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+            .loader-hidden {
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+            }
+
+            /* --- FIX COLAPSABLE AYUDA --- */
+            #guiaUsoCollapse { display: none; overflow: hidden; }
+            #guiaUsoCollapse.show { display: block; animation: slideDownFade 0.3s ease-out; }
+            @keyframes slideDownFade { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+            /* --- MODO OSCURO PARA BOTONES EXPORTAR (NUEVO) --- */
+            .dark-mode .btn-export {
+                background-color: transparent; /* Quitar fondo blanco */
+                box-shadow: none;
+            }
+            /* Excel Dark */
+            .dark-mode .btn-export-excel {
+                color: #4ade80; /* Verde brillante legible en oscuro */
+                border-color: #4ade80;
+            }
+            .dark-mode .btn-export-excel:hover {
+                background-color: rgba(74, 222, 128, 0.1); /* Tinte verde suave */
+            }
+            /* Stata Dark */
+            .dark-mode .btn-export-stata {
+                color: #60a5fa; /* Azul brillante legible en oscuro */
+                border-color: #60a5fa;
+            }
+            .dark-mode .btn-export-stata:hover {
+                background-color: rgba(96, 165, 250, 0.1); /* Tinte azul suave */
+            }
         </style>
 
         <script th:inline="javascript">
@@ -114,7 +189,7 @@
             
             <div class="card-body">
                 
-                <div class="mb-4">
+                <div class="mb-5">
                     <button class="btn-subtle btn-sm" type="button" 
                             onclick="var el = document.getElementById('guiaUsoCollapse'); el.classList.toggle('show');"
                             style="width: 100%; text-align: left; padding: 0.8rem; display: flex; align-items: center; justify-content: space-between;">
@@ -126,7 +201,7 @@
                         <div class="alert alert-light border shadow-sm mt-2" style="background-color: var(--color-fondo); border-color: var(--color-borde) !important; color: var(--color-texto); border-top: none; border-radius: 0 0 8px 8px;">
                             <ul class="mb-0 ps-3" style="font-size: 0.95rem; color: var(--color-texto-secundario);">
                                 <li class="mb-2"><strong>Guardar Config:</strong> Si activa esta opción, el navegador recordará sus variables calculadas y columnas ocultas para la próxima vez que ingrese.</li>
-                                <li class="mb-2"><strong>Crear Variable (+):</strong> Permite crear una nueva columna basada en cálculos (ej. promedio) o lógica compleja (ej. Si Edad > 60 Y Fumador = Sí).</li>
+                                <li class="mb-2"><strong>Crear Variable (+):</strong> Permite crear una nueva columna basada en cálculos o lógica compleja.</li>
                                 <li class="mb-2"><strong>Ocultar Columna (Ojo):</strong> Excluye temporalmente una columna de la visualización y de la exportación final.</li>
                                 <li><strong>Exportación:</strong> Los archivos generados respetarán su configuración actual de columnas visibles y variables creadas.</li>
                             </ul>
@@ -278,50 +353,67 @@
                         const CONFIG_POR_DEFECTO = {"criterios":{"col-1765572706973":{"nombreColumna":"edad_Media","tipo":"media","puntoCorte":"30","operador":">","origenId":"1"},"col-1765572716560":{"nombreColumna":"edad_Mediana","tipo":"mediana","puntoCorte":"30","operador":">","origenId":"1"},"col-1765572751054":{"nombreColumna":"Edad_50","tipo":"personalizado","puntoCorte":"50","operador":">=","origenId":"1"},"col-1765572765578":{"nombreColumna":"Edad_60","tipo":"personalizado","puntoCorte":"60","operador":">=","origenId":"1"},"col-1765572853068":{"nombreColumna":"Sexo","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"2","operador":"==","valor":"0"}]}],"origenId":"2"},"col-1765573132808":{"nombreColumna":"Residencia_Urbana5a","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"4","operador":"==","valor":"0"},{"campoId":"5","operador":"==","valor":"1"}]},{"logic":"AND","rules":[{"campoId":"4","operador":"==","valor":"1"},{"campoId":"5","operador":"==","valor":"0"}]}],"origenId":"4"},"col-1765573207913":{"nombreColumna":"Residencia_Rural5a","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"4","operador":"==","valor":"1"},{"campoId":"5","operador":"==","valor":"1"}]},{"logic":"AND","rules":[{"campoId":"4","operador":"==","valor":"0"},{"campoId":"5","operador":"==","valor":"0"}]}],"origenId":"4"},"col-1765573306952":{"nombreColumna":"NivelEduc_Basico","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"OR","rules":[{"campoId":"6","operador":"==","valor":"1"},{"campoId":"6","operador":"==","valor":"2"}]}],"origenId":"6"},"col-1765573368701":{"nombreColumna":"NivelEduc_BasicoMedio","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"6","operador":"==","valor":"2"}]}],"origenId":"6"},"col-1765573454203":{"nombreColumna":"Prevision_FonasaVsOtros","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"8","operador":"!=","valor":"0"}]}],"origenId":"8"},"col-1765573476784":{"nombreColumna":"Prevision_IsapreVsOtros","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"8","operador":"!=","valor":"1"}]}],"origenId":"8"},"col-1765573533148":{"nombreColumna":"peso_Media","tipo":"media","puntoCorte":"65","operador":">","origenId":"19"},"col-1765573545519":{"nombreColumna":"peso_Mediana","tipo":"mediana","puntoCorte":"65","operador":">","origenId":"19"},"col-1765573569821":{"nombreColumna":"estatura_Media","tipo":"media","puntoCorte":"1.65","operador":">","origenId":"20"},"col-1765573591562":{"nombreColumna":"estatura_Mediana","tipo":"mediana","puntoCorte":"1.65","operador":">","origenId":"20"},"col-1765573611510":{"nombreColumna":"imc_Media","tipo":"media","puntoCorte":"23.799999999999997","operador":">","origenId":"21"},"col-1765573615876":{"nombreColumna":"imc_Mediana","tipo":"mediana","puntoCorte":"23.799999999999997","operador":">","origenId":"21"},"col-1765573680082":{"nombreColumna":"IMC_Menor25","tipo":"personalizado","puntoCorte":"25","operador":">=","origenId":"21"},"col-1765573819433":{"nombreColumna":"tabaco_nunca_vs_otros","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"22","operador":"!=","valor":"0"}]}],"origenId":"22"},"col-1765574019170":{"nombreColumna":"tabaco_actual_o_reciente","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"22","operador":"==","valor":"2"}]},{"logic":"AND","rules":[{"campoId":"22","operador":"==","valor":"1"},{"campoId":"25","operador":"!=","valor":"2"}]}],"origenId":"22"},"col-1765574111886":{"nombreColumna":"tabaco_reciente_agudo","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"22","operador":"==","valor":"2"}]},{"logic":"AND","rules":[{"campoId":"22","operador":"==","valor":"1"},{"campoId":"25","operador":"==","valor":"0"}]}],"origenId":"22"},"col-1765574380110":{"nombreColumna":"tabaco_moderada_carga","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"22","operador":"==","valor":"2"},{"campoId":"23","operador":"==","valor":"2"}]},{"logic":"AND","rules":[{"campoId":"22","operador":"==","valor":"2"},{"campoId":"23","operador":"!=","valor":"2"},{"campoId":"24","operador":"==","valor":"0"}]},{"logic":"AND","rules":[{"campoId":"22","operador":"==","valor":"1"},{"campoId":"25","operador":"!=","valor":"2"}]}],"origenId":"22"},"col-1765574593204":{"nombreColumna":"tabaco_grave_carga","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"22","operador":"==","valor":"2"},{"campoId":"23","operador":"!=","valor":"0"},{"campoId":"24","operador":"==","valor":"0"}]},{"logic":"AND","rules":[{"campoId":"22","operador":"==","valor":"2"},{"campoId":"23","operador":"==","valor":"2"}]},{"logic":"AND","rules":[{"campoId":"22","operador":"==","valor":"1"},{"campoId":"25","operador":"!=","valor":"2"}]}],"origenId":"22"},"col-1765574654090":{"nombreColumna":"tabaco_cronico","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"22","operador":"==","valor":"2"},{"campoId":"24","operador":"==","valor":"0"}]},{"logic":"AND","rules":[{"campoId":"22","operador":"==","valor":"1"}]}],"origenId":"22"},"col-1765574699632":{"nombreColumna":"tabaco_leve_cronico","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"22","operador":"==","valor":"2"},{"campoId":"23","operador":"==","valor":"0"},{"campoId":"24","operador":"==","valor":"0"}]}],"origenId":"22"},"col-1765575026128":{"nombreColumna":"tabaco_reciente_alta_carga","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"22","operador":"==","valor":"2"},{"campoId":"23","operador":"==","valor":"2"}]},{"logic":"AND","rules":[{"campoId":"22","operador":"==","valor":"2"},{"campoId":"23","operador":"!=","valor":"0"},{"campoId":"24","operador":"==","valor":"0"}]},{"logic":"AND","rules":[{"campoId":"22","operador":"==","valor":"1"},{"campoId":"25","operador":"==","valor":"0"},{"campoId":"23","operador":"!=","valor":"0"}]},{"logic":"AND","rules":[{"campoId":"22","operador":"==","valor":"1"},{"campoId":"25","operador":"==","valor":"0"},{"campoId":"24","operador":"!=","valor":"0"}]}],"origenId":"22"},"col-1765575191556":{"nombreColumna":"alcohol_alguna_vez","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"26","operador":"!=","valor":"0"}]}],"origenId":"26"},"col-1765575239735":{"nombreColumna":"alcohol_actual_o_reciente","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"2"}]},{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"1"},{"campoId":"30","operador":"!=","valor":"2"}]}],"origenId":"26"},"col-1765575295212":{"nombreColumna":"alcohol_reciente_agudo","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"2"}]},{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"1"},{"campoId":"30","operador":"==","valor":"0"}]}],"origenId":"26"},"col-1765575567118":{"nombreColumna":"alcohol_moderada_carga","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"2"},{"campoId":"27","operador":"==","valor":"2"}]},{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"2"},{"campoId":"28","operador":"==","valor":"2"}]},{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"2"},{"campoId":"29","operador":"==","valor":"0"}]},{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"1"},{"campoId":"30","operador":"!=","valor":"2"}]}],"origenId":"26"},"col-1765575709836":{"nombreColumna":"alcohol_grave_carga","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"2"},{"campoId":"28","operador":"==","valor":"2"}]},{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"2"},{"campoId":"28","operador":"==","valor":"1"},{"campoId":"29","operador":"==","valor":"0"}]},{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"2"},{"campoId":"27","operador":"==","valor":"2"}]},{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"1"},{"campoId":"30","operador":"!=","valor":"2"}]}],"origenId":"26"},"col-1765575758265":{"nombreColumna":"alcohol_cronico","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"2"},{"campoId":"29","operador":"==","valor":"0"}]},{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"1"}]}],"origenId":"26"},"col-1765575860421":{"nombreColumna":"alcohol_leve_cronico","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"2"},{"campoId":"27","operador":"!=","valor":"2"},{"campoId":"28","operador":"==","valor":"0"},{"campoId":"29","operador":"==","valor":"0"}]}],"origenId":"26"},"col-1765575993277":{"nombreColumna":"alcohol_intenso_reciente","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"2"},{"campoId":"28","operador":"==","valor":"2"}]},{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"2"},{"campoId":"27","operador":"==","valor":"2"}]},{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"1"},{"campoId":"30","operador":"==","valor":"0"},{"campoId":"28","operador":"==","valor":"2"}]},{"logic":"AND","rules":[{"campoId":"26","operador":"==","valor":"1"},{"campoId":"30","operador":"==","valor":"0"},{"campoId":"27","operador":"==","valor":"2"}]}],"origenId":"26"},"col-1765576160159":{"nombreColumna":"CarnesProcesadas_Menos3","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"31","operador":"==","valor":"2"}]}],"origenId":"31"},"col-1765576199244":{"nombreColumna":"CarnesProcesadas_Max1","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"31","operador":"!=","valor":"0"}]}],"origenId":"31"},"col-1765576253923":{"nombreColumna":"FrutasVerduras_3oMas","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"33","operador":"==","valor":"2"}]}],"origenId":"33"},"col-1765576279314":{"nombreColumna":"FrutasVerduras_5oMas","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"33","operador":"!=","valor":"0"}]}],"origenId":"33"},"col-1765576324770":{"nombreColumna":"CondimentosFrecAlta","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"35","operador":"==","valor":"2"}]}],"origenId":"35"},"col-1765576350678":{"nombreColumna":"CondimentosCualquierConsumo","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"35","operador":"!=","valor":"0"}]}],"origenId":"35"},"col-1765576376432":{"nombreColumna":"BebidasCalientes_AltaFrecuencia","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"36","operador":"==","valor":"2"}]}],"origenId":"36"},"col-1765576397155":{"nombreColumna":"BebidasCalientes_CualquierConsumo","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"36","operador":"!=","valor":"0"}]}],"origenId":"36"},"col-1765576597749":{"nombreColumna":"FuenteYTratamientoAgua","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"41","operador":"!=","valor":"0"},{"campoId":"43","operador":"==","valor":"0"}]}],"origenId":"41"},"col-1765576641104":{"nombreColumna":"Lena_Frecuente","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"40","operador":"==","valor":"2"}]}],"origenId":"40"},"col-1765576655586":{"nombreColumna":"Lena_AlgunaExposicion","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"40","operador":"!=","valor":"0"}]}],"origenId":"40"},"col-1765576715816":{"nombreColumna":"HPylori_AlgunaVezPositivo","tipo":"complejo","globalLogic":"OR","bloques":[{"logic":"AND","rules":[{"campoId":"44","operador":"==","valor":"0"}]},{"logic":"AND","rules":[{"campoId":"45","operador":"==","valor":"0"}]}],"origenId":"44"}},"excludedCols":["2","4","5","6","22","23","25","24","29","28","26","27","30","35","36","31","33","40","43","41","53","44","45","46","48","49","55","57","51","54","60","58"]};
 
                         function init() {
-                            try {
-                                if (typeof bootstrap !== 'undefined') {
-                                    bsModalSimple = new bootstrap.Modal(document.getElementById('modalCriterioSimple'));
-                                    bsModalComplejo = new bootstrap.Modal(document.getElementById('modalCriterioComplejo'));
-                                    bsModalExcel = new bootstrap.Modal(document.getElementById('modalExcelConfirm'));
-                                    bsModalStata = new bootstrap.Modal(document.getElementById('modalStataPreview'));
-                                    bsModalConfirm = new bootstrap.Modal(document.getElementById('modalConfirmarAccion'));
-                                    bsModalPersistencia = new bootstrap.Modal(document.getElementById('modalConfirmarDesactivarConfig'));
-                                }
-                                normalizarTablaANumeros();
-                                
-                                // CARGAR CONFIGURACIÓN (PERSISTENTE O DEFECTO)
-                                cargarConfiguracion(); 
-                                
-                                calcularResumenes();
-                                initDragAndDrop();
-                                initColumnControls();
-                                
-                                document.getElementById('selectTipoSimple').addEventListener('change', function() {
-                                    const div = document.getElementById('divSimplePersonalizado');
-                                    div.style.display = this.value === 'personalizado' ? 'block' : 'none';
-                                });
+                            const loader = document.getElementById('loading-overlay');
 
-                                // --- LÓGICA CONFIRMACIÓN PERSISTENCIA ---
-                                checkPersistencia.addEventListener('click', function(e) {
-                                    if (!this.checked) {
-                                        e.preventDefault();
-                                        bsModalPersistencia.show();
-                                    } else {
-                                        activarPersistencia();
+                            // Usamos setTimeout para asegurar que el loader se renderice
+                            // antes de ejecutar la lógica pesada
+                            setTimeout(() => {
+                                try {
+                                    if (typeof bootstrap !== 'undefined') {
+                                        bsModalSimple = new bootstrap.Modal(document.getElementById('modalCriterioSimple'));
+                                        bsModalComplejo = new bootstrap.Modal(document.getElementById('modalCriterioComplejo'));
+                                        bsModalExcel = new bootstrap.Modal(document.getElementById('modalExcelConfirm'));
+                                        bsModalStata = new bootstrap.Modal(document.getElementById('modalStataPreview'));
+                                        bsModalConfirm = new bootstrap.Modal(document.getElementById('modalConfirmarAccion'));
+                                        bsModalPersistencia = new bootstrap.Modal(document.getElementById('modalConfirmarDesactivarConfig'));
                                     }
-                                });
+                                    
+                                    // --- LÓGICA DE PROCESAMIENTO (QUE PUEDE TARDAR) ---
+                                    normalizarTablaANumeros();
+                                    
+                                    // CARGAR CONFIGURACIÓN (PERSISTENTE O DEFECTO)
+                                    cargarConfiguracion(); 
+                                    
+                                    calcularResumenes();
+                                    initDragAndDrop();
+                                    initColumnControls();
+                                    
+                                    document.getElementById('selectTipoSimple').addEventListener('change', function() {
+                                        const div = document.getElementById('divSimplePersonalizado');
+                                        div.style.display = this.value === 'personalizado' ? 'block' : 'none';
+                                    });
 
-                                document.getElementById('btn-confirmar-desactivacion').onclick = function() {
-                                    desactivarPersistencia();
-                                    bsModalPersistencia.hide();
-                                };
-                                
-                                document.getElementById('btn-cancelar-desactivacion').onclick = function() {
-                                    checkPersistencia.checked = true;
-                                    bsModalPersistencia.hide();
-                                };
+                                    // --- LÓGICA CONFIRMACIÓN PERSISTENCIA ---
+                                    checkPersistencia.addEventListener('click', function(e) {
+                                        if (!this.checked) {
+                                            e.preventDefault();
+                                            bsModalPersistencia.show();
+                                        } else {
+                                            activarPersistencia();
+                                        }
+                                    });
 
-                            } catch(e) { console.error("Error init", e); }
+                                    document.getElementById('btn-confirmar-desactivacion').onclick = function() {
+                                        desactivarPersistencia();
+                                        bsModalPersistencia.hide();
+                                    };
+                                    
+                                    document.getElementById('btn-cancelar-desactivacion').onclick = function() {
+                                        checkPersistencia.checked = true;
+                                        bsModalPersistencia.hide();
+                                    };
+
+                                } catch(e) { 
+                                    console.error("Error init", e); 
+                                } finally {
+                                    // --- OCULTAR LOADER AL FINALIZAR ---
+                                    if(loader) {
+                                        loader.classList.add('loader-hidden');
+                                        // Opcional: Eliminar del DOM después de la transición
+                                        setTimeout(() => loader.remove(), 500);
+                                    }
+                                }
+                            }, 100); 
                         }
 
                         // --- MÉTODOS PERSISTENCIA ---

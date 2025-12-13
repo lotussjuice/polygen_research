@@ -21,6 +21,11 @@ public class CampoCrfService {
         return campoCrfRepository.findAll();
     }
 
+    // --- NUEVO: Método para buscar ---
+    public List<CampoCrf> searchCampos(String nombre) {
+        return campoCrfRepository.findByNombreContainingIgnoreCase(nombre);
+    }
+
     @Transactional
     public CampoCrf saveCampo(CampoCrf campoForm) {
         if (campoForm.getIdCampo() == null) {
@@ -29,9 +34,7 @@ public class CampoCrfService {
             }
             procesarOpciones(campoForm);
             return campoCrfRepository.save(campoForm);
-        } 
-        
-        else {
+        } else {
             CampoCrf campoExistente = campoCrfRepository.findById(campoForm.getIdCampo())
                     .orElseThrow(() -> new RuntimeException("Campo no encontrado con ID: " + campoForm.getIdCampo()));
 
@@ -39,7 +42,6 @@ public class CampoCrfService {
             campoExistente.setPreguntaFormulario(campoForm.getPreguntaFormulario());
             campoExistente.setSeccion(campoForm.getSeccion());
             campoExistente.setDescripcion(campoForm.getDescripcion());
-
 
             String tipoAnterior = campoExistente.getTipo();
             String tipoNuevo = campoForm.getTipo();
@@ -72,7 +74,6 @@ public class CampoCrfService {
         }
     }
 
-    // Método auxiliar para procesar opciones en la creación
     private void procesarOpciones(CampoCrf campo) {
         if (!"SELECCION_UNICA".equals(campo.getTipo())) {
             if (campo.getOpciones() != null) {
@@ -104,5 +105,4 @@ public class CampoCrfService {
         campo.setActivo(!estadoActual);
         campoCrfRepository.save(campo);
     }
-
 }

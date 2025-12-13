@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
@@ -107,13 +108,18 @@ public class StataExportService {
         return prepararDatosStata(criteriosJson, "[]");
     }
 
-    // --- LÓGICA CENTRAL (IDÉNTICA A EXCEL, PERO CON NOMBRES SANITIZADOS) ---
+    // --- LÓGICA CENTRAL CON VALIDACIÓN ---
     private StataPreviewDTO prepararDatosStata(String criteriosJson, String excludedColsJson) throws IOException {
         CrfResumenViewDTO data = crfService.getCrfResumenView(true);
         List<CampoCrfStatsDTO> columnasOriginales = data.getCamposConStats();
         List<CrfResumenRowDTO> filas = data.getFilas();
 
-        // 1. Parsear JSONs (Usando las mismas clases que Excel)
+        // 1. SET DE VALIDACIÓN
+        Set<String> idsCamposActivos = columnasOriginales.stream()
+                .map(c -> String.valueOf(c.getCampoCrf().getIdCampo()))
+                .collect(Collectors.toSet());
+
+        // 2. Parsear JSONs
         Map<String, CriterioFrontDTO> criteriosMap;
         try {
             if (criteriosJson != null && !criteriosJson.isEmpty() && !criteriosJson.equals("{}")) {
@@ -129,9 +135,19 @@ public class StataExportService {
             else columnasExcluidas = objectMapper.readValue(excludedColsJson, new TypeReference<HashSet<String>>(){});
         } catch(Exception e) { columnasExcluidas = new HashSet<>(); }
 
-        // 2. Pre-Calcular Medias y Medianas (Igual que Excel)
-        Map<String, Double> puntosCorteCache = new HashMap<>();
+        // 3. FILTRAR CRITERIOS VÁLIDOS
+        List<String> uuidsOrdenados = new ArrayList<>();
         for (String uuid : criteriosMap.keySet()) {
+            CriterioFrontDTO crit = criteriosMap.get(uuid);
+            // Usamos la misma lógica de validación
+            if (esCriterioValido(crit, idsCamposActivos)) {
+                uuidsOrdenados.add(uuid);
+            }
+        }
+
+        // 4. Pre-Calcular Medias y Medianas (Solo válidos)
+        Map<String, Double> puntosCorteCache = new HashMap<>();
+        for (String uuid : uuidsOrdenados) {
             CriterioFrontDTO crit = criteriosMap.get(uuid);
             if (("media".equals(crit.getTipo()) || "mediana".equals(crit.getTipo())) && crit.getOrigenId() != null) {
                 List<Double> vals = new ArrayList<>();
@@ -151,9 +167,9 @@ public class StataExportService {
             }
         }
 
-        // 3. Preparar Estructuras
-        List<String> headersOriginal = new ArrayList<>(); // Para uso interno o debug
-        List<String> headersStata = new ArrayList<>();    // Los que irán al archivo
+        // 5. Preparar Estructuras
+        List<String> headersOriginal = new ArrayList<>(); 
+        List<String> headersStata = new ArrayList<>();    
         List<Map<String, String>> filasStata = new ArrayList<>();
 
         // Headers Fijos
@@ -165,23 +181,21 @@ public class StataExportService {
             String idStr = String.valueOf(stat.getCampoCrf().getIdCampo());
             String tipo = stat.getCampoCrf().getTipo();
 
-            // FILTRO ESTRICTO IGUAL A EXCEL: Excluir TEXTO, FECHA y Excluidos manuales
             if (!columnasExcluidas.contains(idStr) && !"TEXTO".equals(tipo) && !"FECHA".equals(tipo)) {
                 String nombreReal = stat.getNombreColumna();
                 headersOriginal.add(nombreReal);
-                headersStata.add(sanitizarNombreVariable(nombreReal)); // Sanitizar para Stata
+                headersStata.add(sanitizarNombreVariable(nombreReal));
             }
         }
 
-        // Headers Calculados (Criterios) - Siempre se agregan al final, ordenados
-        List<String> uuidsOrdenados = new ArrayList<>(criteriosMap.keySet());
+        // Headers Calculados (SOLO VÁLIDOS)
         for (String uuid : uuidsOrdenados) {
             CriterioFrontDTO criterio = criteriosMap.get(uuid);
             headersOriginal.add(criterio.getNombreColumna());
-            headersStata.add(sanitizarNombreVariable(criterio.getNombreColumna())); // Sanitizar para Stata
+            headersStata.add(sanitizarNombreVariable(criterio.getNombreColumna())); 
         }
 
-        // 4. Procesar Filas
+        // 6. Procesar Filas
         for (CrfResumenRowDTO fila : filas) {
             Map<String, String> filaStata = new LinkedHashMap<>();
 
@@ -199,11 +213,9 @@ public class StataExportService {
                     String colKey = stat.getColumnaKey();
                     String valorCrudo = fila.getValores().get(colKey);
                     
-                    // LÓGICA NUMÉRICA ESTRICTA (Igual a Excel)
                     Double valNum = obtenerValorNumerico(valorCrudo, stat.getCampoCrf());
                     String valorFinal = (valNum != null && !Double.isNaN(valNum)) ? String.valueOf(valNum) : null;
                     
-                    // Usamos el nombre sanitizado como clave para el mapa de Stata
                     filaStata.put(sanitizarNombreVariable(stat.getNombreColumna()), valorFinal);
                 }
             }
@@ -213,7 +225,6 @@ public class StataExportService {
                 CriterioFrontDTO criterio = criteriosMap.get(uuid);
                 Double puntoCorte = puntosCorteCache.get(uuid);
                 
-                // LÓGICA DE EVALUACIÓN (Copiada de ExcelReporteService para consistencia)
                 Integer resultado = evaluarCriterioStata(fila, criterio, columnasOriginales, puntoCorte);
                 
                 String valorDicoStr = (resultado != null) ? String.valueOf(resultado) : null;
@@ -226,7 +237,23 @@ public class StataExportService {
         return new StataPreviewDTO(headersOriginal, headersStata, null, filasStata);
     }
 
-    // --- MÉTODOS DE CÁLCULO (Copiados de ExcelReporteService para asegurar igualdad) ---
+    // --- NUEVO: MÉTODO DE VALIDACIÓN ---
+    private boolean esCriterioValido(CriterioFrontDTO crit, Set<String> idsActivos) {
+        if ("complejo".equals(crit.getTipo())) {
+            if (crit.getBloques() == null) return false;
+            for (BloqueDTO bloque : crit.getBloques()) {
+                if (bloque.getRules() == null) continue;
+                for (ReglaDTO regla : bloque.getRules()) {
+                    if (!idsActivos.contains(regla.getCampoId())) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        } else {
+            return idsActivos.contains(crit.getOrigenId());
+        }
+    }
 
     private Integer evaluarCriterioStata(CrfResumenRowDTO fila, CriterioFrontDTO criterio, List<CampoCrfStatsDTO> allStats, Double puntoCortePrecalc) {
         // 1. Lógica Simple
@@ -240,7 +267,7 @@ public class StataExportService {
                     String valTexto = fila.getValores().get(stat.getColumnaKey());
                     Double valNum = obtenerValorNumerico(valTexto, stat.getCampoCrf());
                     
-                    if (valNum == null || Double.isNaN(valNum)) return null; // Nulo si falta dato original
+                    if (valNum == null || Double.isNaN(valNum)) return null; 
 
                     double target;
                     if ("personalizado".equals(criterio.getTipo())) {
@@ -257,7 +284,7 @@ public class StataExportService {
             return null;
         } 
         
-        // 2. Lógica Compleja (Ahora soportada en Stata)
+        // 2. Lógica Compleja
         else if ("complejo".equals(criterio.getTipo()) && criterio.getBloques() != null) {
             boolean isMissingData = false;
             List<Boolean> blockResults = new ArrayList<>();
@@ -289,7 +316,7 @@ public class StataExportService {
                 blockResults.add(blockResult);
             }
 
-            if (isMissingData) return null; // Si falta dato, retorna NULL
+            if (isMissingData) return null; 
 
             if ("AND".equals(criterio.getGlobalLogic())) return blockResults.stream().allMatch(b -> b) ? 1 : 0;
             else return blockResults.stream().anyMatch(b -> b) ? 1 : 0;

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping; 
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @Controller
 @RequestMapping("/campos")
@@ -21,9 +22,18 @@ public class CampoCrfController {
     }
 
     @GetMapping("/list")
-    public String listarCampos(Model model) {
-        List<CampoCrf> listaCampos = campoCrfService.getAllCampos();
+    public String listarCampos(Model model, @RequestParam(required = false) String search) {
+        List<CampoCrf> listaCampos;
+        
+        if (search != null && !search.trim().isEmpty()) {
+            listaCampos = campoCrfService.searchCampos(search.trim());
+        } else {
+            listaCampos = campoCrfService.getAllCampos();
+        }
+        
         model.addAttribute("campos", listaCampos);
+        model.addAttribute("search", search); 
+        
         return "dev/CampoCrfTemp/campo-list";
     }
 
@@ -52,5 +62,4 @@ public class CampoCrfController {
         campoCrfService.toggleEstadoCampo(id);
         return "redirect:/campos/list";
     }
-
 }

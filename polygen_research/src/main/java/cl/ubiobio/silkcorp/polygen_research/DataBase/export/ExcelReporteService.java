@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -59,72 +60,32 @@ public class ExcelReporteService {
         }
     }
 
-    public String getNombreColumnaDicotomizada(String nombreOriginal, CriterioDTO criterio) {
-        if ("media".equals(criterio.getTipo())) return nombreOriginal + "_Media";
-        if ("mediana".equals(criterio.getTipo())) return nombreOriginal + "_Mediana";
-        if ("personalizado".equals(criterio.getTipo())) return nombreOriginal + "_" + (criterio.getNombre() != null ? criterio.getNombre() : "Corte");
-        return nombreOriginal + "_Calc";
-    }
-
-    public Map<String, Double> preCalcularPuntosDeCorte(List<CrfResumenRowDTO> filas, 
-                                                        Map<Integer, List<CriterioDTO>> criteriosMap,
-                                                        List<CampoCrfStatsDTO> columnasStats) {
-        Map<String, Double> puntos = new HashMap<>();
-
-        for (CampoCrfStatsDTO col : columnasStats) {
-            Integer idCampo = col.getCampoCrf().getIdCampo();
-            if (!criteriosMap.containsKey(idCampo)) continue;
-
-            List<Double> valoresColumna = new ArrayList<>();
-            for (CrfResumenRowDTO fila : filas) {
-                String valStr = fila.getValores().get(col.getColumnaKey());
-                Double val = obtenerValorNumerico(valStr, col.getCampoCrf());
-                if (val != null && !Double.isNaN(val)) {
-                    valoresColumna.add(val);
-                }
-            }
-
-            for (CriterioDTO crit : criteriosMap.get(idCampo)) {
-                if ("media".equals(crit.getTipo())) {
-                    puntos.put(idCampo + "_media", calculoService.calcularMedia(valoresColumna));
-                } else if ("mediana".equals(crit.getTipo())) {
-                    puntos.put(idCampo + "_mediana", calculoService.calcularMediana(valoresColumna));
-                }
-            }
-        }
-        return puntos;
-    }
-
-    public Integer calcularValorDicotomizado(Map<String, String> valoresFila, double valorFila, CriterioDTO criterio, double puntoCorteCalculado) {
-        if (Double.isNaN(valorFila)) return null; 
-
-        double target = 0.0;
-        String op = ">"; 
-
-        if ("media".equals(criterio.getTipo()) || "mediana".equals(criterio.getTipo())) {
-            target = puntoCorteCalculado;
-            op = ">"; 
-        } else if ("personalizado".equals(criterio.getTipo())) {
-            target = parseDouble(criterio.getPuntoCorte());
-            if (Double.isNaN(target)) target = 0.0;
-            op = criterio.getOperador() != null ? criterio.getOperador() : ">";
-        }
-
-        return evaluarOperacionSimple(valorFila, op, target) ? 1 : 0;
-    }
-
     // --- LOGICA EXCEL ---
     public ByteArrayInputStream generarReporteDicotomizado(String criteriosJson, String excludedColsJson) throws IOException {
         Map<String, CriterioFrontDTO> criteriosMap = parsearCriterios(criteriosJson);
         Set<String> columnasExcluidas = parsearExcluidas(excludedColsJson);
 
-        CrfResumenViewDTO data = crfService.getCrfResumenView(true);
+        CrfResumenViewDTO data = crfService.getCrfResumenView(true); // Trae SOLO activos
         List<CampoCrfStatsDTO> columnasOriginales = data.getCamposConStats();
         List<CrfResumenRowDTO> filas = data.getFilas();
 
-        // 1. Pre-Calcular Medias y Medianas
-        Map<String, Double> puntosCorteCache = new HashMap<>();
+        // 1. CREAR SET DE IDs ACTIVOS PARA VALIDACIÓN RÁPIDA
+        Set<String> idsCamposActivos = columnasOriginales.stream()
+                .map(c -> String.valueOf(c.getCampoCrf().getIdCampo()))
+                .collect(Collectors.toSet());
+
+        // 2. FILTRAR CRITERIOS: Solo procesar aquellos cuyos campos origen sigan activos
+        List<String> uuidsOrdenados = new ArrayList<>();
         for (String uuid : criteriosMap.keySet()) {
+            CriterioFrontDTO crit = criteriosMap.get(uuid);
+            if (esCriterioValido(crit, idsCamposActivos)) {
+                uuidsOrdenados.add(uuid);
+            }
+        }
+
+        // 3. Pre-Calcular Medias y Medianas (Solo para los validados)
+        Map<String, Double> puntosCorteCache = new HashMap<>();
+        for (String uuid : uuidsOrdenados) {
             CriterioFrontDTO crit = criteriosMap.get(uuid);
             if (("media".equals(crit.getTipo()) || "mediana".equals(crit.getTipo())) && crit.getOrigenId() != null) {
                 List<Double> vals = new ArrayList<>();
@@ -178,7 +139,7 @@ public class ExcelReporteService {
                 }
             }
 
-            List<String> uuidsOrdenados = new ArrayList<>(criteriosMap.keySet());
+            // SOLO AGREGAMOS HEADERS DE CRITERIOS VÁLIDOS
             for (String uuid : uuidsOrdenados) {
                 CriterioFrontDTO criterio = criteriosMap.get(uuid);
                 crearCeldaHeader(headerRow, colIdx++, criterio.getNombreColumna(), calcHeaderStyle);
@@ -206,7 +167,7 @@ public class ExcelReporteService {
                     }
                 }
 
-                // Columnas Calculadas
+                // Columnas Calculadas (Solo las validadas)
                 for (String uuid : uuidsOrdenados) {
                     CriterioFrontDTO criterio = criteriosMap.get(uuid);
                     Double puntoCorte = puntosCorteCache.get(uuid);
@@ -214,14 +175,34 @@ public class ExcelReporteService {
                     
                     Cell cell = row.createCell(cellIdx++);
                     if (resultado != null) {
-                        cell.setCellValue(resultado); // Escribe 1 o 0 si el cálculo fue exitoso
+                        cell.setCellValue(resultado); 
                     } else {
-                        cell.setBlank(); // Escribe NADA si faltaban datos
+                        cell.setBlank(); 
                     }
                 }
             }
             workbook.write(out);
             return new ByteArrayInputStream(out.toByteArray());
+        }
+    }
+
+    // --- NUEVO: MÉTODO DE VALIDACIÓN ---
+    private boolean esCriterioValido(CriterioFrontDTO crit, Set<String> idsActivos) {
+        if ("complejo".equals(crit.getTipo())) {
+            // Verificar que TODOS los campos usados en los bloques existan
+            if (crit.getBloques() == null) return false;
+            for (BloqueDTO bloque : crit.getBloques()) {
+                if (bloque.getRules() == null) continue;
+                for (ReglaDTO regla : bloque.getRules()) {
+                    if (!idsActivos.contains(regla.getCampoId())) {
+                        return false; // Una regla usa un campo inactivo -> inválido
+                    }
+                }
+            }
+            return true;
+        } else {
+            // Simple: Verificar origenId
+            return idsActivos.contains(crit.getOrigenId());
         }
     }
 
@@ -237,7 +218,6 @@ public class ExcelReporteService {
                     String valTexto = fila.getValores().get(stat.getColumnaKey());
                     Double valNum = obtenerValorNumerico(valTexto, stat.getCampoCrf());
                     
-                    // CORRECCIÓN: Si el valor original no existe, retornamos NULL
                     if (valNum == null || Double.isNaN(valNum)) return null;
 
                     double target;
@@ -252,13 +232,12 @@ public class ExcelReporteService {
                     return evaluarOperacionSimple(valNum, op, target) ? 1 : 0;
                 }
             }
-            return null; // Si no encuentra columna origen, retorna null
+            return null; 
         } 
         
         // --- LOGICA COMPLEJA ---
         else if ("complejo".equals(criterio.getTipo()) && criterio.getBloques() != null) {
             
-            // CORRECCIÓN PRINCIPAL PARA COMPLEJOS: Detectar datos faltantes
             boolean isMissingData = false;
 
             List<Boolean> blockResults = new ArrayList<>();
@@ -274,30 +253,25 @@ public class ExcelReporteService {
                         String valTexto = fila.getValores().get(campoStat.getColumnaKey());
                         Double valNum = obtenerValorNumerico(valTexto, campoStat.getCampoCrf());
                         
-                        // Si falta el dato en la celda, marcamos la bandera de faltante
                         if ((valNum == null || Double.isNaN(valNum)) && (valTexto == null || valTexto.equals("-") || valTexto.isEmpty())) {
                             isMissingData = true;
                         }
 
                         rulesResults.add(evaluarRegla(valNum, valTexto, regla.getOperador(), regla.getValor()));
                     } else {
-                        // Si el campo ni siquiera existe en la definición
                         isMissingData = true; 
                         rulesResults.add(false);
                     }
                 }
                 
-                // Calcular lógica del bloque
                 boolean blockResult;
                 if ("AND".equals(bloque.getLogic())) blockResult = rulesResults.stream().allMatch(b -> b);
                 else blockResult = rulesResults.stream().anyMatch(b -> b);
                 blockResults.add(blockResult);
             }
 
-            // Si detectamos que faltaba algún dato crítico, retornamos NULL
             if (isMissingData) return null;
 
-            // Si todos los datos estaban presentes, calculamos el resultado final
             if ("AND".equals(criterio.getGlobalLogic())) return blockResults.stream().allMatch(b -> b) ? 1 : 0;
             else return blockResults.stream().anyMatch(b -> b) ? 1 : 0;
         }
@@ -337,8 +311,6 @@ public class ExcelReporteService {
     }
 
     private boolean evaluarRegla(Double valNum, String valTexto, String op, String target) {
-        // Nota: Este método retorna false si falta el dato, para que el stream().allMatch funcione.
-        // Pero arriba ya controlamos con 'isMissingData' si debemos invalidar todo el cálculo.
         if (valNum == null && (valTexto == null || "contains".equals(op))) return false;
         
         Double targetNum = null;

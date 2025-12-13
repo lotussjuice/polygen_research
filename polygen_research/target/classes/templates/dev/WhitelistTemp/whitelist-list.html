@@ -17,7 +17,7 @@
 
             <div th:if="${#lists.isEmpty(credenciales)}" class="alert"
                 style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
-                No hay credenciales registradas.
+                No hay credenciales registradas (o visibles para tu rol).
             </div>
 
             <div class="table-responsive-wrapper" th:if="${!#lists.isEmpty(credenciales)}">
@@ -42,39 +42,57 @@
                                 th:id="'rol-actual-text-' + ${w.usuario?.idUsuario}">...</td>
 
                             <td>
-                                <div th:if="${w.usuario != null}"
-                                    style="display: flex; gap: 0.5rem; align-items: center; justify-content: center;">
+                                <div th:if="${w.usuario != null}">
+                                    
+                                    <div th:if="${w.usuario.idUsuario == currentUserId}" 
+                                         style="text-align: center;">
+                                        <span class="badge" style="background-color: var(--color-fondo); color: var(--color-texto-secundario); border: 1px solid var(--color-borde);">
+                                            <i class="ph-bold ph-user"></i> Tu Usuario
+                                        </span>
+                                    </div>
 
-                                    <select class="form-control form-control-sm"
-                                        th:id="'select-rol-' + ${w.usuario.idUsuario}"
-                                        style="width: auto; min-width: 140px;">
-                                        <option th:value="${w.usuario.rolUsuario.idRol}"
-                                            th:text="${w.usuario.rolUsuario.nombreRol}" selected>
-                                        </option>
-                                        <th:block th:each="rol : ${todosLosRoles}">
-                                            <option th:if="${rol.idRol != w.usuario.rolUsuario.idRol}"
-                                                th:value="${rol.idRol}" th:text="${rol.nombreRol}">
+                                    <div th:unless="${w.usuario.idUsuario == currentUserId}"
+                                         style="display: flex; gap: 0.5rem; align-items: center; justify-content: center;">
+
+                                        <select class="form-control form-control-sm"
+                                            th:id="'select-rol-' + ${w.usuario.idUsuario}"
+                                            style="width: auto; min-width: 140px;">
+                                            <option th:value="${w.usuario.rolUsuario.idRol}"
+                                                th:text="${w.usuario.rolUsuario.nombreRol}" selected>
                                             </option>
-                                        </th:block>
-                                    </select>
+                                            <th:block th:each="rol : ${todosLosRoles}">
+                                                <option th:if="${rol.idRol != w.usuario.rolUsuario.idRol}"
+                                                    th:value="${rol.idRol}" th:text="${rol.nombreRol}">
+                                                </option>
+                                            </th:block>
+                                        </select>
 
-                                    <button type="button" class="btn-primario btn-sm"
-                                        th:attr="data-usuario-id=${w.usuario.idUsuario}, data-usuario-nombre=${w.usuario.nombreUsuario}"
-                                        onclick="abrirModalConfirmarRol(this)" title="Guardar Rol">
-                                        <i class="ph-bold ph-floppy-disk"></i>
-                                    </button>
+                                        <button type="button" class="btn-primario btn-sm"
+                                            th:attr="data-usuario-id=${w.usuario.idUsuario}, data-usuario-nombre=${w.usuario.nombreUsuario}"
+                                            onclick="abrirModalConfirmarRol(this)" title="Guardar Rol">
+                                            <i class="ph-bold ph-floppy-disk"></i>
+                                        </button>
+                                    </div>
                                 </div>
                                 <span th:unless="${w.usuario != null}">-</span>
                             </td>
 
                             <td class="actions-cell">
                                 <div style="display: flex; justify-content: center; align-items: center;">
-                                    <button th:if="${w.usuario != null}" type="button" class="btn-error btn-sm"
+                                    
+                                    <button th:if="${w.usuario != null and w.usuario.idUsuario != currentUserId}" 
+                                        type="button" class="btn-error btn-sm"
                                         title="Eliminar Usuario"
                                         th:attr="data-usuario-id=${w.usuario.idUsuario}, data-usuario-nombre=${w.usuario.nombreUsuario}"
                                         onclick="mostrarConfirmacionEliminar(this)">
                                         <i class="ph-bold ph-trash"></i>
                                     </button>
+                                    
+                                    <span th:if="${w.usuario != null and w.usuario.idUsuario == currentUserId}" 
+                                          title="No puedes eliminarte a ti mismo" style="color: var(--color-texto-secundario);">
+                                        <i class="ph-bold ph-lock-key"></i>
+                                    </span>
+
                                     <span th:unless="${w.usuario != null}" style="color: #999;">-</span>
                                 </div>
                             </td>
