@@ -38,7 +38,6 @@
                         <th>ID</th>
                         <th>Nombre (Variable)</th>
                         <th>Tipo</th>
-                        <th>Descripción</th>
                         <th>Estado</th>
                         <th style="text-align: right; width: 150px;">Acciones</th>
                     </tr>
@@ -48,7 +47,6 @@
                         <td th:text="${c.idCampo}">...</td>
                         <td th:text="${c.nombre}">...</td>
                         <td th:text="${c.tipo}">...</td>
-                        <td th:text="${c.descripcion}">...</td>
                         <td>
                             <span th:if="${c.activo == true}" style="color: var(--color-exito);">Activo</span>
                             <span th:if="${c.activo == false or c.activo == null}" style="color: var(--color-texto-secundario);">Inactivo</span>
