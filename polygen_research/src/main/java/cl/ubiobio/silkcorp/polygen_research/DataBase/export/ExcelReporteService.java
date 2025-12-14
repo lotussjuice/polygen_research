@@ -32,7 +32,6 @@ import cl.ubiobio.silkcorp.polygen_research.DataBase.OpcionCampoCrf.OpcionCampoC
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CampoCrfStatsDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenRowDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CrfResumenViewDTO;
-import cl.ubiobio.silkcorp.polygen_research.DataBase.dto.CriterioDTO;
 import cl.ubiobio.silkcorp.polygen_research.DataBase.util.CalculoService;
 
 @Service
@@ -124,8 +123,8 @@ public class ExcelReporteService {
             // Header
             Row headerRow = sheet.createRow(0);
             int colIdx = 0;
-            crearCeldaHeader(headerRow, colIdx++, "ID CRF", headerStyle);
-            crearCeldaHeader(headerRow, colIdx++, "Cód. Paciente", headerStyle);
+            crearCeldaHeader(headerRow, colIdx++, "ID_CRF", headerStyle);
+            crearCeldaHeader(headerRow, colIdx++, "Cod_Paciente", headerStyle);
 
             List<CampoCrfStatsDTO> columnasAExportar = new ArrayList<>();
             for (CampoCrfStatsDTO stat : columnasOriginales) {
