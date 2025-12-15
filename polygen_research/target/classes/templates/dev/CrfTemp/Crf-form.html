@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+
+<div th:fragment="contenido">
+
+    <form th:action="@{/crf/guardar}" th:object="${crfForm}" method="post" id="crfFormulario">
+
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <input type="hidden" th:field="*{idCrf}" />
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="ph-bold ph-user-list"></i> 1. Datos del Paciente y Estudio</h3>
+            </div>
+            <div class="card-body">
+                
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="codigoPaciente">Código</label>
+                        <input type="text" class="form-control" id="codigoPaciente"
+                            th:field="*{datosPaciente.codigoPaciente}" required
+                            autocomplete="off"> <small id="msgErrorCodigo" style="display: none; color: var(--color-error); font-weight: bold; margin-top: 5px;">
+                            <i class="ph-bold ph-warning-circle"></i> Este código ya existe. Debe ser único.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label for="nombre">Nombre</label>
+                        <input type="text" class="form-control" id="nombre" th:field="*{datosPaciente.nombre}" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="apellido">Apellido</label>
+                        <input type="text" class="form-control" id="apellido" th:field="*{datosPaciente.apellido}" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="numero">Número Contacto</label>
+                    <input type="text" class="form-control" id="numero" th:field="*{datosPaciente.numero}">
+                </div>
+                <div class="form-group">
+                    <label for="direccion">Dirección</label>
+                    <input type="text" class="form-control" id="direccion" th:field="*{datosPaciente.direccion}">
+                </div>
+
+                <hr style="margin: 1.5rem 0; border-top: 1px solid var(--borde-tabla);">
+
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Tipo de Caso</label>
+                    <div style="display: flex; gap: 1.5rem;">
+                        <label class="radio-label">
+                            <input type="radio" th:field="*{esCasoEstudio}" th:value="false" required> 
+                            <span>Control</span>
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" th:field="*{esCasoEstudio}" th:value="true" required> 
+                            <span>Caso (Cancér Gástrico))</span>
+                        </label>
+                    </div>
+                </div>
+                <input type="hidden" th:field="*{datosPaciente.estado}">
+            </div>
+        </div>
+
+        <th:block th:each="secNum : ${#numbers.sequence(2, 9)}">
+            <div class="card" style="margin-top: 1.5rem;">
+                <div class="card-header">
+                    <h3 th:switch="${secNum}">
+                        <span th:case="2"><i class="ph-bold ph-users"></i> 2. Datos sociodemográficos</span>
+                        <span th:case="3"><i class="ph-bold ph-heartbeat"></i> 3. Antecedentes clínicos</span>
+                        <span th:case="4"><i class="ph-bold ph-ruler"></i> 4. Variables antropométricas</span>
+                        <span th:case="5"><i class="ph-bold ph-fire"></i> 5. Tabaquismo</span>
+                        <span th:case="6"><i class="ph-bold ph-brandy"></i> 6. Consumo de alcohol</span>
+                        <span th:case="7"><i class="ph-bold ph-carrot"></i> 7. Factores dietarios y ambientales</span>
+                        <span th:case="8"><i class="ph-bold ph-virus"></i> 8. Infección por Helicobacter pylori</span>
+                        <span th:case="9"><i class="ph-bold ph-microscope"></i> 9. Histopatología (SOLO CASOS)</span>
+                        <span th:case="*">Sección [[${secNum}]]</span>
+                    </h3>
+                </div>
+                
+                <div class="card-body">
+                    <div th:each="dato, stat : *{datosCrfList}" 
+                        th:if="${dato.campoCrf.seccion == secNum}" 
+                        class="form-group"
+                        th:data-id="${dato.campoCrf.idCampo}">
+
+                        <label th:for="${'valor-' + stat.index}" 
+                            th:text="${dato.campoCrf.preguntaFormulario != null ? dato.campoCrf.preguntaFormulario : dato.campoCrf.nombre}">
+                        </label>
+                        
+                        <small th:if="${dato.campoCrf.descripcion != null}" 
+                            th:text="${dato.campoCrf.descripcion}"
+                            style="display: block; color: var(--color-texto-secundario); margin-bottom: 0.5rem;">
+                        </small>
+
+                        <div th:switch="${dato.campoCrf.tipo}">
+                            
+                            <input th:case="'NUMERO'" type="number" step="any" class="form-control"
+                                th:id="${'valor-' + stat.index}" 
+                                th:field="*{datosCrfList[__${stat.index}__].valor}"
+                                th:attr="data-var-name=${dato.campoCrf.nombre}"> 
+
+                            <input th:case="'FECHA'" type="date" class="form-control" th:id="${'valor-' + stat.index}"
+                                th:field="*{datosCrfList[__${stat.index}__].valor}">
+
+                            <div th:case="'SI/NO'" class="radio-group-sino">
+                                <label class="radio-label">
+                                    <input type="radio" th:name="${'datosCrfList[' + stat.index + '].valor'}" value="1"
+                                        th:checked="${#strings.equals(dato.valor, '1')}" />
+                                    <span>Sí</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" th:name="${'datosCrfList[' + stat.index + '].valor'}" value="0"
+                                        th:checked="${#strings.equals(dato.valor, '0')}" />
+                                    <span>No</span>
+                                </label>
+                            </div>
+
+                            <div th:case="'SELECCION_UNICA'" class="radio-group-sino">
+                                <label th:each="opcion : ${dato.campoCrf.opciones}" class="radio-label">
+                                    <input type="radio" th:name="${'datosCrfList[' + stat.index + '].valor'}"
+                                        th:value="${opcion.orden}"
+                                        th:checked="${#strings.equals(dato.valor, #strings.toString(opcion.orden))}" />
+                                    <span th:text="${opcion.etiqueta}"></span>
+                                </label>
+                            </div>
+
+                            <input th:case="*" type="text" maxlength="30" class="form-control"
+                                th:id="${'valor-' + stat.index}" th:field="*{datosCrfList[__${stat.index}__].valor}">
+                        </div>
+                        
+                        <input type="hidden" th:field="*{datosCrfList[__${stat.index}__].campoCrf.idCampo}" />
+                    </div>
+                </div>
+            </div>
+        </th:block>
+
+        <div class="card" style="margin-top: 1.5rem; border-left: 5px solid var(--color-primario);">
+            <div class="card-header">
+                <h3><i class="ph-bold ph-note-pencil"></i> Observaciones Finales</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <div class="textarea-wrapper">
+                        <textarea class="form-control" id="observacion" th:field="*{observacion}" rows="4"
+                            maxlength="250"
+                            placeholder="Añadir notas clínicas generales o comentarios sobre el formulario..."
+                            oninput="actualizarContador(this)"></textarea>
+                        <span id="contador-obs" class="char-counter">0/250</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions" style="margin-top: 2rem; display: flex; gap: 1rem; justify-content: flex-end;">
+            <button type="button" class="btn-secondary" onclick="window.history.back()">Cancelar</button>
+            <button type="button" class="btn-primario" id="btnGuardarPrincipal" onclick="abrirConfirmacion()">Guardar CRF</button>
+        </div>
+
+        <div th:if="${errorMessage}" class="alert alert-error" style="margin-top: 1.5rem;">
+            <strong>Error:</strong> <span th:text="${errorMessage}"></span>
+        </div>
+
+    </form>
+
+    <script th:inline="javascript">
+        
+        const codigosRegistrados = []; 
+
+        document.addEventListener("DOMContentLoaded", function () {
+            
+            const inputCodigo = document.getElementById('codigoPaciente');
+            const msgError = document.getElementById('msgErrorCodigo');
+            const btnGuardar = document.getElementById('btnGuardarPrincipal');
+
+            function validarCodigo() {
+                const valor = inputCodigo.value.trim();
+                
+                const existe = codigosRegistrados.some(c => c.toLowerCase() === valor.toLowerCase());
+
+                if (existe) {
+                    inputCodigo.classList.add('input-error-anim');
+                    inputCodigo.style.borderColor = 'var(--color-error)';
+                    msgError.style.display = 'block';
+                    btnGuardar.disabled = true; // Deshabilita el botón guardar
+                    btnGuardar.style.opacity = '0.5';
+                    btnGuardar.style.cursor = 'not-allowed';
+                } else {
+                    inputCodigo.classList.remove('input-error-anim');
+                    inputCodigo.style.borderColor = '';
+                    msgError.style.display = 'none';
+                    btnGuardar.disabled = false; // Rehabilita
+                    btnGuardar.style.opacity = '1';
+                    btnGuardar.style.cursor = 'pointer';
+                }
+            }
+
+            // Ejecutar validación cada vez que el usuario escribe
+            if(inputCodigo) {
+                inputCodigo.addEventListener('input', validarCodigo);
+                // También validamos al cargar por si el navegador autocompletó algo
+                validarCodigo(); 
+            }
+
+            // --- LÓGICA DE ORDENAMIENTO ---
+            document.querySelectorAll('.card-body').forEach(container => {
+                const items = Array.from(container.querySelectorAll('.form-group[data-id]'));
+                if (items.length > 0) {
+                    items.sort((a, b) => {
+                        return parseInt(a.getAttribute('data-id')) - parseInt(b.getAttribute('data-id'));
+                    });
+                    items.forEach(item => container.appendChild(item));
+                }
+            });
+
+            // --- ANIMACIONES DE REQUIRED ---
+            const requiredInputs = document.querySelectorAll('input[required], select[required], textarea[required]');
+            requiredInputs.forEach(input => {
+                input.addEventListener('invalid', function (e) {
+                    this.classList.remove('input-error-anim');
+                    void this.offsetWidth;
+                    this.classList.add('input-error-anim');
+                    setTimeout(() => {
+                        this.classList.remove('input-error-anim');
+                    }, 4000);
+                });
+            });
+
+            // --- CÁLCULO AUTOMÁTICO DE IMC ---
+            const NOMBRE_VAR_PESO = 'peso';
+            const NOMBRE_VAR_TALLA = 'estatura';
+            const NOMBRE_VAR_IMC = 'imc';
+
+            const inputPeso = document.querySelector(`input[type="number"][data-var-name="${NOMBRE_VAR_PESO}"]`);
+            const inputTalla = document.querySelector(`input[type="number"][data-var-name="${NOMBRE_VAR_TALLA}"]`);
+            const inputIMC = document.querySelector(`input[type="number"][data-var-name="${NOMBRE_VAR_IMC}"]`);
+
+            if (inputPeso && inputTalla && inputIMC) {
+                inputIMC.setAttribute('readonly', true);
+                inputIMC.style.backgroundColor = '#e9ecef';
+                inputIMC.placeholder = "Auto...";
+
+                function calcularIMC() {
+                    const peso = parseFloat(inputPeso.value);
+                    let talla = parseFloat(inputTalla.value);
+
+                    if (peso > 0 && talla > 0) {
+                        if (talla > 3) {
+                             talla = talla / 100;
+                        }
+                        const imc = peso / (talla * talla);
+                        inputIMC.value = imc.toFixed(1);
+                    } else {
+                        inputIMC.value = '';
+                    }
+                }
+
+                inputPeso.addEventListener('input', calcularIMC);
+                inputTalla.addEventListener('input', calcularIMC);
+                calcularIMC();
+            }
+
+
+
+
+
+            const radios = document.querySelectorAll('input[type="radio"]');
+            
+            radios.forEach(radio => {
+                radio.addEventListener('mousedown', function() {
+                    this.dataset.wasChecked = this.checked; 
+                });
+
+                radio.addEventListener('click', function() {
+                    if (this.dataset.wasChecked === 'true') {
+                        this.checked = false;
+                        this.dataset.wasChecked = 'false';
+                    }
+                });
+            });
+        });
+
+        const modalConf = document.getElementById('modalConfirmarGuardado');
+        const formCrf = document.getElementById('crfFormulario');
+
+        function abrirConfirmacion() {
+            if (!formCrf.checkValidity()) {
+                formCrf.reportValidity();
+                return;
+            }
+            
+            // Doble chequeo por seguridad antes de abrir modal
+            const btnGuardar = document.getElementById('btnGuardarPrincipal');
+            if (btnGuardar.disabled) {
+                alert("Por favor corrige los errores antes de guardar.");
+                return;
+            }
+
+            const modalElement = document.getElementById('modalConfirmarGuardado');
+            if(modalElement) {
+                modalElement.style.display = 'block';
+            } else {
+                if(confirm("¿Estás seguro de guardar el formulario CRF?")) {
+                    formCrf.submit();
+                }
+            }
+        }
+
+        function enviarFormularioReal() {
+            formCrf.submit();
+        }
+
+        function actualizarContador(textarea) {
+            const maxLength = textarea.getAttribute("maxlength");
+            const currentLength = textarea.value.length;
+            const contador = document.getElementById("contador-obs");
+            if(contador) {
+                contador.textContent = `${currentLength}/${maxLength}`;
+                if (currentLength >= maxLength) {
+                    contador.style.color = "var(--color-error)";
+                } else {
+                    contador.style.color = "var(--color-texto-secundario)";
+                }
+            }
+        }
+        
+        const obsTextarea = document.getElementById("observacion");
+        if (obsTextarea) actualizarContador(obsTextarea);
+
+    </script>
+    
+    <div id="modalConfirmarGuardado" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3>Confirmar Guardado</h3>
+                <span class="close" onclick="document.getElementById('modalConfirmarGuardado').style.display='none'">&times;</span>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de guardar los cambios en este formulario?</p>
+                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secundario" onclick="document.getElementById('modalConfirmarGuardado').style.display='none'">Cancelar</button>
+                <button type="button" class="btn-primario" onclick="enviarFormularioReal()">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+</html>

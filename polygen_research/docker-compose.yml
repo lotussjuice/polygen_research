@@ -1,0 +1,39 @@
+services:
+  mysqldb:
+    image: mysql:8.0
+    container_name: polygen-mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: polygen_research_db
+      MYSQL_ROOT_PASSWORD: root_password_segura
+      MYSQL_USER: polygen_user
+      MYSQL_PASSWORD: polygen_password
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    # Asegurarse de que MySQL esté listo antes de iniciar la aplicación
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  app:
+    build: .
+    container_name: polygen-app
+    depends_on:
+      mysqldb:
+        condition: service_healthy # Espera a que el healthcheck pase
+    ports:
+      - "1010:1010"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysqldb:3306/polygen_research_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: polygen_user
+      SPRING_DATASOURCE_PASSWORD: polygen_password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      MAIL_USERNAME: polygenresearchsys@gmail.com
+      MAIL_PASSWORD: "birj lojp nxdk cnrx"
+
+volumes:
+  db_data:
+    driver: local

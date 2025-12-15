@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/main-layout :: ~{}}">
+
+<div th:fragment="contenido">
+    
+    <style>
+        .mural-section { margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--color-borde); }
+        .mural-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        
+        /* Corrección del botón para que no ocupe todo el ancho */
+        .mural-header .btn-primario {
+            width: auto;
+            display: inline-flex;
+            padding: 0.6rem 1.2rem;
+        }
+
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
+        }
+        
+        .note-card {
+            background-color: #feff9c;
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            position: relative;
+            min-height: 160px;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid transparent;
+        }
+        
+        .note-card:hover { transform: scale(1.02); box-shadow: 3px 3px 10px rgba(0,0,0,0.15); }
+        .note-title { font-weight: bold; margin-bottom: 10px; font-size: 1.1em; border-bottom: 1px dashed rgba(0,0,0,0.1); padding-bottom: 5px; color: #333; }
+        .note-content { font-size: 0.95em; color: #444; flex-grow: 1; white-space: pre-wrap; }
+        
+        .note-actions {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            display: flex;
+            gap: 5px;
+            background-color: rgba(255,255,255,0.7);
+            padding: 3px;
+            border-radius: 4px;
+        }
+        .note-card:hover .note-actions { opacity: 1; }
+        
+        .action-btn { 
+            cursor: pointer; 
+            font-size: 16px;
+            color: #555; 
+            text-decoration: none;
+            padding: 4px 6px;
+            border-radius: 4px;
+            background: transparent;
+            border: none;
+            transition: background-color 0.2s, color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .action-btn:hover { 
+            background-color: rgba(0,0,0,0.1); 
+            color: #000; 
+        }
+
+        /* NUEVO COLOR MODO OSCURO (Gris Neutro) */
+        .dark-mode .note-card { 
+            background-color: #2c3338; 
+            color: #e0e0e0;
+            border-color: #444;
+        }
+        .dark-mode .note-title { color: #fff; border-bottom-color: rgba(255,255,255,0.2); }
+        .dark-mode .note-content { color: #ccc; }
+        .dark-mode .note-actions { background-color: rgba(0,0,0,0.6); }
+        .dark-mode .action-btn { color: #ccc; }
+        .dark-mode .action-btn:hover { background-color: rgba(255,255,255,0.1); color: #fff; }
+
+        #modalNota .modal-content, #modalVerNota .modal-content {
+            background-color: var(--color-tarjeta);
+            color: var(--color-texto);
+            border: 1px solid var(--color-borde);
+        }
+        
+        #modalNota input, #modalNota textarea {
+            background-color: var(--color-fondo);
+            color: var(--color-texto);
+            border: 1px solid var(--color-borde);
+        }
+
+        .input-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        
+        .input-wrapper input, .input-wrapper textarea {
+            width: 100%;
+            padding-right: 70px !important;
+        }
+
+        .char-counter-modal {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            font-size: 0.75rem;
+            color: var(--color-texto-secundario);
+            pointer-events: none;
+            background-color: rgba(255,255,255,0.1);
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+    </style>
+
+    <div class="dashboard-header">
+        <h1 th:text="'¡Bienvenido(a), ' + ${#authentication.principal.nombreUsuario} + '!'">¡Bienvenido(a)!</h1>
+    </div>
+
+    <div class="dashboard-grid-2col">
+        <div class="dashboard-stats-grid-2x2">
+            <div class="mini-stat-card">
+                <span class="stat-title">Cantidad CRF's totales</span>
+                <span class="stat-value" th:text="${totalCrfs}">0</span>
+            </div>
+            <div class="mini-stat-card">
+                <span class="stat-title">Casos (Estudio)</span>
+                <span class="stat-value" th:text="${casosEstudio}">0</span>
+            </div>
+            <div class="mini-stat-card">
+                <span class="stat-title">Controles (Consulta)</span>
+                <span class="stat-value" th:text="${casosConsulta}">0</span>
+            </div>
+            <div class="mini-stat-card">
+                <span class="stat-title">Fecha del último cambio</span>
+                <span class="stat-value-small" th:text="${fechaUltimoCambio}">N/A</span>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <h3>Tipos de Paciente</h3>
+            <div class="chart-canvas-wrapper">
+                <canvas id="tipoPacienteChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <div class="dashboard-user-role" 
+         th:if="${#authentication.authorities.size() > 0}"
+         th:text="${#strings.replace(#authentication.authorities[0].authority, 'ROLE_', '')}">
+         Rol
+    </div>
+
+    <div class="mural-section">
+        <div class="mural-header">
+            <h2>Mural de Notas</h2>
+            <button class="btn-primario" onclick="abrirModalNota()">
+                <i class="ph-bold ph-plus"></i> Nueva Nota
+            </button>
+        </div>
+
+        <div class="notes-grid">
+            <div th:if="${listaNotas == null or listaNotas.empty}" style="grid-column: 1/-1; text-align: center; color: var(--color-texto-secundario);">
+                <p>No hay notas en el mural. ¡Crea la primera!</p>
+            </div>
+
+            <div class="note-card" th:each="nota : ${listaNotas}" 
+                th:onclick="verNotaDetalle(this, event)"
+                th:data-titulo="${nota.titulo}"
+                th:data-contenido="${nota.contenido}"
+                style="cursor: pointer;">
+                
+                <div class="note-actions">
+                    <button class="action-btn" title="Editar"
+                        th:data-id="${nota.id}"
+                        th:data-titulo="${nota.titulo}"
+                        th:data-contenido="${nota.contenido}"
+                        onclick="editarNota(this); event.stopPropagation();">
+                        <i class="ph-bold ph-pencil-simple"></i>
+                    </button> 
+                    <button class="action-btn" title="Eliminar"
+                        th:data-url="@{/notas/eliminar/{id}(id=${nota.id})}"
+                        onclick="confirmarEliminarNota(this); event.stopPropagation();">
+                        <i class="ph-bold ph-trash"></i>
+                    </button>
+                </div>
+    
+                <div class="note-title" th:text="${nota.titulo}">Título</div>
+                <div class="note-content" th:text="${nota.contenido}">Contenido...</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalNota" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h2 id="modalTitle">Nueva Nota</h2>
+                <span class="close-modal" onclick="cerrarModalNota()">&times;</span>
+            </div>
+            
+            <form th:action="@{/notas/guardar}" method="post" onsubmit="return confirmarGuardadoNota(this)">
+                <input type="hidden" id="notaId" name="id" />
+                
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="titulo">Título</label>
+                        <div class="input-wrapper">
+                            <input type="text" id="titulo" name="titulo" 
+                                   required maxlength="255" 
+                                   placeholder="Ej: Revisar caso #404"
+                                   oninput="actualizarContadorNota(this)">
+                            <span class="char-counter-modal">0/255</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="contenido">Contenido</label>
+                        <div class="input-wrapper">
+                            <textarea id="contenido" name="contenido" rows="6" 
+                                      required maxlength="1000" 
+                                      placeholder="Detalles de la nota..."
+                                      oninput="actualizarContadorNota(this)"></textarea>
+                            <span class="char-counter-modal">0/1000</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" onclick="cerrarModalNota()" class="btn-secundario">Cancelar</button>
+                    <button type="submit" class="btn-primario" style="width: auto;">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalVerNota" class="modal">
+        <div class="modal-content" style="max-width: 600px; background-color: #feff9c; color: #333; border: none;">
+            <div class="modal-header" style="border-bottom: 1px dashed rgba(0,0,0,0.2); padding-bottom: 10px;">
+                <h2 id="verTituloDisplay" style="margin: 0; font-size: 1.4em;"></h2>
+                <span class="close-modal" onclick="cerrarModalVer()" style="color: #555;">&times;</span>
+            </div>
+
+            <div class="modal-body">
+                <div id="verContenidoDisplay" style="font-size: 1.1em; line-height: 1.6; white-space: pre-wrap; color: #222; max-height: 60vh; overflow-y: auto;"></div>
+            </div>
+
+            <div class="modal-footer" style="border: none; padding-top: 10px;">
+                <button onclick="cerrarModalVer()" class="btn-secundario" style="background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.1); color: #333; width: 100%;">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalConfirmarEliminarNota" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 450px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                <div style="background-color: #fff0f0; padding: 1rem; border-radius: 50%;">
+                    <i class="ph-bold ph-trash" style="font-size: 2.5rem; color: var(--color-error);"></i>
+                </div>
+            </div>
+            <div class="modal-body">
+                <h2 style="margin-bottom: 1rem;">¿Eliminar Nota?</h2>
+                <p>Esta acción eliminará la nota permanentemente.</p>
+                <input type="hidden" id="urlEliminarNota" value="" />
+            </div>
+            <div class="modal-footer" style="justify-content: center; border-top: none;">
+                <div class="btn-group-equal">
+                    <button type="button" class="btn-secundario" onclick="cerrarConfirmacionEliminar()">Cancelar</button>
+                    <button type="button" class="btn-error" onclick="ejecutarEliminarNota()">Sí, Eliminar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalConfirmarGuardarNota" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 450px; text-align: center;">
+            <div class="modal-header" style="justify-content: center; border-bottom: none; padding-bottom: 0;">
+                <div style="background-color: #f0fff4; padding: 1rem; border-radius: 50%;">
+                    <i class="ph-bold ph-floppy-disk" style="font-size: 2.5rem; color: var(--color-exito);"></i>
+                </div>
+            </div>
+            <div class="modal-body">
+                <h2 style="margin-bottom: 1rem;">¿Guardar Cambios?</h2>
+                <p>Se guardará la información de la nota en el mural.</p>
+            </div>
+            <div class="modal-footer" style="justify-content: center; border-top: none;">
+                <div class="btn-group-equal">
+                    <button type="button" class="btn-secundario" onclick="cerrarConfirmacionGuardar()">Cancelar</button>
+                    <button type="button" class="btn-exito" onclick="ejecutarGuardarNota()">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        
+        const casosEstudio =  /*[[${casosEstudio}]]*/ 0;
+        const casosConsulta = /*[[${casosConsulta}]]*/ 0;
+
+        function getThemeColor(variableName) {
+            const style = getComputedStyle(document.documentElement);
+            const val = style.getPropertyValue(variableName);
+            return val ? val.trim() : null;
+        }
+
+        let chartInstance = null;
+
+        function initChart() {
+            const canvas = document.getElementById('tipoPacienteChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            
+            const colorDefault1 = '#005a9c';
+            const colorDefault2 = '#28a745';
+            
+            const colorUno = getThemeColor('--chart-color-1') || colorDefault1;
+            const colorDos = getThemeColor('--chart-color-2') || colorDefault2;
+            const colorTexto = getThemeColor('--color-texto') || '#333';
+
+            const data = {
+                labels: [ 'Estudio', 'Control' ],
+                datasets: [{
+                    label: 'Tipos de Paciente',
+                    data: [casosEstudio, casosConsulta],
+                    backgroundColor: [ colorUno, colorDos ],
+                    borderWidth: 0,
+                    hoverOffset: 4
+                }]
+            };
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'bottom',
+                            labels: { color: colorTexto, font: { size: 12 } } 
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    let value = context.raw;
+                                    let total = context.chart.getDatasetMeta(0).total;
+                                    let percentage = (total == 0) ? 0 : (value * 100 / total).toFixed(1);
+                                    return label + ': ' + value + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initChart);
+
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && (mutation.attributeName === 'data-theme' || mutation.attributeName === 'class')) {
+                    setTimeout(initChart, 200); 
+                }
+            });
+        });
+        observer.observe(document.documentElement, { attributes: true });
+
+
+        let formNotaPendiente = null;
+
+        function actualizarContadorNota(input) {
+            const max = input.getAttribute("maxlength");
+            const current = input.value.length;
+            const counter = input.parentElement.querySelector('.char-counter-modal');
+            if (counter) {
+                counter.textContent = `${current}/${max}`;
+                counter.style.color = current >= max ? 'var(--color-error)' : 'var(--color-texto-secundario)';
+            }
+        }
+
+        function abrirModalNota() {
+            document.getElementById('modalTitle').innerText = 'Nueva Nota';
+            document.getElementById('notaId').value = ''; 
+            
+            const inputTitulo = document.getElementById('titulo');
+            const inputContenido = document.getElementById('contenido');
+            
+            inputTitulo.value = '';
+            inputContenido.value = '';
+            
+            actualizarContadorNota(inputTitulo);
+            actualizarContadorNota(inputContenido);
+            
+            document.getElementById('modalNota').style.display = 'block';
+        }
+
+        function editarNota(element) {
+            const id = element.getAttribute('data-id');
+            const titulo = element.getAttribute('data-titulo');
+            const contenido = element.getAttribute('data-contenido');
+            document.getElementById('modalTitle').innerText = 'Editar Nota';
+            document.getElementById('notaId').value = id;
+            
+            const inputTitulo = document.getElementById('titulo');
+            const inputContenido = document.getElementById('contenido');
+            
+            inputTitulo.value = titulo;
+            inputContenido.value = contenido;
+
+            actualizarContadorNota(inputTitulo);
+            actualizarContadorNota(inputContenido);
+
+            document.getElementById('modalNota').style.display = 'block';
+        }
+
+        function cerrarModalNota() {
+            document.getElementById('modalNota').style.display = 'none';
+        }
+
+        function confirmarGuardadoNota(form) {
+            formNotaPendiente = form;
+            document.getElementById('modalConfirmarGuardarNota').style.display = 'block';
+            return false; 
+        }
+
+        function cerrarConfirmacionGuardar() {
+            document.getElementById('modalConfirmarGuardarNota').style.display = 'none';
+            formNotaPendiente = null;
+        }
+
+        function ejecutarGuardarNota() {
+            if (formNotaPendiente) formNotaPendiente.submit();
+        }
+
+        function confirmarEliminarNota(btn) {
+            const url = btn.getAttribute('data-url');
+            document.getElementById('urlEliminarNota').value = url;
+            document.getElementById('modalConfirmarEliminarNota').style.display = 'block';
+        }
+
+        function cerrarConfirmacionEliminar() {
+            document.getElementById('modalConfirmarEliminarNota').style.display = 'none';
+            document.getElementById('urlEliminarNota').value = '';
+        }
+
+        function ejecutarEliminarNota() {
+            const url = document.getElementById('urlEliminarNota').value;
+            if (url) window.location.href = url;
+        }
+
+        function verNotaDetalle(element, event) {
+            if (event.target.closest('.note-actions')) return;
+            const titulo = element.getAttribute('data-titulo');
+            const contenido = element.getAttribute('data-contenido');
+            document.getElementById('verTituloDisplay').innerText = titulo;
+            document.getElementById('verContenidoDisplay').innerText = contenido;
+            document.getElementById('modalVerNota').style.display = 'block';
+        }
+
+        function cerrarModalVer() {
+            document.getElementById('modalVerNota').style.display = 'none';
+        }
+        
+        window.onclick = function(event) {
+            const modalForm = document.getElementById('modalNota');
+            const modalVer = document.getElementById('modalVerNota');
+            const modalConfElim = document.getElementById('modalConfirmarEliminarNota');
+            const modalConfGuardar = document.getElementById('modalConfirmarGuardarNota');
+            
+            if (event.target == modalForm) cerrarModalNota();
+            if (event.target == modalVer) cerrarModalVer();
+            if (event.target == modalConfElim) cerrarConfirmacionEliminar();
+            if (event.target == modalConfGuardar) cerrarConfirmacionGuardar();
+        }
+        /*]]>*/
+    </script>
+</div>
+</html>

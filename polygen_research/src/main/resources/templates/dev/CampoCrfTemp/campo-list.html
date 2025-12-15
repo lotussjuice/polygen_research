@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+
+<div th:fragment="contenido">
+
+    <div class="card">
+        
+        <div class="card-header">
+            <h3><i class="ph-bold ph-pencil-simple"></i> Gestión de Campos (Variables)</h3>
+            
+            <div style="display: flex; align-items: center; gap: 1rem;">
+                
+                <form th:action="@{/campos/list}" method="get" style="display: flex; gap: 0.5rem; align-items: center;">
+                    <input type="text" name="search" class="form-control" 
+                           placeholder="Buscar por nombre..." 
+                           th:value="${search}" 
+                           style="width: 200px;" />
+                    <button type="submit" class="btn-primario btn-sm">Buscar</button>
+                    <a th:href="@{/campos/list}" class="btn-secundario btn-sm" title="Limpiar">Limpiar</a>
+                </form>
+
+                <a th:href="@{/campos/nuevo}" class="btn-primario btn-sm">
+                    <i class="ph-bold ph-plus"></i> Registrar Nuevo Campo
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body">
+            
+            <div th:if="${#lists.isEmpty(campos)}" class="alert" style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
+                <span th:if="${search == null or search == ''}">No hay campos registrados.</span>
+                <span th:if="${search != null and search != ''}">No se encontraron campos con ese nombre.</span>
+            </div>
+
+            <table th:if="${!#lists.isEmpty(campos)}">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre (Variable)</th>
+                        <th>Tipo</th>
+                        <th>Estado</th>
+                        <th style="text-align: right; width: 150px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="c : ${campos}">
+                        <td th:text="${c.idCampo}">...</td>
+                        <td th:text="${c.nombre}">...</td>
+                        <td th:text="${c.tipo}">...</td>
+                        <td>
+                            <span th:if="${c.activo == true}" style="color: var(--color-exito);">Activo</span>
+                            <span th:if="${c.activo == false or c.activo == null}" style="color: var(--color-texto-secundario);">Inactivo</span>
+                        </td>
+                        
+                      <td class="actions-cell" style="text-align: right;">
+                            
+                            <a th:href="@{/campos/editar/{id}(id=${c.idCampo})}" 
+                               class="btn-secundario btn-sm"
+                               title="Editar Campo">
+                                <i class="ph-bold ph-pencil-simple"></i>
+                            </a>
+                            
+                            <a th:if="${c.activo == true}"
+                               th:href="@{/campos/desactivar/{id}(id=${c.idCampo})}" 
+                               class="btn-error btn-sm"
+                               title="Desactivar Campo">
+                                <i class="ph-bold ph-power"></i> 
+                            </a>
+                            
+                            <a th:if="${c.activo == false or c.activo == null}"
+                               th:href="@{/campos/desactivar/{id}(id=${c.idCampo})}" 
+                               class="btn-exito btn-sm"
+                               title="Activar Campo">
+                                <i class="ph-bold ph-power"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</html>

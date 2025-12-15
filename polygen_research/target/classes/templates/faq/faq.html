@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/main-layout :: ~{}}">
+
+<div th:fragment="contenido">
+
+    <style>
+        .faq-container { max-width: 800px; margin: 0 auto; padding-top: 20px; }
+        
+        .faq-item {
+            background-color: var(--color-tarjeta);
+            border: 1px solid var(--color-borde);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            box-shadow: var(--sombra-tarjeta);
+            transition: border-color 0.3s;
+        }
+
+        .faq-question {
+            background-color: var(--color-fondo); 
+            color: var(--color-texto);
+            cursor: pointer;
+            padding: 18px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 16px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .faq-question:hover { 
+            background-color: var(--color-borde); 
+        }
+        
+        .faq-question.active { 
+            background-color: var(--color-primario); 
+            color: white; 
+        }
+
+        .faq-icon::after { content: '+'; font-size: 20px; font-weight: bold; }
+        .faq-question.active .faq-icon::after { content: '-'; }
+
+        .faq-answer {
+            padding: 0 18px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s;
+            background-color: var(--color-tarjeta);
+            color: var(--color-texto-secundario);
+            line-height: 1.6;
+        }
+        
+        .faq-answer p { margin: 15px 0; }
+
+        .faq-answer a {
+            color: #0d6efd !important;
+            text-decoration: underline !important;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .faq-answer a:hover {
+            color: #0a58ca !important;
+        }
+    </style>
+
+    <div class="dashboard-header">
+        <h1>Preguntas Frecuentes (FAQ)</h1>
+        <p style="color: var(--color-texto-secundario);">Resuelve tus dudas sobre el funcionamiento de la plataforma Polygen Research.</p>
+    </div>
+
+    <div class="faq-container">
+        <div class="faq-item" th:each="item : ${listaFaqs}">
+            
+            <button class="faq-question">
+                <span th:text="${item.pregunta}">¿Pregunta?</span>
+                <span class="faq-icon"></span>
+            </button>
+            
+           <div class="faq-answer">
+                <p th:utext="${item.respuesta}">Respuesta...</p>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const acc = document.getElementsByClassName("faq-question");
+        for (let i = 0; i < acc.length; i++) {
+            acc[i].addEventListener("click", function() {
+                this.classList.toggle("active");
+                const panel = this.nextElementSibling;
+                if (panel.style.maxHeight) {
+                    panel.style.maxHeight = null;
+                    panel.style.paddingTop = "0";
+                    panel.style.paddingBottom = "0";
+                } else {
+                    panel.style.maxHeight = panel.scrollHeight + "px";
+                    panel.style.paddingTop = "15px"; 
+                    panel.style.paddingBottom = "15px"; 
+                }
+            });
+        }
+    </script>
+</div>
+</html>

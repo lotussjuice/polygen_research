@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+
+<div th:fragment="contenido">
+
+    <div th:if="${param.successName}" class="alert alert-success" style="margin-bottom: 1rem;">
+        Nombre actualizado correctamente.
+    </div>
+
+    <div class="profile-header-card">
+        <div class="profile-avatar-large">
+            <i class="ph-bold ph-user"></i>
+        </div>
+        <div class="profile-info">
+            <h2 th:text="${usuario.nombreUsuario}">Nombre Usuario</h2>
+            <span class="profile-role-badge">
+                <i class="ph-fill ph-shield-check"></i> 
+                <span th:text="${#strings.replace(#authentication.authorities[0].authority, 'ROLE_', '')}">ROL</span>
+            </span>
+        </div>
+    </div>
+
+    <div class="dashboard-grid-2col">
+        
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="ph-bold ph-identification-card"></i> Datos Personales</h3>
+            </div>
+            <div class="card-body">
+                
+                <form th:action="@{/perfil/actualizar-nombre}" method="post" id="form-nombre">
+                    <div class="settings-group" style="flex-wrap: wrap;">
+                        <div class="settings-label">Nombre de Usuario</div>
+                        
+                        <div class="settings-value" id="view-nombre" th:text="${usuario.nombreUsuario}">Javier</div>
+                        
+                        <div class="settings-value" id="edit-nombre" style="display: none;">
+                            <input type="text" name="nuevoNombre" class="form-control" th:value="${usuario.nombreUsuario}" required>
+                        </div>
+
+                        <div class="settings-action">
+                            <button type="button" id="btn-edit-nombre" class="btn-secundario btn-sm" onclick="toggleEditNombre()">
+                                <i class="ph-bold ph-pencil-simple"></i>
+                            </button>
+                            <button type="submit" id="btn-save-nombre" class="btn-primario btn-sm" style="display: none;">
+                                <i class="ph-bold ph-check"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="ph-bold ph-lock-key"></i> Seguridad</h3>
+            </div>
+            <div class="card-body">
+                
+                <div class="settings-group">
+                    <div class="settings-label">Correo Electrónico</div>
+                    <div class="settings-value masked-text" th:text="${correoEnmascarado}">
+                        corr***@dominio.cl
+                    </div>
+                    <div class="settings-action"></div> 
+                </div>
+
+                <div class="settings-group">
+                    <div class="settings-label">Contraseña</div>
+                    <div class="settings-value masked-text">•••••••••••••</div>
+                    <div class="settings-action">
+                        <button id="btn-init-pass" class="btn-primario btn-sm" onclick="iniciarFlujoPassword()">
+                            Cambiar
+                        </button>
+                    </div>
+                </div>
+
+                <div id="security-flow" style="display: none; margin-top: 1.5rem; background: var(--color-fondo); padding: 1.5rem; border-radius: 8px; border: 1px solid var(--color-borde);">
+                    
+                    <div id="step-1">
+                        <h4 style="margin-bottom: 0.5rem;">Verificación Requerida</h4>
+                        <p style="font-size: 0.9rem; color: var(--color-texto-secundario); margin-bottom: 1rem;">
+                            Para proteger su cuenta, enviaremos un código a su correo: <strong th:text="${correoEnmascarado}"></strong>
+                        </p>
+                        <div style="display: flex; gap: 10px;">
+                            <button class="btn-secundario" onclick="cancelarFlujo()" style="width: 50%;">Cancelar</button>
+                            <button class="btn-primario" id="btn-enviar-code" onclick="enviarCodigo()" style="width: 50%;">
+                                <span id="spinner-envio" style="display:none;"><i class="ph-bold ph-spinner ph-spin"></i></span>
+                                Enviar Código
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="step-2" style="display: none;">
+                        <h4 style="margin-bottom: 0.5rem;">Ingrese el Código</h4>
+                        <div class="form-group">
+                            <input type="text" id="input-codigo" class="form-control" placeholder="123456" style="text-align: center; letter-spacing: 5px; font-size: 1.2rem;">
+                            <small id="msg-error-code" style="color: var(--color-error); display: none;">Código incorrecto</small>
+                        </div>
+                        <button class="btn-exito" onclick="validarCodigo()" style="width: 100%;">Verificar</button>
+                    </div>
+
+                    <div id="step-3" style="display: none;">
+                        <h4 style="margin-bottom: 0.5rem;">Nueva Contraseña</h4>
+                        <div class="form-group">
+                            <input type="password" id="new-pass" class="form-control" placeholder="Nueva contraseña">
+                        </div>
+                        <div class="form-group">
+                            <input type="password" id="confirm-pass" class="form-control" placeholder="Confirmar contraseña">
+                            <small id="msg-error-pass" style="color: var(--color-error); display: none;">Las contraseñas no coinciden</small>
+                        </div>
+                        <button class="btn-primario" onclick="guardarPassword()" style="width: 100%;">Actualizar Contraseña</button>
+                    </div>
+
+                    <div id="step-4" style="display: none; text-align: center;">
+                        <i class="ph-fill ph-check-circle" style="font-size: 3rem; color: var(--color-exito);"></i>
+                        <h4>¡Contraseña Actualizada!</h4>
+                        <p>Su contraseña ha sido cambiada exitosamente.</p>
+                        <button class="btn-secundario" onclick="location.reload()">Cerrar</button>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- Token CSRF para peticiones AJAX ---
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+        // --- Editar Nombre ---
+        function toggleEditNombre() {
+            const isEditing = document.getElementById('edit-nombre').style.display === 'block';
+            
+            if (isEditing) {
+                // Cancelar edición
+                document.getElementById('view-nombre').style.display = 'block';
+                document.getElementById('edit-nombre').style.display = 'none';
+                document.getElementById('btn-edit-nombre').style.display = 'inline-flex';
+                document.getElementById('btn-save-nombre').style.display = 'none';
+            } else {
+                // Activar edición
+                document.getElementById('view-nombre').style.display = 'none';
+                document.getElementById('edit-nombre').style.display = 'block';
+                document.getElementById('btn-edit-nombre').style.display = 'none';
+                document.getElementById('btn-save-nombre').style.display = 'inline-flex';
+            }
+        }
+
+        // --- Flujo Contraseña ---
+        function iniciarFlujoPassword() {
+            document.getElementById('btn-init-pass').style.display = 'none';
+            document.getElementById('security-flow').style.display = 'block';
+            document.getElementById('step-1').style.display = 'block';
+        }
+
+        function cancelarFlujo() {
+            document.getElementById('security-flow').style.display = 'none';
+            document.getElementById('btn-init-pass').style.display = 'inline-flex';
+            // Reset pasos
+            document.getElementById('step-1').style.display = 'none';
+            document.getElementById('step-2').style.display = 'none';
+            document.getElementById('step-3').style.display = 'none';
+        }
+
+        async function enviarCodigo() {
+            const btn = document.getElementById('btn-enviar-code');
+            const spinner = document.getElementById('spinner-envio');
+            
+            btn.disabled = true;
+            spinner.style.display = 'inline-block';
+
+            try {
+                const response = await fetch('/perfil/api/enviar-codigo', {
+                    method: 'POST',
+                    headers: { [csrfHeader]: csrfToken }
+                });
+
+                if (response.ok) {
+                    document.getElementById('step-1').style.display = 'none';
+                    document.getElementById('step-2').style.display = 'block';
+                } else {
+                    alert("Error al enviar el correo. Intente más tarde.");
+                    cancelarFlujo();
+                }
+            } catch (e) {
+                console.error(e);
+                alert("Error de conexión.");
+            } finally {
+                btn.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+
+        async function validarCodigo() {
+            const codigo = document.getElementById('input-codigo').value;
+            
+            const formData = new FormData();
+            formData.append('codigo', codigo);
+
+            const response = await fetch('/perfil/api/validar-codigo', {
+                method: 'POST',
+                headers: { [csrfHeader]: csrfToken },
+                body: formData
+            });
+
+            if (response.ok) {
+                document.getElementById('step-2').style.display = 'none';
+                document.getElementById('step-3').style.display = 'block';
+            } else {
+                document.getElementById('msg-error-code').style.display = 'block';
+            }
+        }
+
+        async function guardarPassword() {
+            const p1 = document.getElementById('new-pass').value;
+            const p2 = document.getElementById('confirm-pass').value;
+
+            if (p1 !== p2) {
+                document.getElementById('msg-error-pass').style.display = 'block';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('nuevaPass', p1);
+
+            const response = await fetch('/perfil/api/cambiar-password', {
+                method: 'POST',
+                headers: { [csrfHeader]: csrfToken },
+                body: formData
+            });
+
+            if (response.ok) {
+                document.getElementById('step-3').style.display = 'none';
+                document.getElementById('step-4').style.display = 'block';
+            } else {
+                alert("Error al actualizar contraseña.");
+            }
+        }
+    </script>
+
+</div>
+</html>

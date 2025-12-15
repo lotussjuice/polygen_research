@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+
+<div th:fragment="contenido">
+
+    <div class="card">
+        
+        <div class="card-header">
+            <h3><i class="ph-bold ph-user-gear"></i> Administración de Usuarios</h3>
+            <a th:href="@{/usuarios/nuevo}" class="btn-primario btn-sm">
+                <i class="ph-bold ph-plus"></i> Registrar Nuevo Usuario
+            </a>
+        </div>
+
+        <div class="card-body">
+            
+            <div th:if="${#lists.isEmpty(usuarios)}" class="alert" style="background-color: var(--color-fondo); color: var(--color-texto-secundario);">
+                No hay usuarios registrados. Recuerda que un 'Usuario' debe ser asociado a una 'Credencial' para poder iniciar sesión.
+            </div>
+
+            <table th:if="${!#lists.isEmpty(usuarios)}">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre Usuario</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th style="text-align: right; width: 150px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${usuarios}">
+                        <td th:text="${u.idUsuario}">...</td>
+                        <td th:text="${u.nombreUsuario}">...</td>
+                        <td th:text="${u.rolUsuario?.nombreRol}">N/A</td>
+                        <td th:text="${u.estado}">...</td>
+                        
+                        <td class="actions-cell" style="text-align: right;">
+                            
+                            <a th:href="@{/usuarios/editar/{id}(id=${u.idUsuario})}" 
+                               class="btn-secundario btn-sm"
+                               title="Editar Usuario">
+                                <i class="ph-bold ph-pencil-simple"></i>
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</html>

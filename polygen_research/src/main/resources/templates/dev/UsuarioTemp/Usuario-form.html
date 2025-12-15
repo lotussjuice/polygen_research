@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{layout/main-layout :: ~{}}">
+
+<div th:fragment="contenido">
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="ph-bold ph-user-gear"></i> Formulario de Usuario</h3>
+        </div>
+        
+        <div class="card-body">
+            <form th:action="@{/usuarios/guardar}" th:object="${usuario}" method="POST">
+                
+                <div class="form-group">
+                    <label>Nombre de Usuario:</label>
+                    <input type="text" th:field="*{nombreUsuario}" class="form-control" placeholder="Ej. Juan Pérez" />
+                </div>
+                
+                <div class="form-group">
+                    <label>Rol:</label>
+                    <select th:field="*{rolUsuario}" class="form-control">
+                        <option value="">Seleccione un rol...</option>
+                        <option th:each="r : ${roles}" 
+                                th:value="${r.idRol}" 
+                                th:text="${r.nombreRol}"></option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Estado:</label>
+                    <input type="text" th:field="*{estado}" class="form-control" placeholder="Ej. Activo" />
+                </div>
+                
+                <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+                    <button type="submit" class="btn-primario">Guardar Usuario</button>
+                    <a th:href="@{/usuarios/list}" class="btn-secundario">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+</html>
